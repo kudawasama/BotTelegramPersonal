@@ -26,9 +26,14 @@ namespace BotTelegram.Commands
 
             var text = "📝 Tus recuerdos:\n\n";
             foreach (var r in reminders)
-                text += $"⏰ {r.DueAt}: {r.Text}\n";
+            {
+                var recurrenceStr = r.Recurrence != BotTelegram.Models.RecurrenceType.None ? $" [🔄 {r.Recurrence}]" : "";
+                text += $"🔹 `{r.Id}`\n⏰ {r.DueAt:dd/MM HH:mm} - {r.Text}{recurrenceStr}\n";
+            }
 
-            await bot.SendMessage(message.Chat.Id, text, cancellationToken: ct);
+            text += "\n💡 Usa /delete <id> para eliminar\n💡 Usa /edit <id> <nuevo texto> para modificar";
+
+            await bot.SendMessage(message.Chat.Id, text, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, cancellationToken: ct);
         }
     }
 }

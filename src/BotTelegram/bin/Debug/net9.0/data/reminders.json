@@ -1,14 +1,11 @@
 [
   {
+    "Id": "ea1e7ee3",
     "ChatId": 1392641621,
-    "Text": "prueba final  undos",
-    "DueAt": "2026-02-10T15:26:39.2339049-03:00",
-    "Notified": true
-  },
-  {
-    "ChatId": 1392641621,
-    "Text": "RECORDAR PAGAR GITHUB COPILOT DE 10 MIL PESOS  M\u00C1S",
-    "DueAt": "2026-02-10T15:38:59.2670217-03:00",
-    "Notified": false
+    "Text": "avisar a mi amor que a ya estoy llegando a las 17:35",
+    "DueAt": "2026-02-10T17:01:59.7332104-03:00",
+    "Notified": false,
+    "Recurrence": 0,
+    "CreatedAt": "2026-02-10T16:01:59.7522822-03:00"
   }
 ]

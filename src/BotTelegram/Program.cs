@@ -26,6 +26,30 @@ var scheduler = new ReminderScheduler(bot);
 scheduler.Start();
 Console.WriteLine("✅ ReminderScheduler iniciado");
 
+// Inicializar API web
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+var app = builder.Build();
+app.UseCors("AllowAll");
+app.MapControllers();
+
+// Ejecutar API web en background
+_ = Task.Run(async () =>
+{
+    Console.WriteLine("\n🌐 Iniciando API web en http://localhost:5000");
+    await app.RunAsync("http://localhost:5000");
+});
+
 Console.WriteLine("🔔 Iniciando StartReceiving()...");
 
 bot.StartReceiving(
@@ -49,7 +73,8 @@ bot.StartReceiving(
 );
 
 Console.WriteLine("✅ StartReceiving() iniciado");
-Console.WriteLine("⏳ Esperando mensajes... Presiona ENTER para salir");
+Console.WriteLine("✅ API web iniciada");
+Console.WriteLine("\n📱 Telegram Bot: Presiona ENTER para salir");
 Console.ReadLine();
 Console.WriteLine("🛑 Bot detenido");
 

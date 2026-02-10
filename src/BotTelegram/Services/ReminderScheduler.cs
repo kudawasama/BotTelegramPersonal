@@ -65,7 +65,27 @@ namespace BotTelegram.Services
                                     parseMode: ParseMode.Markdown,
                                     cancellationToken: CancellationToken.None);
 
-                                r.Notified = true;
+                                if (r.Recurrence == BotTelegram.Models.RecurrenceType.None)
+                                {
+                                    r.Notified = true;
+                                }
+                                else
+                                {
+                                    // Crear siguiente ocurrencia
+                                    var nextDueAt = r.Recurrence switch
+                                    {
+                                        BotTelegram.Models.RecurrenceType.Daily => r.DueAt.AddDays(1),
+                                        BotTelegram.Models.RecurrenceType.Weekly => r.DueAt.AddDays(7),
+                                        BotTelegram.Models.RecurrenceType.Monthly => r.DueAt.AddMonths(1),
+                                        BotTelegram.Models.RecurrenceType.Yearly => r.DueAt.AddYears(1),
+                                        _ => r.DueAt.AddHours(1)
+                                    };
+                                    
+                                    r.DueAt = nextDueAt;
+                                    r.Notified = false;
+                                    Console.WriteLine($"      🔄 Próxima ocurrencia: {nextDueAt:dd/MM/yyyy HH:mm}");
+                                }
+
                                 Console.WriteLine($"      ✅ Enviado (MessageId: {result.MessageId})");
                             }
                             catch (Exception ex)

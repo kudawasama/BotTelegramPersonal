@@ -45,6 +45,27 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/delete"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando DeleteCommand");
+                await new DeleteCommand().Execute(bot, message, ct);
+                return;
+            }
+
+            if (message.Text.StartsWith("/edit"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando EditCommand");
+                await new EditCommand().Execute(bot, message, ct);
+                return;
+            }
+
+            if (message.Text.StartsWith("/recur"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando RecurCommand");
+                await new RecurCommand().Execute(bot, message, ct);
+                return;
+            }
+
             Console.WriteLine("   [CommandRouter] → Ejecutando UnknownCommand");
             await new UnknownCommand().Execute(bot, message, ct);
         }
