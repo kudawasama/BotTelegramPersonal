@@ -1,5 +1,6 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using BotTelegram.Services;
 
 namespace BotTelegram.Commands
@@ -37,15 +38,24 @@ namespace BotTelegram.Commands
                 return;
             }
 
-            reminders.Remove(reminder);
-            _service.UpdateAll(reminders);
+            // Mostrar confirmación con botones
+            var text = $"⚠️ ¿Estás seguro de eliminar este recordatorio?\n\n📝 {reminder.Text}\n⏰ {reminder.DueAt:dd/MM HH:mm}";
+            var keyboard = new InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("✅ Sí, eliminar", $"confirm_delete:{input}"),
+                    InlineKeyboardButton.WithCallbackData("❌ Cancelar", $"cancel_delete:{input}")
+                }
+            });
 
             await bot.SendMessage(
                 message.Chat.Id,
-                $"✅ Recordatorio eliminado:\n📝 {reminder.Text}",
+                text,
+                replyMarkup: keyboard,
                 cancellationToken: ct);
 
-            Console.WriteLine($"   [DeleteCommand] ✅ Recordatorio {input} eliminado");
+            Console.WriteLine($"   [DeleteCommand] ⚠️ Solicitando confirmación para eliminar {input}");
         }
     }
 }

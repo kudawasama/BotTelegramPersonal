@@ -1,5 +1,6 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,6 +13,15 @@ namespace BotTelegram.Commands
             Message message,
             CancellationToken ct)
         {
+            // Crear botones inline para acceso rápido
+            var keyboard = new InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("📋 Ver recordatorios", "list")
+                }
+            });
+
             await client.SendMessage(
                 chatId: message.Chat.Id,
                 text:
@@ -36,6 +46,7 @@ namespace BotTelegram.Commands
 - en 10 segundos / en 5 min / en 2 horas / en 3 días
 - hoy a las 18:00
 - mañana a las 09:00",
+                replyMarkup: keyboard,
                 cancellationToken: ct
             );
         }

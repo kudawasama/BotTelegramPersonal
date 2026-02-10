@@ -45,6 +45,14 @@ namespace BotTelegram.Core
             Update update,
             CancellationToken ct)
         {
+            // Manejar CallbackQuery (botones inline)
+            if (update.CallbackQuery != null)
+            {
+                Console.WriteLine($"🔘 [CALLBACK RECIBIDO] ChatId: {update.CallbackQuery.Message?.Chat.Id} | Data: {update.CallbackQuery.Data}");
+                await Handlers.CallbackQueryHandler.Handle(bot, update.CallbackQuery, ct);
+                return;
+            }
+
             if (update.Message is not Message message)
                 return;
 
