@@ -9,15 +9,17 @@ namespace BotTelegram.Commands
     public class ListCommand
     {
         private readonly ReminderService _service = new();
+        private const int PAGE_SIZE = 5; // Máximo 5 items por página
 
         public async Task Execute(
             ITelegramBotClient bot,
             Message message,
-            CancellationToken ct)
+            CancellationToken ct,
+            int page = 1)
         {
             try
             {
-                Console.WriteLine($"[ListCommand] Obteniendo recordatorios para ChatId {message.Chat.Id}");
+                Console.WriteLine($"[ListCommand] Obteniendo recordatorios para ChatId {message.Chat.Id} (página {page})");
                 
                 var allReminders = _service.GetAll()
                     .Where(r => r.ChatId == message.Chat.Id)
@@ -37,6 +39,17 @@ namespace BotTelegram.Commands
 
                 var pendientes = allReminders.Where(r => !r.Notified).ToList();
                 var completados = allReminders.Where(r => r.Notified).ToList();
+                
+                // Paginación para pendientes
+                var totalPages = (int)Math.Ceiling(pendientes.Count / (double)PAGE_SIZE);
+                if (totalPages == 0) totalPages = 1;
+                if (page < 1) page = 1;
+                if (page > totalPages) page = totalPages;
+                
+                var pendientesPagina = pendientes
+                    .Skip((page - 1) * PAGE_SIZE)
+                    .Take(PAGE_SIZE)
+                    .ToList();
 
                 var sb = new StringBuilder();
                 sb.AppendLine("📋 *TUS RECORDATORIOS*\n");
@@ -44,10 +57,10 @@ namespace BotTelegram.Commands
                 // Crear lista de botones para los pendientes
                 var buttons = new List<List<InlineKeyboardButton>>();
 
-                if (pendientes.Any())
+                if (pendientesPagina.Any())
                 {
-                    sb.AppendLine("⏰ *PENDIENTES:*");
-                    foreach (var r in pendientes)
+                    sb.AppendLine($"⏰ *PENDIENTES (página {page}/{totalPages}):*");
+                    foreach (var r in pendientesPagina)
                     {
                         var timeLeft = r.DueAt - DateTimeOffset.Now;
                         var timeStr = FormatTimeLeft(timeLeft);
@@ -84,6 +97,26 @@ namespace BotTelegram.Commands
                 sb.AppendLine("`/delete <id>` - Eliminar");
                 sb.AppendLine("`/edit <id> <texto>` - Modificar");
                 sb.AppendLine("`/recur <id> <tipo>` - Recurrencia");
+                
+                // Botones de navegación de páginas
+                if (totalPages > 1)
+                {
+                    var navButtons = new List<InlineKeyboardButton>();
+                    
+                    if (page > 1)
+                    {
+                        navButtons.Add(InlineKeyboardButton.WithCallbackData("◀️ Anterior", $"list_page:{page - 1}"));
+                    }
+                    
+                    navButtons.Add(InlineKeyboardButton.WithCallbackData($"📝 {page}/{totalPages}", "list_refresh"));
+                    
+                    if (page < totalPages)
+                    {
+                        navButtons.Add(InlineKeyboardButton.WithCallbackData("Siguiente ▶️", $"list_page:{page + 1}"));
+                    }
+                    
+                    buttons.Add(navButtons);
+                }
 
                 // Agregar botón de menú principal al final
                 buttons.Add(new List<InlineKeyboardButton>

@@ -6,6 +6,7 @@ namespace BotTelegram.Services
     public class ReminderService
     {
         private readonly string _filePath;
+        private static readonly object _fileLock = new(); // Thread safety para operaciones de archivo
 
         public ReminderService()
         {
@@ -44,19 +45,22 @@ namespace BotTelegram.Services
 
         public List<Reminder> GetAll()
         {
-            try
+            lock (_fileLock)
             {
-                var json = File.ReadAllText(_filePath);
-                var options = new JsonSerializerOptions
+                try
                 {
-                    PropertyNameCaseInsensitive = true
-                };
-                return JsonSerializer.Deserialize<List<Reminder>>(json, options) ?? new List<Reminder>();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ReminderService] Error leyendo archivo: {ex.Message}");
-                return new List<Reminder>();
+                    var json = File.ReadAllText(_filePath);
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    return JsonSerializer.Deserialize<List<Reminder>>(json, options) ?? new List<Reminder>();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ReminderService] Error leyendo archivo: {ex.Message}");
+                    return new List<Reminder>();
+                }
             }
         }
 
@@ -76,19 +80,22 @@ namespace BotTelegram.Services
 
         private void Persist(List<Reminder> reminders)
         {
-            try
+            lock (_fileLock)
             {
-                var options = new JsonSerializerOptions 
-                { 
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                };
-                var json = JsonSerializer.Serialize(reminders, options);
-                File.WriteAllText(_filePath, json);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ReminderService] Error guardando archivo: {ex.Message}");
+                try
+                {
+                    var options = new JsonSerializerOptions 
+                    { 
+                        WriteIndented = true,
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    };
+                    var json = JsonSerializer.Serialize(reminders, options);
+                    File.WriteAllText(_filePath, json);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ReminderService] Error guardando archivo: {ex.Message}");
+                }
             }
         }
     }

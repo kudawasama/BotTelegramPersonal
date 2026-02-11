@@ -17,6 +17,8 @@ namespace BotTelegram.Commands
             var chatId = message.Chat.Id;
             var userMessage = message.Text!.Replace("/chat", "").Trim();
 
+            AIService.SetChatMode(chatId, true);
+
             Console.WriteLine($"[ChatCommand] 💬 Procesando chat de ChatId {chatId}");
 
             if (string.IsNullOrWhiteSpace(userMessage))
@@ -26,14 +28,20 @@ namespace BotTelegram.Commands
                     new[]
                     {
                         InlineKeyboardButton.WithCallbackData("💡 Ver ejemplos", "show_chat_help"),
+                        InlineKeyboardButton.WithCallbackData("🚪 Salir del chat", "exit_chat")
+                    },
+                    new[]
+                    {
                         InlineKeyboardButton.WithCallbackData("🏠 Menú", "start")
                     }
                 });
 
                 await bot.SendMessage(
                     chatId,
-                    "💬 *Modo Chat IA*\n\n" +
-                    "Escribe algo después de /chat para conversar conmigo.\n\n" +
+                    "💬 *Modo Chat IA ACTIVADO*\n\n" +
+                    "Ahora puedes escribir normalmente y te responderé.\n" +
+                    "Los comandos como `/list` y `/remember` siguen funcionando.\n\n" +
+                    "Si prefieres, también puedes usar `/chat <mensaje>`.\n\n" +
                     "📝 *Ejemplos:*\n" +
                     "• `/chat Hola, ¿cómo estás?`\n" +
                     "• `/chat ¿Qué tengo pendiente hoy?`\n" +
@@ -68,6 +76,10 @@ namespace BotTelegram.Commands
                     new[]
                     {
                         InlineKeyboardButton.WithCallbackData("🔄 Reiniciar chat", "clear_chat"),
+                        InlineKeyboardButton.WithCallbackData("🚪 Salir del chat", "exit_chat")
+                    },
+                    new[]
+                    {
                         InlineKeyboardButton.WithCallbackData("🏠 Menú", "start")
                     }
                 });

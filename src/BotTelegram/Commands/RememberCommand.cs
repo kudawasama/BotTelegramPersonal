@@ -18,12 +18,32 @@ namespace BotTelegram.Commands
             Console.WriteLine($"   [RememberCommand] Procesando: {message.Text}");
             var input = message.Text!.Replace("/remember", "").Trim();
 
+            // Validación de entrada
             if (string.IsNullOrWhiteSpace(input))
             {
                 Console.WriteLine($"   [RememberCommand] ❌ Entrada vacía");
                 await bot.SendMessage(
                     message.Chat.Id,
                     "❌ Uso:\n/remember Tomar agua en 10 min\n/remember Reunión mañana a las 14:30\n/remember Llamar mamá hoy a las 19:00",
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Validación: longitud mínima y máxima
+            if (input.Length < 3)
+            {
+                await bot.SendMessage(
+                    message.Chat.Id,
+                    "❌ El recordatorio debe tener al menos 3 caracteres.",
+                    cancellationToken: ct);
+                return;
+            }
+            
+            if (input.Length > 500)
+            {
+                await bot.SendMessage(
+                    message.Chat.Id,
+                    $"❌ El recordatorio es demasiado largo ({input.Length} caracteres). Máximo: 500 caracteres.",
                     cancellationToken: ct);
                 return;
             }

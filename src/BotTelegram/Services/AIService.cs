@@ -8,6 +8,23 @@ namespace BotTelegram.Services
         private static readonly HttpClient _client = new();
         private readonly string _apiKey;
         private static readonly Dictionary<long, List<ChatMessage>> _conversations = new();
+        private static readonly HashSet<long> _chatMode = new();
+        private static readonly object _chatModeLock = new();
+        
+        // Memory cleanup: tracking de última actividad por usuario
+        private static readonly Dictionary<long, DateTime> _lastActivity = new();
+        private static readonly Timer? _cleanupTimer;
+        
+        // Rate limiting: 10 requests por minuto por usuario
+        private static readonly Dictionary<long, Queue<DateTime>> _userRequests = new();
+        private const int MAX_REQUESTS_PER_MINUTE = 10;
+        
+        static AIService()
+        {
+            // Cleanup cada 5 minutos: elimina conversaciones inactivas >1h
+            _cleanupTimer = new Timer(CleanupInactiveUsers, null, 
+                TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+        }
 
         public AIService()
         {
@@ -16,10 +33,79 @@ namespace BotTelegram.Services
             
             if (!_client.DefaultRequestHeaders.Contains("Authorization"))
             {
+                // IMPORTANTE: usar API key real en header, sanitizar solo en logs
                 _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
             }
             
-            Console.WriteLine("[AIService] ✅ Servicio IA inicializado");
+            Console.WriteLine($"[AIService] ✅ Servicio IA inicializado (key: {SanitizeApiKey(_apiKey)})");
+        }
+        
+        // Sanitiza API keys para logs (muestra solo primeros/últimos 4 chars)
+        private static string SanitizeApiKey(string apiKey)
+        {
+            if (string.IsNullOrEmpty(apiKey) || apiKey.Length <= 8)
+                return "***";
+            return $"{apiKey.Substring(0, 4)}...{apiKey.Substring(apiKey.Length - 4)}";
+        }
+        
+        // Rate limiting: valida que usuario no exceda 10 req/min
+        private static bool CheckRateLimit(long chatId)
+        {
+            var now = DateTime.UtcNow;
+            
+            if (!_userRequests.ContainsKey(chatId))
+            {
+                _userRequests[chatId] = new Queue<DateTime>();
+            }
+            
+            var queue = _userRequests[chatId];
+            
+            // Eliminar requests más antiguos de 1 minuto
+            while (queue.Count > 0 && (now - queue.Peek()).TotalMinutes > 1)
+            {
+                queue.Dequeue();
+            }
+            
+            if (queue.Count >= MAX_REQUESTS_PER_MINUTE)
+            {
+                Console.WriteLine($"[AIService] ⚠️ Rate limit excedido para ChatId {chatId}");
+                return false;
+            }
+            
+            queue.Enqueue(now);
+            return true;
+        }
+        
+        // Cleanup: elimina conversaciones inactivas >1h
+        private static void CleanupInactiveUsers(object? state)
+        {
+            var now = DateTime.UtcNow;
+            var inactiveThreshold = TimeSpan.FromHours(1);
+            var toRemove = new List<long>();
+            
+            lock (_chatModeLock)
+            {
+                foreach (var kvp in _lastActivity)
+                {
+                    if (now - kvp.Value > inactiveThreshold)
+                    {
+                        toRemove.Add(kvp.Key);
+                    }
+                }
+                
+                foreach (var chatId in toRemove)
+                {
+                    _conversations.Remove(chatId);
+                    _lastActivity.Remove(chatId);
+                    _userRequests.Remove(chatId);
+                    Console.WriteLine($"[AIService] 🧹 Cleanup: removido ChatId {chatId} (inactivo >1h)");
+                }
+                
+                if (toRemove.Count > 0)
+                {
+                    Console.WriteLine($"[AIService] 🧹 Cleanup completado: {toRemove.Count} usuarios removidos");
+                }
+            }
         }
 
         public async Task<string> Chat(long chatId, string userMessage)
@@ -27,6 +113,18 @@ namespace BotTelegram.Services
             try
             {
                 Console.WriteLine($"[AIService] 🤖 Iniciando chat para ChatId {chatId}");
+                
+                // Rate limiting: validar 10 req/min
+                if (!CheckRateLimit(chatId))
+                {
+                    return "⚠️ *Demasiadas solicitudes*\n\nPor favor espera un momento antes de enviar otro mensaje. (Máximo 10 mensajes por minuto)";
+                }
+                
+                // Actualizar última actividad
+                lock (_chatModeLock)
+                {
+                    _lastActivity[chatId] = DateTime.UtcNow;
+                }
                 
                 // Verificar si es comando de reinicio
                 if (userMessage.ToLower().Contains("reiniciar") || 
@@ -140,6 +238,37 @@ Formato de respuestas:
                 Console.WriteLine($"[AIService] ❌ Excepción: {ex.Message}");
                 Console.WriteLine($"[AIService] Stack: {ex.StackTrace}");
                 return "❌ Ocurrió un error inesperado. Por favor intenta de nuevo.";
+            }
+        }
+
+        public static void SetChatMode(long chatId, bool enabled)
+        {
+            lock (_chatModeLock)
+            {
+                if (enabled)
+                {
+                    _chatMode.Add(chatId);
+                }
+                else
+                {
+                    _chatMode.Remove(chatId);
+                }
+            }
+        }
+
+        public static bool IsChatMode(long chatId)
+        {
+            lock (_chatModeLock)
+            {
+                return _chatMode.Contains(chatId);
+            }
+        }
+
+        public static void ClearChatMode(long chatId)
+        {
+            lock (_chatModeLock)
+            {
+                _chatMode.Remove(chatId);
             }
         }
 

@@ -46,7 +46,19 @@ namespace BotTelegram.Handlers
                 }
                 else if (data == "list")
                 {
-                    await HandleListCallback(bot, chatId, messageId, ct);
+                    await HandleListCallback(bot, chatId, messageId, ct, page: 1);
+                }
+                else if (data.StartsWith("list_page:"))
+                {
+                    var pageStr = data.Replace("list_page:", "");
+                    if (int.TryParse(pageStr, out var page))
+                    {
+                        await HandleListCallback(bot, chatId, messageId, ct, page);
+                    }
+                }
+                else if (data == "list_refresh")
+                {
+                    await HandleListCallback(bot, chatId, messageId, ct, page: 1);
                 }
                 else if (data.StartsWith("help_"))
                 {
@@ -87,6 +99,10 @@ namespace BotTelegram.Handlers
                 else if (data == "clear_chat")
                 {
                     await HandleClearChatCallback(bot, chatId, messageId, ct);
+                }
+                else if (data == "exit_chat")
+                {
+                    await HandleExitChatCallback(bot, chatId, messageId, ct);
                 }
             }
             catch (Exception ex)
@@ -343,8 +359,11 @@ namespace BotTelegram.Handlers
             ITelegramBotClient bot,
             long chatId,
             int messageId,
-            CancellationToken ct)
+            CancellationToken ct,
+            int page = 1)
         {
+            const int PAGE_SIZE = 5;
+            
             var reminders = _reminderService.GetAll()
                 .Where(r => r.ChatId == chatId && !r.Notified)
                 .OrderBy(r => r.DueAt)
@@ -363,11 +382,22 @@ namespace BotTelegram.Handlers
                     replyMarkup: emptyKeyboard, cancellationToken: ct);
                 return;
             }
+            
+            // Paginación
+            var totalPages = (int)Math.Ceiling(reminders.Count / (double)PAGE_SIZE);
+            if (totalPages == 0) totalPages = 1;
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            
+            var remindersPagina = reminders
+                .Skip((page - 1) * PAGE_SIZE)
+                .Take(PAGE_SIZE)
+                .ToList();
 
-            var text = "📝 *TUS RECORDATORIOS PENDIENTES*\n\n";
+            var text = $"📋 *TUS RECORDATORIOS PENDIENTES*\n📊 Página {page}/{totalPages}\n\n";
             var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
 
-            foreach (var r in reminders)
+            foreach (var r in remindersPagina)
             {
                 var recurrenceStr = r.Recurrence != Models.RecurrenceType.None ? $" [🔄 {r.Recurrence}]" : "";
                 text += $"🔹 `{r.Id}`\n⏰ {r.DueAt:dd/MM HH:mm} - {r.Text}{recurrenceStr}\n\n";
@@ -378,6 +408,26 @@ namespace BotTelegram.Handlers
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🗑️ {r.Id}", $"delete:{r.Id}"),
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🔄 Recurrente", $"recur:{r.Id}")
                 });
+            }
+            
+            // Botones de navegación de páginas
+            if (totalPages > 1)
+            {
+                var navButtons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
+                
+                if (page > 1)
+                {
+                    navButtons.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("◀️ Anterior", $"list_page:{page - 1}"));
+                }
+                
+                navButtons.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"📝 {page}/{totalPages}", "list_refresh"));
+                
+                if (page < totalPages)
+                {
+                    navButtons.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("Siguiente ▶️", $"list_page:{page + 1}"));
+                }
+                
+                buttons.Add(navButtons);
             }
 
             // Agregar botón de menú al final
@@ -967,8 +1017,15 @@ Escribe `/help` para ver la ayuda rápida con botones de acción.";
             int messageId,
             CancellationToken ct)
         {
+            BotTelegram.Services.AIService.SetChatMode(chatId, true);
+
             var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
             {
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔄 Reiniciar chat", "clear_chat"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🚪 Salir del chat", "exit_chat")
+                },
                 new[]
                 {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
@@ -977,10 +1034,12 @@ Escribe `/help` para ver la ayuda rápida con botones de acción.";
 
             var helpText = @"🤖 *CHAT CON INTELIGENCIA ARTIFICIAL*
 
-¡Ahora puedes conversar conmigo de forma natural!
+✅ *Modo chat activado.*
+Ahora puedes escribir normalmente y responderé como asistente.
+Los comandos `/list`, `/remember`, etc. siguen funcionando.
 
 📝 *¿Cómo usar?*
-Escribe: `/chat <tu mensaje>`
+Escribe libremente o usa: `/chat <tu mensaje>`
 
 💬 *Ejemplos de conversación:*
 • `/chat Hola, ¿cómo estás?`
@@ -999,7 +1058,7 @@ Escribe: `/chat <tu mensaje>`
 
 🔄 *Reiniciar conversación:*
 Si quieres que olvide el contexto anterior:
-`/chat reiniciar`
+`/chat reiniciar` o botón *Reiniciar chat*
 
 💡 *Consejos:*
 • Puedo ayudarte a crear recordatorios de forma conversacional
@@ -1034,7 +1093,11 @@ Si quieres que olvide el contexto anterior:
                 {
                     new[]
                     {
-                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💬 Chatear", "show_chat_help"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💡 Ver ejemplos", "show_chat_help"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🚪 Salir del chat", "exit_chat")
+                    },
+                    new[]
+                    {
                         Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú", "start")
                     }
                 });
@@ -1045,7 +1108,7 @@ Si quieres que olvide el contexto anterior:
                     "🔄 *Conversación reiniciada*\n\n" +
                     "He limpiado el historial de nuestra conversación.\n" +
                     "Ahora puedes empezar una nueva conversación desde cero.\n\n" +
-                    "Escribe `/chat <mensaje>` para comenzar.",
+                    "Escribe normalmente o usa `/chat <mensaje>` para comenzar.",
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: keyboard,
                     cancellationToken: ct);
@@ -1057,6 +1120,35 @@ Si quieres que olvide el contexto anterior:
                 Console.WriteLine($"[CallbackQueryHandler] ❌ Error al reiniciar chat: {ex.Message}");
                 await bot.SendMessage(chatId, "❌ Error al reiniciar la conversación.", cancellationToken: ct);
             }
+        }
+
+        private static async Task HandleExitChatCallback(
+            ITelegramBotClient bot,
+            long chatId,
+            int messageId,
+            CancellationToken ct)
+        {
+            BotTelegram.Services.AIService.ClearChatMode(chatId);
+
+            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🤖 Activar chat", "show_chat_help"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú", "start")
+                }
+            });
+
+            await bot.EditMessageText(
+                chatId,
+                messageId,
+                "🚪 *Modo chat desactivado*\n\n" +
+                "Si quieres volver a conversar con la IA, pulsa *Activar chat* o escribe `/chat`.",
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                replyMarkup: keyboard,
+                cancellationToken: ct);
+
+            Console.WriteLine($"[CallbackQueryHandler] 🚪 Chat desactivado para ChatId {chatId}");
         }
     }
 }
