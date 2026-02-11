@@ -1,6 +1,6 @@
-using BotTelegram.Models;
+using BotTelegram.RPG.Models;
 
-namespace BotTelegram.Services
+namespace BotTelegram.RPG.Services
 {
     public class RpgCombatService
     {

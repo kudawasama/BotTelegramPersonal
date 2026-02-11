@@ -1,6 +1,8 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using BotTelegram.Services;
+using BotTelegram.RPG.Services;
+using BotTelegram.RPG.Models;
 
 namespace BotTelegram.Handlers
 {
@@ -1168,9 +1170,9 @@ Si quieres que olvide el contexto anterior:
         {
             var chatId = callbackQuery.Message!.Chat.Id;
             var messageId = callbackQuery.Message.MessageId;
-            var rpgCommand = new BotTelegram.Commands.RpgCommand();
-            var rpgService = new BotTelegram.Services.RpgService();
-            var combatService = new BotTelegram.Services.RpgCombatService();
+            var rpgCommand = new BotTelegram.RPG.Commands.RpgCommand();
+            var rpgService = new BotTelegram.RPG.Services.RpgService();
+            var combatService = new BotTelegram.RPG.Services.RpgCombatService();
             
             Console.WriteLine($"[RPG] Callback: {data}");
             
@@ -1225,11 +1227,11 @@ Si quieres que olvide el contexto anterior:
                     
                     var characterClass = className switch
                     {
-                        "warrior" => BotTelegram.Models.CharacterClass.Warrior,
-                        "mage" => BotTelegram.Models.CharacterClass.Mage,
-                        "rogue" => BotTelegram.Models.CharacterClass.Rogue,
-                        "cleric" => BotTelegram.Models.CharacterClass.Cleric,
-                        _ => BotTelegram.Models.CharacterClass.Warrior
+                        "warrior" => CharacterClass.Warrior,
+                        "mage" => CharacterClass.Mage,
+                        "rogue" => CharacterClass.Rogue,
+                        "cleric" => CharacterClass.Cleric,
+                        _ => CharacterClass.Warrior
                     };
                     
                     var player = rpgService.CreateNewPlayer(chatId, playerName, characterClass);
@@ -1317,9 +1319,9 @@ Si quieres que olvide el contexto anterior:
                 
                 // Generate random enemy
                 var difficulties = new[] { 
-                    BotTelegram.Models.EnemyDifficulty.Easy,
-                    BotTelegram.Models.EnemyDifficulty.Easy,
-                    BotTelegram.Models.EnemyDifficulty.Medium
+                    EnemyDifficulty.Easy,
+                    EnemyDifficulty.Easy,
+                    EnemyDifficulty.Medium
                 };
                 var difficulty = difficulties[new Random().Next(difficulties.Length)];
                 var enemy = rpgService.GenerateEnemy(currentPlayer.Level, difficulty);

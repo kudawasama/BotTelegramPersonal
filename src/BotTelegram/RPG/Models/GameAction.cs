@@ -1,4 +1,4 @@
-namespace BotTelegram.Models
+namespace BotTelegram.RPG.Models
 {
     public class GameAction
     {
@@ -20,7 +20,10 @@ namespace BotTelegram.Models
         Rest,
         Work,
         Shop,
-        Quest
+        Quest,
+        Dungeon,      // Nuevo
+        PvP,          // Nuevo
+        Craft         // Nuevo
     }
     
     public class ActionResult

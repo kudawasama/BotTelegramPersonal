@@ -1,6 +1,7 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using BotTelegram.Commands;
+using BotTelegram.RPG.Commands;
 using BotTelegram.Models;
 
 namespace BotTelegram.Core

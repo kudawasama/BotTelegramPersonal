@@ -1,10 +1,10 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
-using BotTelegram.Services;
-using BotTelegram.Models;
+using BotTelegram.RPG.Services;
+using BotTelegram.RPG.Models;
 
-namespace BotTelegram.Commands
+namespace BotTelegram.RPG.Commands
 {
     public class RpgCommand
     {
