@@ -554,6 +554,13 @@ namespace BotTelegram.RPG.Services
                     TrackCombo(player, player.ComboCount);
                 }
                 
+                // Auto-desbloquear skills al terminar combate
+                var newSkills = SkillDatabase.CheckAndUnlockSkills(player);
+                if (newSkills.Any())
+                {
+                    result.UnlockedSkills = newSkills;
+                }
+                
                 player.Gold += result.GoldGained;
                 player.TotalKills++;
                 player.TotalGoldEarned += result.GoldGained;

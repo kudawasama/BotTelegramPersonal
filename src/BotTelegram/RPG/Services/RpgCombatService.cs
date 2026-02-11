@@ -151,6 +151,13 @@ namespace BotTelegram.RPG.Services
                     TrackCombo(player, player.ComboCount);
                 }
                 
+                // Auto-desbloquear skills al terminar combate
+                var newSkills = SkillDatabase.CheckAndUnlockSkills(player);
+                if (newSkills.Any())
+                {
+                    result.UnlockedSkills = newSkills;
+                }
+                
                 player.Gold += result.GoldGained;
                 player.TotalKills++;
                 player.TotalGoldEarned += result.GoldGained;
@@ -779,6 +786,9 @@ namespace BotTelegram.RPG.Services
         // Efectos de estado
         public StatusEffectType? InflictedEffect { get; set; }
         public int StatusDamage { get; set; }
+        
+        // Skills desbloqueadas al terminar combate
+        public List<RpgSkill> UnlockedSkills { get; set; } = new();
         
         // Legacy (compatibilidad)
         [Obsolete("Use HitChancePercent y HitRoll instead")]
