@@ -50,8 +50,10 @@ app.MapControllers();
 // Ejecutar API web en background
 _ = Task.Run(async () =>
 {
-    Console.WriteLine("\n🌐 Iniciando API web en http://localhost:5000");
-    await app.RunAsync("http://localhost:5000");
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "5001";
+    var url = $"http://0.0.0.0:{port}";
+    Console.WriteLine($"\n🌐 Iniciando API web en {url}");
+    await app.RunAsync(url);
 });
 
 Console.WriteLine("🔔 Iniciando StartReceiving()...");
