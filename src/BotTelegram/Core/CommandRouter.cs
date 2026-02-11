@@ -73,6 +73,13 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/chat"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando ChatCommand (IA)");
+                await new ChatCommand().Execute(bot, message, ct);
+                return;
+            }
+
             Console.WriteLine("   [CommandRouter] → Ejecutando UnknownCommand");
             await new UnknownCommand().Execute(bot, message, ct);
         }

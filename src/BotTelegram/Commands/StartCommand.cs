@@ -30,6 +30,7 @@ namespace BotTelegram.Commands
                 },
                 new[]
                 {
+                    InlineKeyboardButton.WithCallbackData("🤖 Chatear con IA", "show_chat_help"),
                     InlineKeyboardButton.WithCallbackData("📚 FAQ / Manual", "faq_menu")
                 }
             });

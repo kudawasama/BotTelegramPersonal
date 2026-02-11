@@ -80,6 +80,14 @@ namespace BotTelegram.Handlers
                 {
                     await HandleFaqCallback(bot, chatId, messageId, data, ct);
                 }
+                else if (data == "show_chat_help")
+                {
+                    await HandleShowChatHelpCallback(bot, chatId, messageId, ct);
+                }
+                else if (data == "clear_chat")
+                {
+                    await HandleClearChatCallback(bot, chatId, messageId, ct);
+                }
             }
             catch (Exception ex)
             {
@@ -951,6 +959,104 @@ Escribe `/help` para ver la ayuda rápida con botones de acción.";
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
                 cancellationToken: ct);
+        }
+
+        private static async Task HandleShowChatHelpCallback(
+            ITelegramBotClient bot,
+            long chatId,
+            int messageId,
+            CancellationToken ct)
+        {
+            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
+                }
+            });
+
+            var helpText = @"🤖 *CHAT CON INTELIGENCIA ARTIFICIAL*
+
+¡Ahora puedes conversar conmigo de forma natural!
+
+📝 *¿Cómo usar?*
+Escribe: `/chat <tu mensaje>`
+
+💬 *Ejemplos de conversación:*
+• `/chat Hola, ¿cómo estás?`
+• `/chat ¿Qué tengo pendiente hoy?`
+• `/chat Explícame cómo crear recordatorios`
+• `/chat Tengo reunión mañana a las 10`
+• `/chat ¿Cómo se hace café espresso?`
+• `/chat Dame consejos de productividad`
+
+🧠 *Capacidades:*
+✅ Recuerdo el contexto de nuestra conversación
+✅ Te ayudo a organizar tu día
+✅ Respondo consultas generales
+✅ Sugiero recordatorios cuando es apropiado
+✅ Explico cómo usar el bot
+
+🔄 *Reiniciar conversación:*
+Si quieres que olvide el contexto anterior:
+`/chat reiniciar`
+
+💡 *Consejos:*
+• Puedo ayudarte a crear recordatorios de forma conversacional
+• Pregúntame sobre tus tareas pendientes
+• Pide sugerencias para organizarte mejor
+• Úsame para consultas rápidas
+
+⚡ *Potenciado por:* Groq AI (Llama 3.1)";
+
+            await bot.EditMessageText(
+                chatId,
+                messageId,
+                helpText,
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                replyMarkup: keyboard,
+                cancellationToken: ct);
+        }
+
+        private static async Task HandleClearChatCallback(
+            ITelegramBotClient bot,
+            long chatId,
+            int messageId,
+            CancellationToken ct)
+        {
+            try
+            {
+                // Limpiar conversación
+                var aiService = new BotTelegram.Services.AIService();
+                aiService.ClearConversation(chatId);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💬 Chatear", "show_chat_help"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú", "start")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    "🔄 *Conversación reiniciada*\n\n" +
+                    "He limpiado el historial de nuestra conversación.\n" +
+                    "Ahora puedes empezar una nueva conversación desde cero.\n\n" +
+                    "Escribe `/chat <mensaje>` para comenzar.",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+
+                Console.WriteLine($"[CallbackQueryHandler] 🔄 Chat reiniciado para ChatId {chatId}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[CallbackQueryHandler] ❌ Error al reiniciar chat: {ex.Message}");
+                await bot.SendMessage(chatId, "❌ Error al reiniciar la conversación.", cancellationToken: ct);
+            }
         }
     }
 }
