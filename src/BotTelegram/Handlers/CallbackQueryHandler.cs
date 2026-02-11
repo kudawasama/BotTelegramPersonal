@@ -124,10 +124,27 @@ namespace BotTelegram.Handlers
                     await HandleRpgCallback(bot, callbackQuery, data, ct);
                 }
             }
+            catch (Telegram.Bot.Exceptions.ApiRequestException apiEx) when (apiEx.Message.Contains("message is not modified"))
+            {
+                // Error esperado: mensaje no modificado (silenciar)
+                Console.WriteLine($"⚠️ [CallbackQueryHandler] Mensaje no modificado (mismo contenido)");
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+            }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ [CallbackQueryHandler] Error: {ex.Message}");
-                await bot.SendMessage(chatId, "❌ Ocurrió un error procesando tu solicitud.", cancellationToken: ct);
+                Console.WriteLine($"❌ [CallbackQueryHandler] Error: {ex.GetType().Name} - {ex.Message}");
+                Console.WriteLine($"   StackTrace: {ex.StackTrace}");
+                
+                // Intentar responder sin mensaje visible al usuario
+                try
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "⚠️ Error procesando acción", showAlert: false, cancellationToken: ct);
+                }
+                catch
+                {
+                    // Si falla el callback, enviar mensaje
+                    await bot.SendMessage(chatId, "❌ Ocurrió un error inesperado. Intenta de nuevo.", cancellationToken: ct);
+                }
             }
         }
 
@@ -1514,8 +1531,13 @@ Si quieres que olvide el contexto anterior:
                     return;
                 }
                 
-                var result = combatService.PlayerAttack(currentPlayer, currentPlayer.CurrentEnemy);
-                var narrative = combatService.GetCombatNarrative(result, currentPlayer, currentPlayer.CurrentEnemy);
+                // Feedback inmediato
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⚔️ Atacando...", showAlert: false, cancellationToken: ct);
+                
+                // Guardar referencia al enemigo ANTES de que sea null
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.PlayerAttack(currentPlayer, enemy);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
                 
                 rpgService.SavePlayer(currentPlayer);
                 
@@ -1588,8 +1610,14 @@ Si quieres que olvide el contexto anterior:
                     return;
                 }
                 
-                var result = combatService.PlayerDefend(currentPlayer, currentPlayer.CurrentEnemy);
-                var narrative = combatService.GetCombatNarrative(result, currentPlayer, currentPlayer.CurrentEnemy);
+                // Feedback inmediato
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🛡️ Defendiendo...", showAlert: false, cancellationToken: ct);
+                
+                // Guardar referencia al enemigo
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.PlayerDefend(currentPlayer, enemy);
+                // Agregar timestamp para evitar mensajes idénticos
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy) + $"\n\n`[{DateTime.Now:HH:mm:ss}]`";
                 
                 rpgService.SavePlayer(currentPlayer);
                 
@@ -1645,7 +1673,12 @@ Si quieres que olvide el contexto anterior:
                     return;
                 }
                 
-                var success = combatService.TryToFlee(currentPlayer, currentPlayer.CurrentEnemy);
+                // Feedback inmediato
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🏃 Intentando huir...", showAlert: false, cancellationToken: ct);
+                
+                // Guardar referencia al enemigo
+                var enemy = currentPlayer.CurrentEnemy;
+                var success = combatService.TryToFlee(currentPlayer, enemy);
                 rpgService.SavePlayer(currentPlayer);
                 
                 if (success)
