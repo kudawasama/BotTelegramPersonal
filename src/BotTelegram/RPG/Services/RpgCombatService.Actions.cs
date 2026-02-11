@@ -553,5 +553,100 @@ namespace BotTelegram.RPG.Services
                 AddCombatLog(player, "Derrota", "💀 Has sido derrotado");
             }
         }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // SISTEMA DE TRACKING DE ACCIONES
+        // ═══════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Trackea una acción del jugador para desbloqueo de skills
+        /// </summary>
+        private void TrackAction(RpgPlayer player, string actionType, int count = 1)
+        {
+            if (!player.ActionCounters.ContainsKey(actionType))
+            {
+                player.ActionCounters[actionType] = 0;
+            }
+            
+            player.ActionCounters[actionType] += count;
+        }
+        
+        /// <summary>
+        /// Trackea daño infligido
+        /// </summary>
+        private void TrackDamageDealt(RpgPlayer player, int damage)
+        {
+            TrackAction(player, "damage_dealt", damage);
+        }
+        
+        /// <summary>
+        /// Trackea daño recibido
+        /// </summary>
+        private void TrackDamageTaken(RpgPlayer player, int damage)
+        {
+            TrackAction(player, "damage_taken", damage);
+        }
+        
+        /// <summary>
+        /// Trackea golpe crítico
+        /// </summary>
+        private void TrackCriticalHit(RpgPlayer player)
+        {
+            TrackAction(player, "critical_hit");
+        }
+        
+        /// <summary>
+        /// Trackea esquiva perfecta (no recibir daño)
+        /// </summary>
+        private void TrackPerfectDodge(RpgPlayer player)
+        {
+            TrackAction(player, "perfect_dodge");
+        }
+        
+        /// <summary>
+        /// Trackea combate sobrevivido
+        /// </summary>
+        private void TrackCombatSurvived(RpgPlayer player)
+        {
+            TrackAction(player, "combat_survived");
+            
+            // Trackear si sobrevivió con HP baja
+            if (player.HP < player.MaxHP * 0.3)
+            {
+                TrackAction(player, "low_hp_combat");
+            }
+        }
+        
+        /// <summary>
+        /// Trackea enemigo derrotado
+        /// </summary>
+        private void TrackEnemyDefeated(RpgPlayer player)
+        {
+            TrackAction(player, "enemy_defeated");
+        }
+        
+        /// <summary>
+        /// Trackea combo largo
+        /// </summary>
+        private void TrackCombo(RpgPlayer player, int comboCount)
+        {
+            if (comboCount >= 5)
+            {
+                TrackAction(player, "combo_5plus");
+            }
+            if (comboCount >= 10)
+            {
+                TrackAction(player, "combo_10plus");
+            }
+        }
+        
+        /// <summary>
+        /// Trackea uso de habilidad
+        /// </summary>
+        private void TrackSkillUsed(RpgPlayer player, string skillId)
+        {
+            TrackAction(player, "skill_used");
+            TrackAction(player, $"skill_{skillId}");
+        }
     }
 }
