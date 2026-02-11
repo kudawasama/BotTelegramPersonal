@@ -43,6 +43,7 @@ namespace BotTelegram.RPG.Services
             if (result.PlayerHit)
             {
                 player.ComboCount++;
+                TrackAction(player, "charge_attack"); // Track para skill unlocks
                 
                 // Daño aumentado (+30%)
                 int baseDamage = (int)(player.PhysicalAttack * 1.3);
@@ -60,6 +61,7 @@ namespace BotTelegram.RPG.Services
                 result.PlayerDamage = Math.Max(1, finalDamage);
                 result.AttackType = AttackType.Physical;
                 enemy.HP -= result.PlayerDamage;
+                TrackDamageDealt(player, result.PlayerDamage); // Track daño total
                 
                 // Chance de aturdir (20%)
                 if (_random.Next(100) < 20 && !enemy.IsImmuneToEffect(StatusEffectType.Stunned))
@@ -103,6 +105,7 @@ namespace BotTelegram.RPG.Services
             if (result.PlayerHit)
             {
                 player.ComboCount++;
+                TrackAction(player, "precise_attack"); // Track para skill unlocks
                 
                 // Daño reducido (-20%)
                 int baseDamage = (int)(player.PhysicalAttack * 0.8);
@@ -119,6 +122,7 @@ namespace BotTelegram.RPG.Services
                 result.PlayerDamage = Math.Max(1, finalDamage);
                 result.AttackType = AttackType.Physical;
                 enemy.HP -= result.PlayerDamage;
+                TrackDamageDealt(player, result.PlayerDamage); // Track daño total
                 
                 AddCombatLog(player, "🎯 Ataque Preciso", $"💥 {result.PlayerDamage} daño");
             }
@@ -164,6 +168,7 @@ namespace BotTelegram.RPG.Services
             if (result.PlayerHit)
             {
                 player.ComboCount++;
+                TrackAction(player, "heavy_attack"); // Track para skill unlocks
                 
                 int baseDamage = (int)(player.PhysicalAttack * 1.5);
                 var damageVariation = _random.Next(90, 111) / 100.0;
@@ -179,6 +184,7 @@ namespace BotTelegram.RPG.Services
                 result.PlayerDamage = Math.Max(1, finalDamage);
                 result.AttackType = AttackType.Physical;
                 enemy.HP -= result.PlayerDamage;
+                TrackDamageDealt(player, result.PlayerDamage); // Track daño total
                 
                 AddCombatLog(player, "💥 Ataque Pesado", $"💥 {result.PlayerDamage} daño");
             }
@@ -215,6 +221,8 @@ namespace BotTelegram.RPG.Services
             if (dodged)
             {
                 result.Dodged = true;
+                TrackAction(player, "dodge"); // Track para skill unlocks
+                TrackPerfectDodge(player); // Track esquives perfectos
                 AddCombatLog(player, "🌀 Esquivar", "✅ Exitoso");
                 
                 // Enemigo ataca y falla
@@ -262,6 +270,7 @@ namespace BotTelegram.RPG.Services
             {
                 result.Countered = true;
                 result.EnemyHit = false;
+                TrackAction(player, "counter"); // Track para skill unlocks
                 
                 // Contraataque exitoso - daña al enemigo
                 int counterDamage = (int)(player.PhysicalAttack * 1.2);
@@ -274,6 +283,7 @@ namespace BotTelegram.RPG.Services
                 
                 result.PlayerDamage = Math.Max(1, finalDamage);
                 enemy.HP -= result.PlayerDamage;
+                TrackDamageDealt(player, result.PlayerDamage); // Track daño total
                 
                 AddCombatLog(player, "💫 Contraataque", $"✅ ¡Éxito! {result.PlayerDamage} daño");
             }
@@ -312,6 +322,8 @@ namespace BotTelegram.RPG.Services
             
             player.Stamina -= staminaCost;
             
+            TrackAction(player, "jump"); // Track para skill unlocks
+            
             // Gana evasión temporal para próximo turno
             double jumpBonus = 25.0;
             double enemyHitChance = Math.Max(10.0, 80.0 - jumpBonus - (player.Evasion * 0.5));
@@ -342,6 +354,8 @@ namespace BotTelegram.RPG.Services
         {
             var result = new CombatResult();
             player.CombatTurnCount++;
+            
+            TrackAction(player, "retreat"); // Track para skill unlocks
             
             // Mejora evasión pero no ataca
             double retreatBonus = 30.0;
@@ -375,6 +389,8 @@ namespace BotTelegram.RPG.Services
             var result = new CombatResult();
             player.CombatTurnCount++;
             
+            TrackAction(player, "advance"); // Track para skill unlocks
+            
             AddCombatLog(player, "⚡ Avanzar", "Te acercas al enemigo");
             
             // Recibe ataque con defensas reducidas
@@ -398,6 +414,8 @@ namespace BotTelegram.RPG.Services
         {
             var result = new CombatResult();
             player.CombatTurnCount++;
+            
+            TrackAction(player, "meditate"); // Track para skill unlocks
             
             int manaRestore = (int)(player.MaxMana * 0.25);
             player.Mana = Math.Min(player.MaxMana, player.Mana + manaRestore);
@@ -423,6 +441,8 @@ namespace BotTelegram.RPG.Services
         {
             var result = new CombatResult();
             player.CombatTurnCount++;
+            
+            TrackAction(player, "observe"); // Track para skill unlocks
             
             string info = $"📊 **{enemy.Name}** (Lv.{enemy.Level})\n\n";
             info += $"❤️ HP: {enemy.HP}/{enemy.MaxHP}\n";
@@ -481,6 +501,8 @@ namespace BotTelegram.RPG.Services
             var result = new CombatResult();
             player.CombatTurnCount++;
             
+            TrackAction(player, "wait"); // Track para skill unlocks
+            
             int staminaRestore = (int)(player.MaxStamina * 0.10);
             player.Stamina = Math.Min(player.MaxStamina, player.Stamina + staminaRestore);
             
@@ -523,6 +545,14 @@ namespace BotTelegram.RPG.Services
                 result.EnemyDefeated = true;
                 result.XPGained = enemy.XPReward;
                 result.GoldGained = enemy.GoldReward;
+                
+                // Track para skill unlocks
+                TrackEnemyDefeated(player);
+                TrackCombatSurvived(player); // También trackea low_hp_combat si HP < 30%
+                if (player.ComboCount >= 5)
+                {
+                    TrackCombo(player, player.ComboCount);
+                }
                 
                 player.Gold += result.GoldGained;
                 player.TotalKills++;

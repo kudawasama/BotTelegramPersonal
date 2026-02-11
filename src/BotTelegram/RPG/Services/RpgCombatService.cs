@@ -46,6 +46,9 @@ namespace BotTelegram.RPG.Services
                 // Incrementar combo
                 player.ComboCount++;
                 
+                // Track tipo de ataque para skill unlocks
+                TrackAction(player, useMagic ? "magic_attack" : "physical_attack");
+                
                 // 2. CALCULAR DAÑO BASE
                 int baseDamage;
                 int defenseValue;
@@ -92,6 +95,7 @@ namespace BotTelegram.RPG.Services
                 if (result.PlayerCritical)
                 {
                     baseDamage = (int)(baseDamage * 1.75); // Crítico = 175% daño
+                    TrackCriticalHit(player); // Track críticos para skill unlocks
                     
                     // Combo x3+ con crítico = Sangrado
                     if (player.ComboCount >= 3)
@@ -110,6 +114,7 @@ namespace BotTelegram.RPG.Services
                 result.PlayerDamage = Math.Max(1, finalDamage); // Mínimo 1 daño
                 result.DamageReduction = (int)(baseDamage * damageReduction);
                 enemy.HP -= result.PlayerDamage;
+                TrackDamageDealt(player, result.PlayerDamage); // Track daño total para skills
                 
                 var attackTypeEmoji = useMagic ? "🔮" : "⚔️";
                 var criticalText = result.PlayerCritical ? " [CRÍTICO!]" : "";
@@ -137,6 +142,14 @@ namespace BotTelegram.RPG.Services
                 result.EnemyDefeated = true;
                 result.XPGained = enemy.XPReward;
                 result.GoldGained = enemy.GoldReward;
+                
+                // Track para skill unlocks
+                TrackEnemyDefeated(player);
+                TrackCombatSurvived(player); // También trackea low_hp_combat si HP < 30%
+                if (player.ComboCount >= 5)
+                {
+                    TrackCombo(player, player.ComboCount);
+                }
                 
                 player.Gold += result.GoldGained;
                 player.TotalKills++;
@@ -458,6 +471,7 @@ namespace BotTelegram.RPG.Services
                 
                 result.EnemyDamage = Math.Max(1, finalDamage);
                 player.HP -= result.EnemyDamage;
+                TrackDamageTaken(player, result.EnemyDamage); // Track daño recibido para skills
                 
                 // Romper combo si recibe daño y no está defendiendo
                 if (player.ComboCount > 0 && defenseBonus == 0)
