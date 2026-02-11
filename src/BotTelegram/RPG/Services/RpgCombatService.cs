@@ -12,7 +12,7 @@ namespace BotTelegram.RPG.Services
             _rpgService = new RpgService();
         }
         
-        public CombatResult PlayerAttack(RpgPlayer player, RpgEnemy enemy)
+        public CombatResult PlayerAttack(RpgPlayer player, RpgEnemy enemy, bool useMagic = false)
         {
             var result = new CombatResult();
             player.CombatTurnCount++;
@@ -26,45 +26,74 @@ namespace BotTelegram.RPG.Services
                 return result;
             }
             
-            // Roll player attack
-            var attackRoll = RpgService.RollDice(20);
-            var hitChance = 10 + enemy.Defense;
+            // ═══════════════════════════════════════
+            // SISTEMA DE PROBABILIDADES FIJAS
+            // ═══════════════════════════════════════
             
-            result.PlayerRoll = attackRoll;
-            result.PlayerHit = attackRoll >= hitChance;
+            // 1. CALCULAR HIT CHANCE (probabilidad de golpear)
+            double baseHitChance = 85.0; // Base 85%
+            double accuracyBonus = (player.Accuracy - enemy.Evasion) * 0.5; // Cada punto de diferencia = 0.5%
+            double hitChance = Math.Clamp(baseHitChance + accuracyBonus, 10.0, 95.0); // Min 10%, Max 95%
+            
+            // Roll de probabilidad (0-100)
+            double hitRoll = _random.Next(0, 10000) / 100.0;
+            result.HitChancePercent = hitChance;
+            result.HitRoll = hitRoll;
+            result.PlayerHit = hitRoll <= hitChance;
             
             if (result.PlayerHit)
             {
                 // Incrementar combo
                 player.ComboCount++;
                 
-                // Calculate damage
-                var baseDamage = player.TotalAttack;
+                // 2. CALCULAR DAÑO BASE
+                int baseDamage;
+                int defenseValue;
                 
-                // Bonus de combo (5% por ataque consecutivo, máx 25%)
+                if (useMagic)
+                {
+                    baseDamage = player.MagicalAttack;
+                    defenseValue = enemy.MagicResistance;
+                    result.AttackType = AttackType.Magical;
+                }
+                else
+                {
+                    baseDamage = player.PhysicalAttack;
+                    defenseValue = enemy.PhysicalDefense;
+                    result.AttackType = AttackType.Physical;
+                }
+                
+                // 3. APLICAR VARIACIÓN DE DAÑO (90-110% del base)
+                var damageVariation = _random.Next(90, 111) / 100.0;
+                baseDamage = (int)(baseDamage * damageVariation);
+                
+                // 4. BONUS DE COMBO (5% por ataque, máx 25%)
                 if (player.ComboCount > 1)
                 {
                     var comboBonus = Math.Min(player.ComboCount - 1, 5) * 0.05;
-                    baseDamage = (int)(baseDamage * (1 + comboBonus));
-                    result.ComboBonus = (int)(baseDamage * comboBonus);
+                    var comboDamage = (int)(baseDamage * comboBonus);
+                    baseDamage += comboDamage;
+                    result.ComboBonus = comboDamage;
                 }
                 
-                // Bonus de empoderamiento
+                // 5. BONUS DE EMPODERAMIENTO
                 var empowerEffect = player.StatusEffects.FirstOrDefault(e => e.Type == StatusEffectType.Empowered);
                 if (empowerEffect != null)
                 {
                     baseDamage += empowerEffect.Intensity;
                 }
                 
-                var damageRoll = _random.Next((int)(baseDamage * 0.8), (int)(baseDamage * 1.2));
+                // 6. CALCULAR CRITICAL HIT
+                double critRoll = _random.Next(0, 10000) / 100.0;
+                result.CriticalChancePercent = player.CriticalChance;
+                result.CriticalRoll = critRoll;
+                result.PlayerCritical = critRoll <= player.CriticalChance;
                 
-                // Critical hit (natural 20)
-                if (attackRoll == 20)
+                if (result.PlayerCritical)
                 {
-                    damageRoll = (int)(damageRoll * 1.5);
-                    result.PlayerCritical = true;
+                    baseDamage = (int)(baseDamage * 1.75); // Crítico = 175% daño
                     
-                    // Combo de 3+ con crítico = Sangrado
+                    // Combo x3+ con crítico = Sangrado
                     if (player.ComboCount >= 3)
                     {
                         enemy.StatusEffects.Add(new StatusEffect(StatusEffectType.Bleeding, 3, 5));
@@ -72,13 +101,22 @@ namespace BotTelegram.RPG.Services
                     }
                 }
                 
-                result.PlayerDamage = Math.Max(1, damageRoll - enemy.Defense / 2);
+                // 7. REDUCCIÓN POR DEFENSA (Defensa reduce % del daño)
+                // Fórmula: DamageReduction = Defense / (Defense + 100)
+                // Ejemplo: 50 def = 33% reducción, 100 def = 50% reducción
+                double damageReduction = defenseValue / (defenseValue + 100.0);
+                int finalDamage = (int)(baseDamage * (1.0 - damageReduction));
+                
+                result.PlayerDamage = Math.Max(1, finalDamage); // Mínimo 1 daño
+                result.DamageReduction = (int)(baseDamage * damageReduction);
                 enemy.HP -= result.PlayerDamage;
                 
+                var attackTypeEmoji = useMagic ? "🔮" : "⚔️";
+                var criticalText = result.PlayerCritical ? " [CRÍTICO!]" : "";
                 AddCombatLog(player, $"Atacar (Combo x{player.ComboCount})", 
-                    $"⚔️ {result.PlayerDamage} daño" + (result.PlayerCritical ? " [CRÍTICO]" : ""));
+                    $"{attackTypeEmoji} {result.PlayerDamage} daño{criticalText}");
                 
-                Console.WriteLine($"[Combat] 🗡️ {player.Name} ataca: dado={attackRoll}, daño={result.PlayerDamage}, combo={player.ComboCount}");
+                Console.WriteLine($"[Combat] {attackTypeEmoji} {player.Name} ataca: chance={hitChance:F1}%, roll={hitRoll:F1}%, daño={result.PlayerDamage}, combo={player.ComboCount}");
             }
             else
             {
@@ -90,7 +128,7 @@ namespace BotTelegram.RPG.Services
                 }
                 player.ComboCount = 0;
                 
-                Console.WriteLine($"[Combat] ❌ {player.Name} falla: dado={attackRoll} < {hitChance}");
+                Console.WriteLine($"[Combat] ❌ {player.Name} falla: chance={hitChance:F1}%, roll={hitRoll:F1}%");
             }
             
             // Check if enemy is dead
@@ -241,10 +279,24 @@ namespace BotTelegram.RPG.Services
             // Romper combo
             player.ComboCount = 0;
             
-            var fleeRoll = RpgService.RollDice(20);
-            var fleeDifficulty = 10 + (enemy.Level - player.Level) * 2;
+            // ═══ SISTEMA DE PROBABILIDADES PARA HUIR ═══
             
-            var success = fleeRoll + player.Dexterity >= fleeDifficulty;
+            // 1. CALCULAR PROBABILIDAD DE HUIDA
+            double baseFleeChance = 60.0; // Chance base
+            
+            // Bonus por DEX y Evasión (la agilidad ayuda a huir)
+            double agilityBonus = (player.Dexterity - 10) * 1.0; // +1% por cada punto de DEX sobre 10
+            double evasionBonus = player.Evasion * 0.5; // +0.5% por cada punto de Evasión
+            
+            // Penalización por diferencia de nivel
+            double levelPenalty = (enemy.Level - player.Level) * 5.0; // -5% por cada nivel del enemigo sobre el jugador
+            
+            double fleeChance = baseFleeChance + agilityBonus + evasionBonus - levelPenalty;
+            fleeChance = Math.Clamp(fleeChance, 10.0, 95.0); // Min 10%, Max 95%
+            
+            // 2. ROLL DE PROBABILIDAD (0-100)
+            double fleeRoll = _random.Next(0, 10000) / 100.0;
+            bool success = fleeRoll <= fleeChance;
             
             if (success)
             {
@@ -254,17 +306,20 @@ namespace BotTelegram.RPG.Services
                 player.CombatTurnCount = 0;
                 player.StatusEffects.Clear();
                 
-                AddCombatLog(player, "Huir", $"✅ Escapaste (dado: {fleeRoll})");
-                Console.WriteLine($"[Combat] 🏃 {player.Name} huyó exitosamente (dado: {fleeRoll})");
+                AddCombatLog(player, "Huir", $"✅ Escapaste (chance: {fleeChance:F1}%, roll: {fleeRoll:F1}%)");
+                Console.WriteLine($"[Combat] 🏃 {player.Name} huyó exitosamente (chance={fleeChance:F1}%, roll={fleeRoll:F1}%)");
             }
             else
             {
-                // Enemy gets a free attack
-                var damage = Math.Max(1, enemy.Attack - player.TotalDefense);
+                // Enemy gets a free attack (usa su ataque físico)
+                double damageReduction = player.PhysicalDefense / (player.PhysicalDefense + 100.0);
+                int damage = (int)(enemy.Attack * (1.0 - damageReduction));
+                damage = Math.Max(1, damage);
+                
                 player.HP -= damage;
                 
-                AddCombatLog(player, "Huir", $"❌ Fallo (dado: {fleeRoll}) - Recibiste {damage} daño");
-                Console.WriteLine($"[Combat] ❌ Fallo al huir (dado: {fleeRoll}). Recibe {damage} daño");
+                AddCombatLog(player, "Huir", $"❌ Fallo (chance: {fleeChance:F1}%, roll: {fleeRoll:F1}%) - Recibiste {damage} daño");
+                Console.WriteLine($"[Combat] ❌ Fallo al huir (chance={fleeChance:F1}%, roll={fleeRoll:F1}%). Recibe {damage} daño");
                 
                 if (player.HP <= 0)
                 {
@@ -363,45 +418,64 @@ namespace BotTelegram.RPG.Services
         // Método auxiliar: ataque enemigo
         private void PerformEnemyAttack(RpgPlayer player, RpgEnemy enemy, CombatResult result, int defenseBonus = 0)
         {
-            var enemyAttackRoll = RpgService.RollDice(20);
-            var enemyHitChance = 10 + player.TotalDefense + defenseBonus;
+            // SISTEMA DE PROBABILIDADES FIJAS para enemigo
+            double baseHitChance = 80.0; // Base 80% (enemigos un poco menos precisos)
+            double accuracyBonus = (enemy.Accuracy - player.Evasion) * 0.5;
+            double hitChance = Math.Clamp(baseHitChance + accuracyBonus, 10.0, 90.0);
             
-            result.EnemyRoll = enemyAttackRoll;
-            result.EnemyHit = enemyAttackRoll >= enemyHitChance;
+            double hitRoll = _random.Next(0, 10000) / 100.0;
+            result.EnemyHitChancePercent = hitChance;
+            result.EnemyHitRoll = hitRoll;
+            result.EnemyHit = hitRoll <= hitChance;
             
             if (result.EnemyHit)
             {
-                var enemyBaseDamage = enemy.Attack;
-                var enemyDamageRoll = _random.Next((int)(enemyBaseDamage * 0.8), (int)(enemyBaseDamage * 1.2));
+                // Daño base del enemigo
+                int baseDamage = enemy.Attack;
                 
-                // Enemy critical
-                if (enemyAttackRoll == 20)
+                // Variación (90-110%)
+                var damageVariation = _random.Next(90, 111) / 100.0;
+                baseDamage = (int)(baseDamage * damageVariation);
+                
+                // Crítico (probabilidad fija 10% para enemigos)
+                double critRoll = _random.Next(0, 10000) / 100.0;
+                result.EnemyCritical = critRoll <= 10.0;
+                
+                if (result.EnemyCritical)
                 {
-                    enemyDamageRoll = (int)(enemyDamageRoll * 1.5);
-                    result.EnemyCritical = true;
+                    baseDamage = (int)(baseDamage * 1.5);
                 }
                 
-                // Reducir daño si está defendiendo
-                var damageReduction = defenseBonus > 0 ? 2 : 1;
-                result.EnemyDamage = Math.Max(1, (enemyDamageRoll - player.TotalDefense - defenseBonus) / damageReduction);
+                // Defensa física del jugador
+                double damageReduction = (player.PhysicalDefense + defenseBonus) / (player.PhysicalDefense + defenseBonus + 100.0);
+                int finalDamage = (int)(baseDamage * (1.0 - damageReduction));
+                
+                // Reducir daño adicional si está defendiendo
+                if (defenseBonus > 0)
+                {
+                    finalDamage = finalDamage / 2;
+                }
+                
+                result.EnemyDamage = Math.Max(1, finalDamage);
                 player.HP -= result.EnemyDamage;
                 
-                // Romper combo del jugador si recibe daño
+                // Romper combo si recibe daño y no está defendiendo
                 if (player.ComboCount > 0 && defenseBonus == 0)
                 {
                     player.ComboCount = 0;
                     result.ComboBroken = true;
                 }
                 
+                var critText = result.EnemyCritical ? " [CRÍTICO!]" : "";
                 AddCombatLog(player, $"{enemy.Name} ataca", 
-                    $"⚔️ {result.EnemyDamage} daño" + (result.EnemyCritical ? " [CRÍTICO]" : ""));
+                    $"⚔️ {result.EnemyDamage} daño{critText}");
                 
-                Console.WriteLine($"[Combat] ⚔️ {enemy.Name} contraataca: dado={enemyAttackRoll}, daño={result.EnemyDamage}");
+                Console.WriteLine($"[Combat] ⚔️ {enemy.Name} contraataca: chance={hitChance:F1}%, roll={hitRoll:F1}%, daño={result.EnemyDamage}");
             }
             else
             {
                 AddCombatLog(player, $"{enemy.Name} ataca", "🛡️ Esquivado");
-                Console.WriteLine($"[Combat] 🛡️ {player.Name} esquiva: dado enemigo={enemyAttackRoll} < {enemyHitChance}");
+                Console.WriteLine($"[Combat] 🛡️ {player.Name} esquiva: chance={hitChance:F1}%, roll={hitRoll:F1}%");
             }
         }
         
@@ -448,17 +522,32 @@ namespace BotTelegram.RPG.Services
             }
             else if (result.PlayerHit)
             {
+                // Tipo de ataque
+                var attackEmoji = result.AttackType == AttackType.Magical ? "🔮" : "⚔️";
+                var attackType = result.AttackType == AttackType.Magical ? "Mágico" : "Físico";
+                
                 if (result.PlayerCritical)
                 {
-                    narrative += $"⚔️ **¡GOLPE CRÍTICO!**\n";
+                    narrative += $"✨ **¡GOLPE CRÍTICO {attackType.ToUpper()}!**\n";
                 }
                 else
                 {
-                    narrative += $"⚔️ *Atacas con precisión*\n";
+                    narrative += $"{attackEmoji} *Ataque {attackType} preciso*\n";
                 }
                 
-                narrative += $"🎲 Dado: {result.PlayerRoll}/20\n";
+                // Mostrar sistema de probabilidades
+                narrative += $"🎯 Probabilidad: {result.HitChancePercent:F1}% | Roll: {result.HitRoll:F1}%\n";
+                if (result.PlayerCritical)
+                {
+                    narrative += $"💫 Crítico: {result.CriticalChancePercent:F1}% | Roll: {result.CriticalRoll:F1}%\n";
+                }
+                
                 narrative += $"💥 Daño: {result.PlayerDamage}";
+                
+                if (result.DamageReduction > 0)
+                {
+                    narrative += $" (bloqueado: {result.DamageReduction})";
+                }
                 
                 if (result.ComboBonus > 0)
                 {
@@ -476,7 +565,7 @@ namespace BotTelegram.RPG.Services
             else
             {
                 narrative += $"❌ *Tu ataque falla*\n";
-                narrative += $"🎲 Dado: {result.PlayerRoll}/20 (necesitabas ≥{10 + enemy.Defense})\n";
+                narrative += $"🎯 Probabilidad: {result.HitChancePercent:F1}% | Roll: {result.HitRoll:F1}%\n";
                 if (result.ComboBroken)
                 {
                     narrative += "💔 *Combo roto*\n";
@@ -535,7 +624,7 @@ namespace BotTelegram.RPG.Services
                 {
                     narrative += $"⚔️ *{enemy.Name} contraataca*\n";
                 }
-                narrative += $"🎲 Dado: {result.EnemyRoll}/20\n";
+                narrative += $"🎯 Probabilidad: {result.EnemyHitChancePercent:F1}% | Roll: {result.EnemyHitRoll:F1}%\n";
                 narrative += $"🩸 Daño: {result.EnemyDamage}\n";
                 if (result.ComboBroken && !result.PlayerDefended)
                 {
@@ -546,12 +635,13 @@ namespace BotTelegram.RPG.Services
             else if (result.PlayerDefended && result.EnemyHit)
             {
                 narrative += $"🛡️ *Bloqueas parcialmente el ataque*\n";
+                narrative += $"🎯 Probabilidad: {result.EnemyHitChancePercent:F1}% | Roll: {result.EnemyHitRoll:F1}%\n";
                 narrative += $"🩸 Daño reducido: {result.EnemyDamage}\n\n";
             }
-            else if (!result.EnemyHit && result.EnemyRoll > 0)
+            else if (!result.EnemyHit && result.EnemyHitChancePercent > 0)
             {
                 narrative += $"🛡️ *¡Esquivas el ataque!*\n";
-                narrative += $"🎲 Dado enemigo: {result.EnemyRoll}/20\n\n";
+                narrative += $"🎯 Probabilidad enemiga: {result.EnemyHitChancePercent:F1}% | Roll: {result.EnemyHitRoll:F1}%\n\n";
             }
             
             // Combat status
@@ -631,18 +721,31 @@ namespace BotTelegram.RPG.Services
     
     public class CombatResult
     {
+        // Información del jugador
         public bool PlayerHit { get; set; }
         public bool PlayerCritical { get; set; }
         public int PlayerDamage { get; set; }
-        public int PlayerRoll { get; set; }
         public bool PlayerDefended { get; set; }
         public bool PlayerStunned { get; set; }
         
+        // Sistema de probabilidades (jugador)
+        public double HitChancePercent { get; set; }
+        public double HitRoll { get; set; }
+        public double CriticalChancePercent { get; set; }
+        public double CriticalRoll { get; set; }
+        public AttackType AttackType { get; set; } = AttackType.Physical;
+        public int DamageReduction { get; set; } // Daño absorbido por defensa
+        
+        // Información del enemigo
         public bool EnemyHit { get; set; }
         public bool EnemyCritical { get; set; }
         public int EnemyDamage { get; set; }
-        public int EnemyRoll { get; set; }
         
+        // Sistema de probabilidades (enemigo)
+        public double EnemyHitChancePercent { get; set; }
+        public double EnemyHitRoll { get; set; }
+        
+        // Resultado del combate
         public bool EnemyDefeated { get; set; }
         public bool PlayerDefeated { get; set; }
         
@@ -656,5 +759,18 @@ namespace BotTelegram.RPG.Services
         // Efectos de estado
         public StatusEffectType? InflictedEffect { get; set; }
         public int StatusDamage { get; set; }
+        
+        // Legacy (compatibilidad)
+        [Obsolete("Use HitChancePercent y HitRoll instead")]
+        public int PlayerRoll { get; set; }
+        
+        [Obsolete("Use EnemyHitChancePercent y EnemyHitRoll instead")]
+        public int EnemyRoll { get; set; }
+    }
+    
+    public enum AttackType
+    {
+        Physical,  // Usa defensa física
+        Magical    // Usa resistencia mágica
     }
 }

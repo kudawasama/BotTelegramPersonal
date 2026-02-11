@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace BotTelegram.RPG.Models
 {
     public class RpgEnemy
@@ -8,7 +10,11 @@ namespace BotTelegram.RPG.Models
         public int HP { get; set; } = 30;
         public int MaxHP { get; set; } = 30;
         public int Attack { get; set; } = 8;
-        public int Defense { get; set; } = 2;
+        public int MagicPower { get; set; } = 5;
+        public int PhysicalDefense { get; set; } = 2;
+        public int MagicResistance { get; set; } = 1;
+        public int Accuracy { get; set; } = 10;  // Precisión para golpear
+        public int Evasion { get; set; } = 5;    // Probabilidad de esquivar
         public int XPReward { get; set; } = 20;
         public int GoldReward { get; set; } = 15;
         public EnemyDifficulty Difficulty { get; set; } = EnemyDifficulty.Easy;
@@ -18,14 +24,20 @@ namespace BotTelegram.RPG.Models
         public bool CanPoison { get; set; } = false;
         public bool CanStun { get; set; } = false;
         public bool CanHeal { get; set; } = false;
-        public int MagicResistance { get; set; } = 0;
-        public int PhysicalResistance { get; set; } = 0;
         
         // Combat avanzado
         public List<StatusEffect> StatusEffects { get; set; } = new();
         
         // Loot drops (opcional)
         public List<RpgItem>? PossibleLoot { get; set; }
+        
+        // Legacy property (compatibilidad)
+        [JsonIgnore]
+        public int Defense
+        {
+            get => PhysicalDefense;
+            set => PhysicalDefense = value;
+        }
     }
     
     public enum EnemyDifficulty

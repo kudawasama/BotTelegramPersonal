@@ -13,6 +13,7 @@ namespace BotTelegram.RPG.Models
         // Stats (para armas/armadura)
         public int AttackBonus { get; set; } = 0;
         public int DefenseBonus { get; set; } = 0;
+        public int MagicResistanceBonus { get; set; } = 0;
         public int HPBonus { get; set; } = 0;
         public int ManaBonus { get; set; } = 0;
         public int MagicBonus { get; set; } = 0;
@@ -20,7 +21,7 @@ namespace BotTelegram.RPG.Models
         // Para consumibles
         public int HPRestore { get; set; } = 0;
         public int ManaRestore { get; set; } = 0;
-        public int EnergyRestore { get; set; } = 0;
+        public int StaminaRestore { get; set; } = 0;
         
         public ItemRarity Rarity { get; set; } = ItemRarity.Common;
         
