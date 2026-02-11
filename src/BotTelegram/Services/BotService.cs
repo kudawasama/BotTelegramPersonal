@@ -14,20 +14,29 @@ namespace BotTelegram.Services
         {
             Console.WriteLine($"   [BotService] Tipo de update: {update.Type}");
 
-            if (update.Type != UpdateType.Message)
+            // Procesar mensajes
+            if (update.Type == UpdateType.Message)
             {
-                Console.WriteLine($"   [BotService] Update ignorado (no es Message)");
+                if (update.Message!.Text == null)
+                {
+                    Console.WriteLine($"   [BotService] Message sin texto");
+                    return;
+                }
+
+                Console.WriteLine($"   [BotService] Enviando a MessageHandler: {update.Message.Text}");
+                await MessageHandler.Handle(bot, update.Message, ct);
                 return;
             }
 
-            if (update.Message!.Text == null)
+            // Procesar callbacks de botones inline
+            if (update.Type == UpdateType.CallbackQuery)
             {
-                Console.WriteLine($"   [BotService] Message sin texto");
+                Console.WriteLine($"   [BotService] Enviando a CallbackQueryHandler: {update.CallbackQuery!.Data}");
+                await CallbackQueryHandler.Handle(bot, update.CallbackQuery!, ct);
                 return;
             }
 
-            Console.WriteLine($"   [BotService] Enviando a MessageHandler: {update.Message.Text}");
-            await MessageHandler.Handle(bot, update.Message, ct);
+            Console.WriteLine($"   [BotService] Update ignorado (tipo no soportado)");
         }
     }
 }
