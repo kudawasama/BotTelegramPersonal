@@ -1332,6 +1332,50 @@ Si quieres que olvide el contexto anterior:
             
             Console.WriteLine($"[RPG] Callback: {data}");
             
+            // Helper: Generate combat menu
+            var GetCombatKeyboard = () => new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+            {
+                // Fila 1: Ataques básicos
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Físico", "rpg_combat_physical"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔮 Mágico", "rpg_combat_magic")
+                },
+                // Fila 2: Ataques especiales
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💨 Envestida", "rpg_combat_charge"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎯 Preciso", "rpg_combat_precise"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💥 Pesado", "rpg_combat_heavy")
+                },
+                // Fila 3: Defensas
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🛡️ Bloquear", "rpg_combat_block"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🌀 Esquivar", "rpg_combat_dodge"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💫 Contraatacar", "rpg_combat_counter")
+                },
+                // Fila 4: Movimiento
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🦘 Saltar", "rpg_combat_jump"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏃 Retroceder", "rpg_combat_retreat"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚡ Avanzar", "rpg_combat_advance")
+                },
+                // Fila 5: Especiales
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧘 Meditar", "rpg_combat_meditate"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("👁️ Observar", "rpg_combat_observe"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⏸️ Esperar", "rpg_combat_wait")
+                },
+                // Fila 6: Huir
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏃💨 Huir", "rpg_combat_flee")
+                }
+            });
+            
             // Main menu
             if (data == "rpg_main")
             {
@@ -1500,24 +1544,14 @@ Si quieres que olvide el contexto anterior:
                     chatId,
                     $"⚔️ **¡COMBATE!**\n\n" +
                     $"Mientras exploras, te encuentras con:\n\n" +
-                    $"{enemy.Emoji} **{enemy.Name}** (Nv.{enemy.Level})\n" +
+                    $"{enemy.Emoji} **{enemy.Name}** (Nv.{enemy.Level}) - {enemy.Type}\n" +
                     $"❤️ {enemy.HP}/{enemy.MaxHP} HP\n" +
-                    $"⚔️ Ataque: {enemy.Attack}\n" +
-                    $"🛡️ Defensa: {enemy.Defense}\n\n" +
+                    $"⚔️ Ataque: {enemy.Attack} | 🔮 Magia: {enemy.MagicPower}\n" +
+                    $"🛡️ Def.Física: {enemy.PhysicalDefense} | 🌀 Def.Mágica: {enemy.MagicResistance}\n\n" +
+                    $"💡 _Usa 👁️Observar para ver debilidades_\n\n" +
                     $"¿Qué haces?",
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-                    {
-                        new[]
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Atacar", "rpg_combat_attack"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🛡️ Defender", "rpg_combat_defend")
-                        },
-                        new[]
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏃 Huir", "rpg_combat_flee")
-                        }
-                    }),
+                    replyMarkup: GetCombatKeyboard(),
                     cancellationToken: ct);
                 return;
             }
@@ -1741,6 +1775,588 @@ Si quieres que olvide el contexto anterior:
                             }),
                             cancellationToken: ct);
                     }
+                }
+                return;
+            }
+            
+            // ═══════════════════════════════════════════════════════════════
+            // NUEVOS HANDLERS DE COMBATE - ATAQUES
+            // ═══════════════════════════════════════════════════════════════
+            
+            // Combat - Physical Attack
+            if (data == "rpg_combat_physical")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⚔️ Ataque físico!", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.PlayerAttack(currentPlayer, enemy, useMagic: false);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.EnemyDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Continuar", "rpg_main") }
+                        }), cancellationToken: ct);
+                }
+                else if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**\n\nRegresaste a la taberna...",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // Combat - Magic Attack
+            if (data == "rpg_combat_magic")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                if (currentPlayer.Mana < 10)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Mana insuficiente (necesitas 10)", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🔮 Ataque mágico!", showAlert: false, cancellationToken: ct);
+                
+                currentPlayer.Mana -= 10;
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.PlayerAttack(currentPlayer, enemy, useMagic: true);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.EnemyDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Continuar", "rpg_main") }
+                        }), cancellationToken: ct);
+                }
+                else if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // Combat - Charge Attack
+            if (data == "rpg_combat_charge")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "💨 Envestida!", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.ChargeAttack(currentPlayer, enemy);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.EnemyDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Continuar", "rpg_main") }
+                        }), cancellationToken: ct);
+                }
+                else if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // Combat - Precise Attack
+            if (data == "rpg_combat_precise")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🎯 Ataque preciso!", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.PreciseAttack(currentPlayer, enemy);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.EnemyDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Continuar", "rpg_main") }
+                        }), cancellationToken: ct);
+                }
+                else if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // Combat - Heavy Attack
+            if (data == "rpg_combat_heavy")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "💥 Ataque pesado!", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.HeavyAttack(currentPlayer, enemy);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.EnemyDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Continuar", "rpg_main") }
+                        }), cancellationToken: ct);
+                }
+                else if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // ═══════════════════════════════════════════════════════════════
+            // HANDLERS DE COMBATE - DEFENSAS
+            // ═══════════════════════════════════════════════════════════════
+            
+            // Combat - Block (mantener compatibilidad con rpg_combat_defend)
+            if (data == "rpg_combat_block")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🛡️ Bloqueando!", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.PlayerDefend(currentPlayer, enemy);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // Combat - Dodge
+            if (data == "rpg_combat_dodge")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🌀 Esquivando!", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.DodgeAction(currentPlayer, enemy);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // Combat - Counter
+            if (data == "rpg_combat_counter")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "💫 Contraataque!", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.CounterAction(currentPlayer, enemy);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.EnemyDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Continuar", "rpg_main") }
+                        }), cancellationToken: ct);
+                }
+                else if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // ═══════════════════════════════════════════════════════════════
+            // HANDLERS DE COMBATE - MOVIMIENTOS
+            // ═══════════════════════════════════════════════════════════════
+            
+            // Combat - Jump
+            if (data == "rpg_combat_jump")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🦘 Saltando!", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.JumpAction(currentPlayer, enemy);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // Combat - Retreat
+            if (data == "rpg_combat_retreat")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🏃 Retrocediendo!", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.RetreatAction(currentPlayer, enemy);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // Combat - Advance
+            if (data == "rpg_combat_advance")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⚡ Avanzando!", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.AdvanceAction(currentPlayer, enemy);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // ═══════════════════════════════════════════════════════════════
+            // HANDLERS DE COMBATE - ACCIONES ESPECIALES
+            // ═══════════════════════════════════════════════════════════════
+            
+            // Combat - Meditate
+            if (data == "rpg_combat_meditate")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🧘 Meditando...", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.MeditateAction(currentPlayer, enemy);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // Combat - Observe
+            if (data == "rpg_combat_observe")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "👁️ Observando...", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.ObserveAction(currentPlayer, enemy);
+                
+                // Si hay info revelada, mostrarla primero
+                if (!string.IsNullOrEmpty(result.RevealedInfo))
+                {
+                    await bot.SendMessage(chatId, result.RevealedInfo, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, cancellationToken: ct);
+                }
+                
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // Combat - Wait
+            if (data == "rpg_combat_wait")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⏸️ Esperando...", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.WaitAction(currentPlayer, enemy);
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                if (result.PlayerDefeated)
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n💀 **Game Over**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main") }
+                        }), cancellationToken: ct);
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                }
+                else
+                {
+                    await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }

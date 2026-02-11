@@ -309,13 +309,17 @@ Bienvenido, **{playerName}**. Elige tu camino:
         
         private string GetXPBar(RpgPlayer player)
         {
-            var percentage = (double)player.XP / player.XPNeeded;
+            // Asegurar que XP no sea negativo para la barra
+            var currentXP = Math.Max(0, player.XP);
+            var percentage = (double)currentXP / player.XPNeeded;
+            percentage = Math.Clamp(percentage, 0.0, 1.0);
+            
             var barLength = 10;
             var filled = (int)(percentage * barLength);
-            var empty = barLength - filled;
+            var empty = Math.Max(0, barLength - filled);
             
             var bar = "⭐ " + new string('█', filled) + new string('░', empty);
-            return $"{bar} {player.XP}/{player.XPNeeded} XP";
+            return $"{bar} {currentXP}/{player.XPNeeded} XP";
         }
         
         private string GetTimeAgo(DateTime time)

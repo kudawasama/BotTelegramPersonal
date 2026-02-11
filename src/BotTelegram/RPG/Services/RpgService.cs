@@ -460,8 +460,11 @@ namespace BotTelegram.RPG.Services
         
         private void LevelUp(RpgPlayer player)
         {
+            // Guardar XP necesario ANTES de incrementar nivel
+            var xpNeeded = player.XPNeeded;
+            
             player.Level++;
-            player.XP -= player.XPNeeded;
+            player.XP -= xpNeeded; // Usar el valor guardado
             
             // Stat increases
             player.MaxHP += 10;
@@ -472,6 +475,9 @@ namespace BotTelegram.RPG.Services
             player.Strength += 2;
             player.Intelligence += 2;
             player.Dexterity += 2;
+            player.Constitution += 2;
+            player.Wisdom += 1;
+            player.Charisma += 1;
             
             Console.WriteLine($"[RpgService] 🎉 ¡{player.Name} subió a nivel {player.Level}!");
         }
@@ -504,7 +510,15 @@ namespace BotTelegram.RPG.Services
         // Enemy Generation
         public RpgEnemy GenerateEnemy(int playerLevel, EnemyDifficulty difficulty)
         {
-            var enemies = GetEnemyPool(difficulty);
+            var enemies = difficulty switch
+            {
+                EnemyDifficulty.Easy => Data.EnemyDatabase.GetEasyEnemies(),
+                EnemyDifficulty.Medium => Data.EnemyDatabase.GetMediumEnemies(),
+                EnemyDifficulty.Hard => Data.EnemyDatabase.GetHardEnemies(),
+                EnemyDifficulty.Boss => Data.EnemyDatabase.GetBossEnemies(),
+                _ => Data.EnemyDatabase.GetEasyEnemies()
+            };
+            
             var template = enemies[_random.Next(enemies.Count)];
             
             // Scale to player level
@@ -513,53 +527,13 @@ namespace BotTelegram.RPG.Services
                 EnemyDifficulty.Easy => -1,
                 EnemyDifficulty.Medium => 0,
                 EnemyDifficulty.Hard => 1,
-                EnemyDifficulty.Boss => 2,
+                EnemyDifficulty.Elite => 2,
+                EnemyDifficulty.Boss => 3,
                 _ => 0
             };
             
-            var enemyLevel = Math.Max(1, playerLevel + levelDiff);
-            
-            return new RpgEnemy
-            {
-                Name = template.Name,
-                Emoji = template.Emoji,
-                Level = enemyLevel,
-                HP = template.HP + (enemyLevel - 1) * 10,
-                MaxHP = template.MaxHP + (enemyLevel - 1) * 10,
-                Attack = template.Attack + (enemyLevel - 1) * 2,
-                Defense = template.Defense + (enemyLevel - 1) * 1,
-                XPReward = template.XPReward + (enemyLevel - 1) * 10,
-                GoldReward = template.GoldReward + (enemyLevel - 1) * 5,
-                Difficulty = difficulty
-            };
+            return Data.EnemyDatabase.ScaleEnemy(template, playerLevel, levelDiff);
         }
-        
-        private List<RpgEnemy> GetEnemyPool(EnemyDifficulty difficulty)
-        {
-            return difficulty switch
-            {
-                EnemyDifficulty.Easy => new List<RpgEnemy>
-                {
-                    new() { Name = "Lobo Salvaje", Emoji = "🐺", HP = 30, MaxHP = 30, Attack = 8, Defense = 2, XPReward = 20, GoldReward = 15 },
-                    new() { Name = "Goblin", Emoji = "👺", HP = 25, MaxHP = 25, Attack = 6, Defense = 3, XPReward = 15, GoldReward = 20 },
-                    new() { Name = "Esqueleto", Emoji = "💀", HP = 20, MaxHP = 20, Attack = 10, Defense = 1, XPReward = 18, GoldReward = 12 }
-                },
-                EnemyDifficulty.Medium => new List<RpgEnemy>
-                {
-                    new() { Name = "Orco Guerrero", Emoji = "👹", HP = 50, MaxHP = 50, Attack = 12, Defense = 4, XPReward = 40, GoldReward = 30 },
-                    new() { Name = "Araña Gigante", Emoji = "🕷️", HP = 40, MaxHP = 40, Attack = 10, Defense = 3, XPReward = 35, GoldReward = 25 },
-                    new() { Name = "Bandido", Emoji = "🏴‍☠️", HP = 45, MaxHP = 45, Attack = 14, Defense = 2, XPReward = 38, GoldReward = 40 }
-                },
-                EnemyDifficulty.Hard => new List<RpgEnemy>
-                {
-                    new() { Name = "Troll de Hielo", Emoji = "🧊", HP = 80, MaxHP = 80, Attack = 18, Defense = 6, XPReward = 70, GoldReward = 60 },
-                    new() { Name = "Demonio Menor", Emoji = "😈", HP = 70, MaxHP = 70, Attack = 20, Defense = 4, XPReward = 75, GoldReward = 55 },
-                    new() { Name = "Caballero Oscuro", Emoji = "⚔️", HP = 75, MaxHP = 75, Attack = 16, Defense = 8, XPReward = 65, GoldReward = 70 }
-                },
-                _ => new List<RpgEnemy>()
-            };
-        }
-        
         // Helper: Roll dice
         public static int RollDice(int sides = 20)
         {

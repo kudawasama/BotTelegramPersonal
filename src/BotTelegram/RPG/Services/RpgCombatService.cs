@@ -2,7 +2,7 @@ using BotTelegram.RPG.Models;
 
 namespace BotTelegram.RPG.Services
 {
-    public class RpgCombatService
+    public partial class RpgCombatService
     {
         private readonly RpgService _rpgService;
         private static readonly Random _random = new();
@@ -735,6 +735,12 @@ namespace BotTelegram.RPG.Services
         public double CriticalRoll { get; set; }
         public AttackType AttackType { get; set; } = AttackType.Physical;
         public int DamageReduction { get; set; } // Daño absorbido por defensa
+        
+        // Nuevas propiedades de acciones avanzadas
+        public bool Dodged { get; set; }
+        public bool Blocked { get; set; }
+        public bool Countered { get; set; }
+        public string? RevealedInfo { get; set; }
         
         // Información del enemigo
         public bool EnemyHit { get; set; }
