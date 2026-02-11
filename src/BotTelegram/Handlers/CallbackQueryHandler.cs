@@ -1196,6 +1196,9 @@ Si quieres que olvide el contexto anterior:
             // New game
             if (data == "rpg_new_game")
             {
+                // Activar estado de espera de nombre
+                BotTelegram.RPG.Services.RpgService.SetAwaitingName(chatId, true);
+                
                 await bot.EditMessageText(
                     chatId,
                     messageId,
@@ -1207,12 +1210,18 @@ Si quieres que olvide el contexto anterior:
                     {
                         new[]
                         {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_cancel_creation")
                         }
                     }),
                     cancellationToken: ct);
-                    
-                // TODO: Implement name input handler
+                return;
+            }
+            
+            // Cancelar creación
+            if (data == "rpg_cancel_creation")
+            {
+                BotTelegram.RPG.Services.RpgService.SetAwaitingName(chatId, false);
+                await rpgCommand.Execute(bot, callbackQuery.Message!, ct);
                 return;
             }
             

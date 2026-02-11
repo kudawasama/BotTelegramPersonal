@@ -9,6 +9,29 @@ namespace BotTelegram.RPG.Services
         private static readonly object _fileLock = new();
         private static readonly Random _random = new();
         
+        // Sistema de estados para creación de personajes
+        private static readonly HashSet<long> _awaitingName = new();
+        private static readonly object _stateLock = new();
+        
+        public static void SetAwaitingName(long chatId, bool awaiting)
+        {
+            lock (_stateLock)
+            {
+                if (awaiting)
+                    _awaitingName.Add(chatId);
+                else
+                    _awaitingName.Remove(chatId);
+            }
+        }
+        
+        public static bool IsAwaitingName(long chatId)
+        {
+            lock (_stateLock)
+            {
+                return _awaitingName.Contains(chatId);
+            }
+        }
+        
         public RpgService()
         {
             var currentDir = Directory.GetCurrentDirectory();

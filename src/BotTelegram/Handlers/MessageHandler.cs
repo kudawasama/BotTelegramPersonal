@@ -2,6 +2,8 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using BotTelegram.Services;
+using BotTelegram.RPG.Services;
+using BotTelegram.RPG.Commands;
 
 namespace BotTelegram.Handlers
 {
@@ -20,6 +22,30 @@ namespace BotTelegram.Handlers
             }
 
             Console.WriteLine($"   [MessageHandler] Mensaje de ChatId {message.Chat.Id}: {message.Text}");
+
+            // Captura de nombre de personaje RPG
+            if (RpgService.IsAwaitingName(message.Chat.Id) && !message.Text.StartsWith("/"))
+            {
+                var name = message.Text.Trim();
+                
+                // Validar nombre
+                if (name.Length < 3 || name.Length > 20)
+                {
+                    await bot.SendMessage(
+                        message.Chat.Id,
+                        "❌ El nombre debe tener entre 3 y 20 caracteres. Intenta de nuevo:",
+                        cancellationToken: ct);
+                    return;
+                }
+                
+                // Desactivar estado de espera
+                RpgService.SetAwaitingName(message.Chat.Id, false);
+                
+                // Mostrar selección de clase
+                var rpgCommand = new RpgCommand();
+                await rpgCommand.ShowClassSelection(bot, message.Chat.Id, name, ct);
+                return;
+            }
 
             if (AIService.IsChatMode(message.Chat.Id) && !message.Text.StartsWith("/"))
             {
