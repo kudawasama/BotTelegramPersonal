@@ -3,14 +3,18 @@ using Telegram.Bot;
 using BotTelegram.Services;
 
 var config = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
+    .AddJsonFile("appsettings.json", optional: true)
+    .AddEnvironmentVariables()
     .Build();
 
-var token = config["Telegram:Token"];
+// Intentar cargar desde variable de entorno primero (Replit Secrets)
+var token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN") 
+    ?? config["Telegram:Token"];
 
 if (string.IsNullOrEmpty(token))
 {
     Console.WriteLine("❌ Token NO encontrado");
+    Console.WriteLine("💡 Configura TELEGRAM_BOT_TOKEN en Secrets (Replit) o en appsettings.json");
     return;
 }
 
