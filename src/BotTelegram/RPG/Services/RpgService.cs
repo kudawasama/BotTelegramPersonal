@@ -512,11 +512,11 @@ namespace BotTelegram.RPG.Services
         {
             var enemies = difficulty switch
             {
-                EnemyDifficulty.Easy => Data.EnemyDatabase.GetEasyEnemies(),
-                EnemyDifficulty.Medium => Data.EnemyDatabase.GetMediumEnemies(),
-                EnemyDifficulty.Hard => Data.EnemyDatabase.GetHardEnemies(),
-                EnemyDifficulty.Boss => Data.EnemyDatabase.GetBossEnemies(),
-                _ => Data.EnemyDatabase.GetEasyEnemies()
+                EnemyDifficulty.Easy => EnemyDatabase.GetEasyEnemies(),
+                EnemyDifficulty.Medium => EnemyDatabase.GetMediumEnemies(),
+                EnemyDifficulty.Hard => EnemyDatabase.GetHardEnemies(),
+                EnemyDifficulty.Boss => EnemyDatabase.GetBossEnemies(),
+                _ => EnemyDatabase.GetEasyEnemies()
             };
             
             var template = enemies[_random.Next(enemies.Count)];
@@ -532,7 +532,7 @@ namespace BotTelegram.RPG.Services
                 _ => 0
             };
             
-            return Data.EnemyDatabase.ScaleEnemy(template, playerLevel, levelDiff);
+            return EnemyDatabase.ScaleEnemy(template, playerLevel, levelDiff);
         }
         // Helper: Roll dice
         public static int RollDice(int sides = 20)
