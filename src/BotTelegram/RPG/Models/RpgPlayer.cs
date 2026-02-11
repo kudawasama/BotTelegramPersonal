@@ -37,20 +37,33 @@ namespace BotTelegram.RPG.Models
         // Resources
         public int Gold { get; set; } = 50;
         public List<RpgItem> Inventory { get; set; } = new();
+        
+        // Legacy equipment (mantener RpgItem por compatibilidad)
         public RpgItem? EquippedWeapon { get; set; }
         public RpgItem? EquippedArmor { get; set; }
         public RpgItem? EquippedAccessory { get; set; }
         
         // ═══════════════════════════════════════
-        // HABILIDADES
+        // EQUIPMENT SYSTEM (Nuevo)
         // ═══════════════════════════════════════
-        public List<RpgSkill> Skills { get; set; } = new();
+        public RpgEquipment? EquippedWeaponNew { get; set; }
+        public RpgEquipment? EquippedArmorNew { get; set; }
+        public RpgEquipment? EquippedAccessoryNew { get; set; }
+        public List<RpgEquipment> EquipmentInventory { get; set; } = new();
         
-        [JsonIgnore]
-        public List<RpgSkill> AvailableSkills => Skills.Where(s => 
-            s.CurrentCooldown == 0 && 
-            s.ManaCost <= Mana && 
-            s.StaminaCost <= Stamina).ToList();
+        // ═══════════════════════════════════════
+        // ACTION COUNTERS (Sistema de progreso)
+        // ═══════════════════════════════════════
+        public Dictionary<string, int> ActionCounters { get; set; } = new();
+        
+        // ═══════════════════════════════════════
+        // SKILLS SYSTEM (Habilidades desbloqueables)
+        // ═══════════════════════════════════════
+        public List<string> UnlockedSkills { get; set; } = new(); // IDs de skills desbloqueadas
+        public Dictionary<string, int> SkillCooldowns { get; set; } = new(); // Cooldowns activos
+        
+        // Legacy skills (deprecado - usar UnlockedSkills)
+        public List<RpgSkill> Skills { get; set; } = new();
         
         // Progress
         public string CurrentLocation { get; set; } = "Taberna de Puerto Esperanza";
@@ -82,10 +95,64 @@ namespace BotTelegram.RPG.Models
         // ═══════════════════════════════════════
         
         /// <summary>
-        /// Ataque Físico = STR + (STR * bonuses de clase) + arma
+        /// Ataque Físico = Base STR + Equipment Bonuses + Class Bonuses
         /// </summary>
         [JsonIgnore]
         public int PhysicalAttack => GetPhysicalAttack();
+        
+        /// <summary>
+        /// STR Activo = Base + Equipment
+        /// </summary>
+        [JsonIgnore]
+        public int ActiveStrength => Strength + 
+            (EquippedWeaponNew?.BonusStrength ?? 0) + 
+            (EquippedArmorNew?.BonusStrength ?? 0) + 
+            (EquippedAccessoryNew?.BonusStrength ?? 0);
+        
+        /// <summary>
+        /// INT Activo = Base + Equipment
+        /// </summary>
+        [JsonIgnore]
+        public int ActiveIntelligence => Intelligence + 
+            (EquippedWeaponNew?.BonusIntelligence ?? 0) + 
+            (EquippedArmorNew?.BonusIntelligence ?? 0) + 
+            (EquippedAccessoryNew?.BonusIntelligence ?? 0);
+        
+        /// <summary>
+        /// DEX Activo = Base + Equipment
+        /// </summary>
+        [JsonIgnore]
+        public int ActiveDexterity => Dexterity + 
+            (EquippedWeaponNew?.BonusDexterity ?? 0) + 
+            (EquippedArmorNew?.BonusDexterity ?? 0) + 
+            (EquippedAccessoryNew?.BonusDexterity ?? 0);
+        
+        /// <summary>
+        /// CON Activo = Base + Equipment
+        /// </summary>
+        [JsonIgnore]
+        public int ActiveConstitution => Constitution + 
+            (EquippedWeaponNew?.BonusConstitution ?? 0) + 
+            (EquippedArmorNew?.BonusConstitution ?? 0) + 
+            (EquippedAccessoryNew?.BonusConstitution ?? 0);
+        
+        /// <summary>
+        /// WIS Activo = Base + Equipment
+        /// </summary>
+        [JsonIgnore]
+        public int ActiveWisdom => Wisdom + 
+            (EquippedWeaponNew?.BonusWisdom ?? 0) + 
+            (EquippedArmorNew?.BonusWisdom ?? 0) + 
+            (EquippedAccessoryNew?.BonusWisdom ?? 0);
+        
+        /// <summary>
+        /// CHA Activo = Base + Equipment
+        /// </summary>
+        [JsonIgnore]
+        public int ActiveCharisma => Charisma + 
+            (EquippedWeaponNew?.BonusCharisma ?? 0) + 
+            (EquippedArmorNew?.BonusCharisma ?? 0) + 
+            (EquippedAccessoryNew?.BonusCharisma ?? 0);
         
         /// <summary>
         /// Ataque Mágico = INT + (INT * bonuses de clase) + arma mágica
@@ -176,7 +243,8 @@ namespace BotTelegram.RPG.Models
         
         private int GetPhysicalAttack()
         {
-            var baseAttack = Strength;
+            // Usar STR activo (con bonos de equipo)
+            var baseAttack = ActiveStrength;
             
             // Scaling por clase (multiplicador de STR)
             var classMultiplier = Class switch
@@ -193,16 +261,19 @@ namespace BotTelegram.RPG.Models
             
             baseAttack = (int)(baseAttack * classMultiplier);
             
-            // Bonus de nivel
-            baseAttack += Level / 2;
+            // Bonus de nivel (reducido para aumentar dificultad)
+            baseAttack += Level / 3;
             
-            // Bonus de equipamiento
-            return baseAttack + (EquippedWeapon?.AttackBonus ?? 0);
+            // Bonus directo de arma (nuevo sistema prioritario, fallback a legacy)
+            baseAttack += (EquippedWeaponNew?.BonusAttack ?? EquippedWeapon?.AttackBonus ?? 0);
+            
+            return baseAttack;
         }
         
         private int GetMagicalAttack()
         {
-            var baseAttack = Intelligence;
+            // Usar INT activo (con bonos de equipo)
+            var baseAttack = ActiveIntelligence;
             
             // Scaling por clase (multiplicador de INT)
             var classMultiplier = Class switch
@@ -219,37 +290,41 @@ namespace BotTelegram.RPG.Models
             
             baseAttack = (int)(baseAttack * classMultiplier);
             
-            // Bonus de nivel
-            baseAttack += Level / 2;
+            // Bonus de nivel (reducido para aumentar dificultad)
+            baseAttack += Level / 3;
             
-            // Bonus de equipamiento magic
-            return baseAttack + (EquippedWeapon?.MagicBonus ?? 0);
+            // Bonus directo de magia (nuevo sistema prioritario, fallback a legacy)
+            baseAttack += (EquippedWeaponNew?.BonusMagicPower ?? EquippedWeapon?.MagicBonus ?? 0);
+            
+            return baseAttack;
         }
         
         private int GetPhysicalDefense()
         {
-            var baseDefense = Constitution + (Dexterity / 2);
+            var baseDefense = ActiveConstitution + (ActiveDexterity / 2);
             
             // Scaling por clase
             var classBonus = Class switch
             {
                 CharacterClass.Paladin => Level,
                 CharacterClass.Warrior => Level / 2,
-                CharacterClass.Monk => Wisdom / 2,
+                CharacterClass.Monk => ActiveWisdom / 2,
                 _ => 0
             };
             
             baseDefense += classBonus;
             
-            // Bonus de armadura y accesorios
-            return baseDefense + 
-                   (EquippedArmor?.DefenseBonus ?? 0) + 
-                   (EquippedAccessory?.DefenseBonus ?? 0);
+            // Bonus directo de equipamiento (nuevo sistema prioritario, fallback a legacy)
+            baseDefense += (EquippedWeaponNew?.BonusDefense ?? 0);
+            baseDefense += (EquippedArmorNew?.BonusDefense ?? EquippedArmor?.DefenseBonus ?? 0);
+            baseDefense += (EquippedAccessoryNew?.BonusDefense ?? EquippedAccessory?.DefenseBonus ?? 0);
+            
+            return baseDefense;
         }
         
         private int GetMagicResistance()
         {
-            var baseResist = Wisdom + (Intelligence / 3);
+            var baseResist = ActiveWisdom + (ActiveIntelligence / 3);
             
             // Scaling por clase
             var classBonus = Class switch
@@ -263,14 +338,18 @@ namespace BotTelegram.RPG.Models
             
             baseResist += classBonus;
             
-            // Bonus de accesorios mágicos
-            return baseResist + (EquippedAccessory?.MagicResistanceBonus ?? 0);
+            // Bonus directo de equipamiento (nuevo sistema prioritario, fallback a legacy)
+            baseResist += (EquippedWeaponNew?.BonusMagicResistance ?? 0);
+            baseResist += (EquippedArmorNew?.BonusMagicResistance ?? 0);
+            baseResist += (EquippedAccessoryNew?.BonusMagicResistance ?? EquippedAccessory?.MagicResistanceBonus ?? 0);
+            
+            return baseResist;
         }
         
         private double GetCriticalChance()
         {
-            // Base: DEX/2 + CHA/3
-            var baseCrit = (Dexterity / 2.0) + (Charisma / 3.0);
+            // Base: DEX/2 + CHA/3 (usando stats activos)
+            var baseCrit = (ActiveDexterity / 2.0) + (ActiveCharisma / 3.0);
             
             // Bonus de clase
             var classBonus = Class switch
@@ -282,15 +361,20 @@ namespace BotTelegram.RPG.Models
                 _ => 0.0
             };
             
+            // Bonus de equipamiento (solo nuevo sistema)
+            var equipBonus = (EquippedWeaponNew?.BonusCritChance ?? 0) + 
+                            (EquippedArmorNew?.BonusCritChance ?? 0) + 
+                            (EquippedAccessoryNew?.BonusCritChance ?? 0);
+            
             // Caps: 5% min, 80% max
-            var total = baseCrit + classBonus + (Level * 0.5);
+            var total = baseCrit + classBonus + (Level * 0.5) + equipBonus;
             return Math.Clamp(total, 5.0, 80.0);
         }
         
         private double GetEvasion()
         {
-            // Base: DEX + Level/2
-            var baseEvasion = Dexterity + (Level / 2.0);
+            // Base: DEX + Level/2 (usando stats activos)
+            var baseEvasion = ActiveDexterity + (Level / 2.0);
             
             // Bonus de clase
             var classBonus = Class switch
@@ -302,8 +386,13 @@ namespace BotTelegram.RPG.Models
                 _ => 0.0
             };
             
+            // Bonus de equipamiento (solo nuevo sistema)
+            var equipBonus = (EquippedWeaponNew?.BonusEvasion ?? 0) + 
+                            (EquippedArmorNew?.BonusEvasion ?? 0) + 
+                            (EquippedAccessoryNew?.BonusEvasion ?? 0);
+            
             // Caps: 0% min, 70% max
-            var total = baseEvasion + classBonus;
+            var total = baseEvasion + classBonus + equipBonus;
             return Math.Clamp(total, 0.0, 70.0);
         }
     }
