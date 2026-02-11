@@ -34,6 +34,18 @@ namespace BotTelegram.Handlers
                 {
                     await HandleStartCallback(bot, chatId, messageId, ct);
                 }
+                else if (data == "menu_reminders")
+                {
+                    await HandleRemindersMenuCallback(bot, chatId, messageId, ct);
+                }
+                else if (data == "menu_ai")
+                {
+                    await HandleAIMenuCallback(bot, chatId, messageId, ct);
+                }
+                else if (data == "menu_info")
+                {
+                    await HandleInfoMenuCallback(bot, chatId, messageId, ct);
+                }
                 else if (data == "show_remember_help")
                 {
                     await HandleShowRememberHelpCallback(bot, chatId, messageId, ct);
@@ -190,23 +202,150 @@ namespace BotTelegram.Handlers
             {
                 new[]
                 {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⏰ Crear Recordatorio", "show_remember_help"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Ver Lista", "list")
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📅 RECORDATORIOS", "menu_reminders")
                 },
                 new[]
                 {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🕐 Atajos Rápidos", "quick_times"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("❓ Ayuda", "help")
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🤖 INTELIGENCIA ARTIFICIAL", "menu_ai")
+                },
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("ℹ️ AYUDA E INFORMACIÓN", "menu_info")
                 }
             });
 
             await bot.EditMessageText(
                 chatId,
                 messageId,
-                "👋 *¡Bienvenido al Bot de Recordatorios!*\n\n" +
-                "✨ Soy tu asistente personal para recordatorios.\n" +
-                "Nunca más olvidarás algo importante.\n\n" +
-                "🎯 *Elige una opción:*",
+                "👋 *¡Bienvenido al Bot Multifuncional!*\n\n" +
+                "✨ Tu asistente personal todo-en-uno:\n" +
+                "• Recordatorios inteligentes\n" +
+                "• Chat con IA avanzada\n" +
+                "• Juego RPG inmersivo\n\n" +
+                "🎯 *Selecciona una categoría:*",
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                replyMarkup: keyboard,
+                cancellationToken: ct);
+        }
+
+        private static async Task HandleRemindersMenuCallback(
+            ITelegramBotClient bot,
+            long chatId,
+            int messageId,
+            CancellationToken ct)
+        {
+            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⏰ Crear Recordatorio", "show_remember_help"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Ver Lista", "list")
+                },
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🕐 Atajos Rápidos", "quick_times"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("✏️ Gestionar", "help")
+                },
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
+                }
+            });
+
+            await bot.EditMessageText(
+                chatId,
+                messageId,
+                "📅 *MENÚ DE RECORDATORIOS*\n\n" +
+                "Gestiona tus recordatorios de forma eficiente:\n\n" +
+                "⏰ *Crear* - Nuevo recordatorio\n" +
+                "📋 *Ver Lista* - Todos tus recordatorios\n" +
+                "🕐 *Atajos Rápidos* - Tiempos predefinidos\n" +
+                "✏️ *Gestionar* - Editar/Eliminar/Recurrencia\n\n" +
+                "💡 *Tip:* Usa `/remember <texto> en <tiempo>` desde cualquier momento",
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                replyMarkup: keyboard,
+                cancellationToken: ct);
+        }
+
+        private static async Task HandleAIMenuCallback(
+            ITelegramBotClient bot,
+            long chatId,
+            int messageId,
+            CancellationToken ct)
+        {
+            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💬 Chat con IA", "show_chat_help")
+                },
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Juego RPG", "rpg_main")
+                },
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
+                }
+            });
+
+            await bot.EditMessageText(
+                chatId,
+                messageId,
+                "🤖 *INTELIGENCIA ARTIFICIAL*\n\n" +
+                "Potenciado por Groq (Llama 3.1 8B):\n\n" +
+                "💬 *Chat con IA*\n" +
+                "   Conversaciones naturales e inteligentes\n" +
+                "   Rate limit: 10 consultas/minuto\n\n" +
+                "🎮 *Juego RPG - Leyenda del Void*\n" +
+                "   Aventura épica generada con IA\n" +
+                "   14 clases, combate por turnos, narrativas dinámicas\n\n" +
+                "⚡ *Características:*\n" +
+                "• Respuestas contextuales\n" +
+                "• Memoria de conversación\n" +
+                "• Generación de narrativas RPG",
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                replyMarkup: keyboard,
+                cancellationToken: ct);
+        }
+
+        private static async Task HandleInfoMenuCallback(
+            ITelegramBotClient bot,
+            long chatId,
+            int messageId,
+            CancellationToken ct)
+        {
+            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("❓ Ayuda", "help"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📚 FAQ", "faq_menu")
+                },
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
+                }
+            });
+
+            await bot.EditMessageText(
+                chatId,
+                messageId,
+                "ℹ️ *AYUDA E INFORMACIÓN*\n\n" +
+                "Todo lo que necesitas saber:\n\n" +
+                "❓ *Ayuda*\n" +
+                "   Guía de comandos y uso básico\n\n" +
+                "📚 *FAQ / Manual*\n" +
+                "   Preguntas frecuentes\n" +
+                "   Ejemplos detallados\n" +
+                "   Solución de problemas\n\n" +
+                "💡 *Comandos disponibles:*\n" +
+                "`/start` - Menú principal\n" +
+                "`/help` - Ayuda rápida\n" +
+                "`/remember` - Crear recordatorio\n" +
+                "`/list` - Ver recordatorios\n" +
+                "`/chat` - IA conversacional\n" +
+                "`/rpg` - Juego RPG",
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
                 cancellationToken: ct);
@@ -1636,6 +1775,256 @@ Si quieres que olvide el contexto anterior:
                     
                 await bot.DeleteMessage(chatId, messageId, ct);
                 await rpgCommand.ShowMainMenu(bot, chatId, currentPlayer, ct);
+                return;
+            }
+            
+            // Lore (Historia del juego)
+            if (data == "rpg_lore")
+            {
+                var loreText = @"📖 **LEYENDA DEL VOID**
+
+*La Historia de Valentia*
+
+Hace milenios, el reino de Valentia era un paraíso de paz y prosperidad. Magos y guerreros vivían en armonía, protegidos por las antiguas defensas de los Primigenios.
+
+Pero todo cambió cuando *el Void* se abrió...
+
+🌑 **El Void**
+Una grieta entre dimensiones que apareció sin previo aviso. De ella emergieron criaturas de pesadilla: sombras vivientes, bestias corrompidas, y horrores ancestrales.
+
+⚔️ **Tu Destino**
+Los héroes de antaño cayeron uno por uno. Ahora, eres la última esperanza de Valentia. Debes ganar fuerza, explorar tierras olvidadas, y enfrentar las fuerzas del Void antes de que consuman todo.
+
+🔮 **La Profecía**
+*'Cuando la oscuridad amenace con devorar la luz, un héroe surgirá de entre las sombras. Solo aquel que domine las cuatro artes podrá sellar el Void y restaurar el equilibrio.'*
+
+📍 **Tu Aventura Comienza**
+En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará...";
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    loreText,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Comenzar Aventura", "rpg_main"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("❓ Cómo Jugar", "rpg_tutorial")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Tutorial
+            if (data == "rpg_tutorial")
+            {
+                var tutorialText = @"❓ **CÓMO JUGAR - GUÍA RÁPIDA**
+
+**🎮 CONCEPTOS BÁSICOS**
+
+*Stats Principales:*
+• ❤️ HP - Puntos de vida
+• ⚡ Energía - Para acciones
+• ⭐ XP - Experiencia (sube de nivel)
+• 💰 Oro - Moneda del juego
+
+*Acciones Principales:*
+⚔️ **Explorar** - Busca enemigos (15 energía)
+🛡️ **Entrenar** - Gana XP (20 energía)
+😴 **Descansar** - Recupera HP y energía
+💼 **Trabajar** - Gana oro (10 energía)
+
+**⚔️ COMBATE**
+
+🎲 Sistema d20 (como D&D):
+• Ataque: d20 + tu ataque vs defensa enemiga
+• Crítico: 20 en el dado (×2 daño)
+• Crítico fallido: 1 en el dado
+
+*Opciones en combate:*
+⚔️ Atacar - Daño normal
+🛡️ Defender - Reduce daño recibido
+🏃 Huir - 75% probabilidad de éxito
+
+**📈 PROGRESIÓN**
+
+*Sistema de Clases (14 clases):*
+• Tier 1 (Lv.1): Warrior, Mage, Rogue, Cleric
+• Tier 2 (Lv.10+): Evoluciones intermedias
+• Tier 3 (Lv.20+): Clases avanzadas
+• Tier 4 (Lv.30+): Clases maestras
+
+💡 *Tip: Descansa regularmente para mantener HP/energía altos*";
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    tutorialText,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Jugar Ahora", "rpg_main"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📖 Lore", "rpg_lore")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Options (Configuración)
+            if (data == "rpg_options")
+            {
+                var player = rpgService.GetPlayer(chatId);
+                if (player == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Primero crea un personaje", cancellationToken: ct);
+                    return;
+                }
+                
+                var optionsText = $@"⚙️ **OPCIONES DE PERSONAJE**
+
+👤 **{player.Name}** - {player.Class} Nv.{player.Level}
+📊 Stats totales: {player.Strength + player.Intelligence + player.Dexterity + player.Constitution + player.Wisdom + player.Charisma}
+
+**Información del Personaje:**
+• Creado: {player.CreatedAt:dd/MM/yyyy HH:mm}
+• Ubicación: {player.CurrentLocation}
+• Enemigos derrotados: {player.Level * 2}
+• Tiempo jugado: {(DateTime.UtcNow - player.CreatedAt).TotalHours:F1}h
+
+**⚠️ ACCIONES:**
+🗑️ *Borrar Personaje* - Empieza de nuevo
+📊 *Ver Stats Completos* - Detalles de atributos
+
+💡 *Nota: El borrado es permanente*";
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    optionsText,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗑️ Borrar Personaje", "rpg_confirm_delete")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver al Juego", "rpg_main")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Confirm delete character
+            if (data == "rpg_confirm_delete")
+            {
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    "⚠️ **¿BORRAR PERSONAJE?**\n\n" +
+                    "Esta acción es **PERMANENTE**.\n" +
+                    "Perderás todo tu progreso, items, y oro.\n\n" +
+                    "¿Estás completamente seguro?",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("✅ SÍ, BORRAR TODO", "rpg_delete_confirmed")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("❌ Cancelar", "rpg_options")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Delete confirmed
+            if (data == "rpg_delete_confirmed")
+            {
+                rpgService.DeletePlayer(chatId);
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    "🗑️ **Personaje Borrado**\n\n" +
+                    "Tu aventura ha terminado.\n" +
+                    "Puedes crear un nuevo personaje cuando quieras.\n\n" +
+                    "✨ *Adiós, héroe...*",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Nueva Aventura", "rpg_main")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // AI Chat integration with RPG
+            if (data == "rpg_ai_chat")
+            {
+                var player = rpgService.GetPlayer(chatId);
+                if (player == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Primero crea un personaje", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    $"💬 **CHAT CON IA - MODO RPG**\n\n" +
+                    $"Chatea con la IA sobre tu aventura:\n\n" +
+                    $"👤 {player.Name} ({player.Class} Nv.{player.Level})\n" +
+                    $"📍 {player.CurrentLocation}\n\n" +
+                    $"✨ *La IA conoce tu personaje y puede:*\n" +
+                    $"• Narrar tus aventuras\n" +
+                    $"• Darte consejos de estrategia\n" +
+                    $"• Crear historias personalizadas\n" +
+                    $"• Describir el mundo de Valentia\n\n" +
+                    $"💡 Usa `/chat <mensaje>` para hablar con la IA",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💬 Iniciar Chat", "show_chat_help")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver al Juego", "rpg_main")
+                        }
+                    }),
+                    cancellationToken: ct);
                 return;
             }
             

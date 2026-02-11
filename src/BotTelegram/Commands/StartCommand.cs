@@ -15,36 +15,31 @@ namespace BotTelegram.Commands
         {
             Console.WriteLine($"   [StartCommand] Enviando mensaje de bienvenida");
             
-            // Crear menú principal con acciones
+            // Menú principal reorganizado por categorías
             var keyboard = new InlineKeyboardMarkup(new[]
             {
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("⏰ Crear Recordatorio", "show_remember_help"),
-                    InlineKeyboardButton.WithCallbackData("📋 Ver Lista", "list")
+                    InlineKeyboardButton.WithCallbackData("📅 RECORDATORIOS", "menu_reminders")
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("🕐 Atajos Rápidos", "quick_times"),
-                    InlineKeyboardButton.WithCallbackData("❓ Ayuda", "help")
+                    InlineKeyboardButton.WithCallbackData("🤖 INTELIGENCIA ARTIFICIAL", "menu_ai")
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("🤖 Chatear con IA", "show_chat_help"),
-                    InlineKeyboardButton.WithCallbackData("📚 FAQ / Manual", "faq_menu")
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("🎮 Juego RPG", "rpg_main")
+                    InlineKeyboardButton.WithCallbackData("ℹ️ AYUDA E INFORMACIÓN", "menu_info")
                 }
             });
 
             await client.SendMessage(
                 chatId: message.Chat.Id,
-                text: "👋 *¡Bienvenido al Bot de Recordatorios!*\n\n" +
-                      "✨ Soy tu asistente personal para recordatorios.\n" +
-                      "Nunca más olvidarás algo importante.\n\n" +
-                      "🎯 *Elige una opción:*",
+                text: "👋 *¡Bienvenido al Bot Multifuncional!*\n\n" +
+                      "✨ Tu asistente personal todo-en-uno:\n" +
+                      "• Recordatorios inteligentes\n" +
+                      "• Chat con IA avanzada\n" +
+                      "• Juego RPG inmersivo\n\n" +
+                      "🎯 *Selecciona una categoría:*",
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
                 cancellationToken: ct
