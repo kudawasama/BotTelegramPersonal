@@ -1470,15 +1470,92 @@ Si quieres que olvide el contexto anterior:
                 return;
             }
             
-            // Stats
+            // Stats (detailed)
             if (data == "rpg_stats")
             {
                 await bot.DeleteMessage(chatId, messageId, ct);
-                await rpgCommand.ShowStats(bot, chatId, currentPlayer, ct);
+                var statsCommand = new BotTelegram.RPG.Commands.RpgStatsCommand();
+                await statsCommand.Execute(bot, callbackQuery.Message, ct);
                 return;
             }
             
-            // Inventory
+            // Skills menu
+            if (data == "rpg_skills")
+            {
+                await bot.DeleteMessage(chatId, messageId, ct);
+                var skillsCommand = new BotTelegram.RPG.Commands.RpgSkillsCommand();
+                await skillsCommand.Execute(bot, callbackQuery.Message, ct);
+                return;
+            }
+            
+            // Counters menu
+            if (data == "rpg_counters")
+            {
+                await bot.DeleteMessage(chatId, messageId, ct);
+                var countersCommand = new BotTelegram.RPG.Commands.RpgCountersCommand();
+                await countersCommand.Execute(bot, callbackQuery.Message, ct);
+                return;
+            }
+            
+            // Equipment menu (placeholder for now)
+            if (data == "rpg_equipment")
+            {
+                var equipmentText = "🎒 **EQUIPMENT**\n\n";
+                
+                if (currentPlayer.EquipmentInventory == null || !currentPlayer.EquipmentInventory.Any())
+                {
+                    equipmentText += "❌ No tienes equipment en tu inventario.\n\n";
+                    equipmentText += "💡 Derrota enemigos para obtener loot o compra equipment en la tienda.\n";
+                }
+                else
+                {
+                    equipmentText += $"📦 **Inventario** ({currentPlayer.EquipmentInventory.Count} items)\n\n";
+                    
+                    foreach (var equip in currentPlayer.EquipmentInventory.Take(10))
+                    {
+                        equipmentText += $"{equip.TypeEmoji} **{equip.Name}** {equip.RarityEmoji}\n";
+                        equipmentText += $"   Lv.{equip.RequiredLevel} | {equip.Type}\n";
+                        
+                        var bonuses = new List<string>();
+                        if (equip.BonusAttack > 0) bonuses.Add($"+{equip.BonusAttack} Atk");
+                        if (equip.BonusMagicPower > 0) bonuses.Add($"+{equip.BonusMagicPower} MP");
+                        if (equip.BonusDefense > 0) bonuses.Add($"+{equip.BonusDefense} Def");
+                        if (equip.BonusMagicResistance > 0) bonuses.Add($"+{equip.BonusMagicResistance} MR");
+                        
+                        if (bonuses.Any())
+                            equipmentText += $"   {string.Join(", ", bonuses)}\n";
+                        
+                        equipmentText += "\n";
+                    }
+                    
+                    if (currentPlayer.EquipmentInventory.Count > 10)
+                    {
+                        equipmentText += $"_...y {currentPlayer.EquipmentInventory.Count - 10} items más_\n\n";
+                    }
+                }
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    equipmentText,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_skills")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Inventory (legacy)
             if (data == "rpg_inventory")
             {
                 var inventoryText = "🎒 **INVENTARIO**\n\n";

@@ -129,7 +129,12 @@ Solo los más valientes pueden enfrentar este destino...
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("📊 Stats", "rpg_stats"),
-                    InlineKeyboardButton.WithCallbackData("🎒 Inventario", "rpg_inventory")
+                    InlineKeyboardButton.WithCallbackData("🎒 Equipment", "rpg_equipment")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_skills"),
+                    InlineKeyboardButton.WithCallbackData("📈 Counters", "rpg_counters")
                 },
                 new[]
                 {
