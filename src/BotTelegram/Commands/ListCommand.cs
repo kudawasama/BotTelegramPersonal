@@ -41,6 +41,9 @@ namespace BotTelegram.Commands
                 var sb = new StringBuilder();
                 sb.AppendLine("📋 *TUS RECORDATORIOS*\n");
 
+                // Crear lista de botones para los pendientes
+                var buttons = new List<List<InlineKeyboardButton>>();
+
                 if (pendientes.Any())
                 {
                     sb.AppendLine("⏰ *PENDIENTES:*");
@@ -53,6 +56,13 @@ namespace BotTelegram.Commands
                         sb.AppendLine($"• `{r.Id}` - {r.Text}");
                         sb.AppendLine($"  ⏰ {r.DueAt:dd/MM HH:mm} ({timeStr}){recurrenceStr}");
                         sb.AppendLine();
+
+                        // Agregar botones para cada recordatorio
+                        buttons.Add(new List<InlineKeyboardButton>
+                        {
+                            InlineKeyboardButton.WithCallbackData($"🗑️ {r.Id}", $"delete:{r.Id}"),
+                            InlineKeyboardButton.WithCallbackData($"🔄 Recurrente", $"recur:{r.Id}")
+                        });
                     }
                 }
                 else
@@ -75,10 +85,19 @@ namespace BotTelegram.Commands
                 sb.AppendLine("`/edit <id> <texto>` - Modificar");
                 sb.AppendLine("`/recur <id> <tipo>` - Recurrencia");
 
+                // Agregar botón de menú principal al final
+                buttons.Add(new List<InlineKeyboardButton>
+                {
+                    InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
+                });
+
+                var keyboard = new InlineKeyboardMarkup(buttons);
+
                 await bot.SendMessage(
                     message.Chat.Id,
                     sb.ToString(),
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
                     cancellationToken: ct);
 
                 Console.WriteLine("[ListCommand] ✅ Lista enviada");

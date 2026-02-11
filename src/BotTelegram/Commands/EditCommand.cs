@@ -1,5 +1,6 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using BotTelegram.Services;
 using BotTelegram.Models;
 using System.Text.RegularExpressions;
@@ -63,9 +64,20 @@ namespace BotTelegram.Commands
             _service.UpdateAll(reminders);
 
             var formattedTime = newDueAt.ToString("dd/MM/yyyy HH:mm");
+            
+            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Ver Lista", "list"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
+                }
+            });
+            
             await bot.SendMessage(
                 message.Chat.Id,
                 $"✅ Recordatorio actualizado:\n📝 {taskText}\n⏰ {formattedTime}",
+                replyMarkup: keyboard,
                 cancellationToken: ct);
 
             Console.WriteLine($"   [EditCommand] ✅ Recordatorio {reminderId} actualizado");

@@ -46,6 +46,10 @@ namespace BotTelegram.Commands
                 {
                     InlineKeyboardButton.WithCallbackData("✅ Sí, eliminar", $"confirm_delete:{input}"),
                     InlineKeyboardButton.WithCallbackData("❌ Cancelar", $"cancel_delete:{input}")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
                 }
             });
 

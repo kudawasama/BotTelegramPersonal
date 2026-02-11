@@ -280,6 +280,10 @@ namespace BotTelegram.Handlers
                 {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Ver Lista", "list"),
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("❓ Ayuda", "help")
+                },
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
                 }
             });
 
@@ -340,11 +344,19 @@ namespace BotTelegram.Handlers
 
             if (!reminders.Any())
             {
-                await bot.EditMessageText(chatId, messageId, "📭 No tienes recordatorios pendientes.", cancellationToken: ct);
+                var emptyKeyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
+                    }
+                });
+                await bot.SendMessage(chatId, "📭 No tienes recordatorios pendientes.", 
+                    replyMarkup: emptyKeyboard, cancellationToken: ct);
                 return;
             }
 
-            var text = "📝 Tus recordatorios:\n\n";
+            var text = "📝 *TUS RECORDATORIOS PENDIENTES*\n\n";
             var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
 
             foreach (var r in reminders)
@@ -355,15 +367,22 @@ namespace BotTelegram.Handlers
                 // Agregar botones para este recordatorio
                 buttons.Add(new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
                 {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🗑️ Eliminar {r.Id}", $"delete:{r.Id}"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🔄 Recurrencia", $"recur:{r.Id}")
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🗑️ {r.Id}", $"delete:{r.Id}"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🔄 Recurrente", $"recur:{r.Id}")
                 });
             }
 
+            // Agregar botón de menú al final
+            buttons.Add(new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+            {
+                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
+            });
+
             var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons);
-            await bot.EditMessageText(
+            
+            // Crear mensaje NUEVO en lugar de editar
+            await bot.SendMessage(
                 chatId, 
-                messageId, 
                 text, 
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
@@ -591,7 +610,7 @@ namespace BotTelegram.Handlers
                 new[]
                 {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Otros tiempos", "quick_times"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú", "start")
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
                 }
             });
 
