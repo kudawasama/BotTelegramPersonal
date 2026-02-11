@@ -11,6 +11,10 @@ namespace BotTelegram.Services
         private static readonly HashSet<long> _chatMode = new();
         private static readonly object _chatModeLock = new();
         
+        // RPG Context: conversaciones separadas para modo RPG
+        private static readonly Dictionary<long, List<ChatMessage>> _rpgConversations = new();
+        private static readonly HashSet<long> _rpgChatMode = new();
+        
         // Memory cleanup: tracking de última actividad por usuario
         private static readonly Dictionary<long, DateTime> _lastActivity = new();
         private static readonly Timer? _cleanupTimer;
@@ -96,6 +100,7 @@ namespace BotTelegram.Services
                 foreach (var chatId in toRemove)
                 {
                     _conversations.Remove(chatId);
+                    _rpgConversations.Remove(chatId);
                     _lastActivity.Remove(chatId);
                     _userRequests.Remove(chatId);
                     Console.WriteLine($"[AIService] 🧹 Cleanup: removido ChatId {chatId} (inactivo >1h)");
@@ -248,11 +253,169 @@ Formato de respuestas:
                 if (enabled)
                 {
                     _chatMode.Add(chatId);
+                    // Al activar chat normal, desactivar RPG mode
+                    _rpgChatMode.Remove(chatId);
+                    Console.WriteLine($"[AIService] 💬 Chat mode ACTIVADO para {chatId}");
                 }
                 else
                 {
                     _chatMode.Remove(chatId);
+                    Console.WriteLine($"[AIService] 💬 Chat mode DESACTIVADO para {chatId}");
                 }
+            }
+        }
+        
+        public static void SetRpgChatMode(long chatId, bool enabled)
+        {
+            lock (_chatModeLock)
+            {
+                if (enabled)
+                {
+                    _rpgChatMode.Add(chatId);
+                    // Al activar RPG mode, desactivar chat normal
+                    _chatMode.Remove(chatId);
+                    Console.WriteLine($"[AIService] 🎮 RPG Chat mode ACTIVADO para {chatId}");
+                }
+                else
+                {
+                    _rpgChatMode.Remove(chatId);
+                    Console.WriteLine($"[AIService] 🎮 RPG Chat mode DESACTIVADO para {chatId}");
+                }
+            }
+        }
+        
+        public static bool IsRpgChatMode(long chatId)
+        {
+            lock (_chatModeLock)
+            {
+                return _rpgChatMode.Contains(chatId);
+            }
+        }
+        
+        // Chat con contexto RPG
+        public async Task<string> ChatWithRpgContext(long chatId, string userMessage, string playerName, string playerClass, int playerLevel, string location)
+        {
+            try
+            {
+                Console.WriteLine($"[AIService] 🎮 Chat RPG para {playerName} (ChatId {chatId})");
+                
+                // Rate limiting
+                if (!CheckRateLimit(chatId))
+                {
+                    return "⚠️ *Demasiadas solicitudes*\n\nPor favor espera un momento. (Máximo 10 mensajes por minuto)";
+                }
+                
+                // Actualizar última actividad
+                lock (_chatModeLock)
+                {
+                    _lastActivity[chatId] = DateTime.UtcNow;
+                }
+                
+                // Obtener o crear historial RPG separado
+                if (!_rpgConversations.ContainsKey(chatId))
+                {
+                    _rpgConversations[chatId] = new List<ChatMessage>();
+                }
+
+                var history = _rpgConversations[chatId];
+                Console.WriteLine($"[AIService] 🎮 Memoria RPG: {history.Count} mensajes previos");
+
+                // Construir mensajes
+                var messages = new List<object>();
+
+                // System prompt CON CONTEXTO RPG
+                messages.Add(new
+                {
+                    role = "system",
+                    content = $@"Eres un Narrador Maestro (Dungeon Master) en un juego de rol de fantasía medieval llamado 'Aventuras de Valentia'.
+
+CONTEXTO DEL PERSONAJE:
+• Nombre: {playerName}
+• Clase: {playerClass} (Nivel {playerLevel})
+• Ubicación actual: {location}
+• Mundo: Valentia, un reino amenazado por el Vacío
+
+Tu función es:
+✨ Narrar aventuras épicas y personalizadas basadas en el personaje del jugador
+🎲 Describir escenarios, NPCs y situaciones de forma inmersiva
+💡 Dar consejos estratégicos sobre combate y progresión
+📖 Contar historias sobre el lore de Valentia y el Vacío
+🗺️ Sugerir misiones y lugares para explorar
+
+Estilo narrativo:
+• Usa descripciones ricas y atmosféricas
+• Adapta la dificultad narrativa al nivel del personaje
+• Incorpora elementos de la clase del personaje en las historias
+• Mantén un tono épico pero accesible
+• Usa markdown para énfasis (*cursiva* y **negrita**)
+• Máximo 4-5 párrafos por respuesta
+
+IMPORTANTE: No inventes mecánicas de juego que no existen. El sistema real usa dados d20, combos, y efectos de estado. Si el jugador pregunta por mecánicas, describe las que realmente existen."
+                });
+
+                // Agregar historial (últimos 8 mensajes para dejar espacio al contexto)
+                foreach (var msg in history.TakeLast(8))
+                {
+                    messages.Add(new
+                    {
+                        role = msg.Role,
+                        content = msg.Content
+                    });
+                }
+
+                // Agregar mensaje del usuario
+                messages.Add(new
+                {
+                    role = "user",
+                    content = userMessage
+                });
+
+                // Request
+                var requestBody = new
+                {
+                    model = "llama-3.1-8b-instant",
+                    messages = messages,
+                    temperature = 0.85, // Más creativo para narrativa
+                    max_tokens = 700, // Más tokens para narrativa rica
+                    top_p = 0.95
+                };
+
+                Console.WriteLine("[AIService] 📤 Enviando request RPG a Groq API...");
+                
+                var response = await _client.PostAsJsonAsync(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    requestBody);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[AIService] ❌ Error API: {response.StatusCode} - {error}");
+                    return "❌ El narrador tuvo un problema. Intenta de nuevo.";
+                }
+
+                var result = await response.Content.ReadFromJsonAsync<GroqResponse>();
+                var aiResponse = result?.Choices?[0]?.Message?.Content?.Trim() 
+                                ?? "Lo siento, no pude generar una respuesta.";
+
+                Console.WriteLine($"[AIService] ✅ Narrativa generada ({aiResponse.Length} chars)");
+
+                // Guardar en historial RPG separado
+                history.Add(new ChatMessage { Role = "user", Content = userMessage });
+                history.Add(new ChatMessage { Role = "assistant", Content = aiResponse });
+                
+                if (history.Count > 16) // 8 intercambios
+                {
+                    history.RemoveRange(0, history.Count - 16);
+                }
+                
+                _rpgConversations[chatId] = history;
+
+                return aiResponse;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AIService] ❌ Excepción RPG: {ex.Message}");
+                return "❌ Error inesperado en la narrativa.";
             }
         }
 
@@ -275,7 +438,8 @@ Formato de respuestas:
         public void ClearConversation(long chatId)
         {
             _conversations.Remove(chatId);
-            Console.WriteLine($"[AIService] 🗑️ Conversación eliminada para ChatId {chatId}");
+            _rpgConversations.Remove(chatId);
+            Console.WriteLine($"[AIService] 🗑️ Conversaciones eliminadas para ChatId {chatId} (normal + RPG)");
         }
         
         // ============================================

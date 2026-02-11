@@ -21,6 +21,9 @@ namespace BotTelegram.RPG.Models
         public int MagicResistance { get; set; } = 0;
         public int PhysicalResistance { get; set; } = 0;
         
+        // Combat avanzado
+        public List<StatusEffect> StatusEffects { get; set; } = new();
+        
         // Loot drops (opcional)
         public List<RpgItem>? PossibleLoot { get; set; }
     }

@@ -40,6 +40,14 @@ namespace BotTelegram.RPG.Models
         public bool IsInCombat { get; set; } = false;
         public RpgEnemy? CurrentEnemy { get; set; }
         
+        // Combat avanzado
+        public int ComboCount { get; set; } = 0; // Ataques consecutivos exitosos
+        public int CombatTurnCount { get; set; } = 0; // Turno actual del combate
+        public List<StatusEffect> StatusEffects { get; set; } = new();
+        
+        [JsonIgnore]
+        public List<CombatLogEntry> CombatLog { get; set; } = new(); // No persistir en JSON
+        
         // Timestamps
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime LastPlayedAt { get; set; } = DateTime.UtcNow;

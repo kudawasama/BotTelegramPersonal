@@ -2044,17 +2044,54 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                     $"• Darte consejos de estrategia\n" +
                     $"• Crear historias personalizadas\n" +
                     $"• Describir el mundo de Valentia\n\n" +
-                    $"💡 Usa `/chat <mensaje>` para hablar con la IA",
+                    $"💡 Usa `/chat <mensaje>` para hablar con la IA\n" +
+                    $"📝 La IA recordará toda la conversación\n\n" +
+                    $"⚠️ *Importante:* Este chat es INDEPENDIENTE del chat normal de IA",
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
                     {
                         new[]
                         {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💬 Iniciar Chat", "show_chat_help")
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💬 Iniciar Chat RPG", "rpg_start_chat")
                         },
                         new[]
                         {
                             Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver al Juego", "rpg_main")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Iniciar chat con modo RPG
+            if (data == "rpg_start_chat")
+            {
+                var player = rpgService.GetPlayer(chatId);
+                if (player == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Primero crea un personaje", cancellationToken: ct);
+                    return;
+                }
+                
+                // Activar modo RPG chat
+                BotTelegram.Services.AIService.SetRpgChatMode(chatId, true);
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    $"🎮 **MODO CHAT RPG ACTIVADO**\n\n" +
+                    $"✅ La IA ahora conoce a tu personaje:\n\n" +
+                    $"👤 **{player.Name}** - {player.Class} Nv.{player.Level}\n" +
+                    $"📍 {player.CurrentLocation}\n\n" +
+                    $"💬 Simplemente escribe tu mensaje y la IA responderá con narrativa épica contextualizada.\n\n" +
+                    $"*Ejemplo:* \"Describe el ambiente de la taberna\" o \"Dame consejos para mi siguiente batalla\"\n\n" +
+                    $"⚙️ Para salir del modo RPG, usa `/chat` sin argumento",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver al Menú RPG", "rpg_main")
                         }
                     }),
                     cancellationToken: ct);

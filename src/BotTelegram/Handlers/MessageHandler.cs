@@ -47,6 +47,62 @@ namespace BotTelegram.Handlers
                 return;
             }
 
+            // Chat con contexto RPG
+            if (AIService.IsRpgChatMode(message.Chat.Id) && !message.Text.StartsWith("/"))
+            {
+                var rpgService = new RpgService();
+                var player = rpgService.GetPlayer(message.Chat.Id);
+                
+                if (player == null)
+                {
+                    // Si no tiene personaje, desactivar modo RPG
+                    AIService.SetRpgChatMode(message.Chat.Id, false);
+                    await bot.SendMessage(
+                        message.Chat.Id,
+                        "❌ No tienes un personaje creado. Modo RPG desactivado.",
+                        cancellationToken: ct);
+                    return;
+                }
+                
+                var aiService = new AIService();
+
+                await bot.SendChatAction(
+                    message.Chat.Id,
+                    Telegram.Bot.Types.Enums.ChatAction.Typing,
+                    cancellationToken: ct);
+
+                var response = await aiService.ChatWithRpgContext(
+                    message.Chat.Id, 
+                    message.Text,
+                    player.Name,
+                    player.Class.ToString(),
+                    player.Level,
+                    player.CurrentLocation);
+
+                var keyboard = new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData("🎮 Menu RPG", "rpg_main"),
+                        InlineKeyboardButton.WithCallbackData("🚪 Salir", "exit_chat")
+                    },
+                    new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
+                    }
+                });
+
+                // Visual feedback: indicador mágico para modo RPG
+                await bot.SendMessage(
+                    message.Chat.Id,
+                    $"🎲 *Narrador RPG* ({player.Name} - {player.Class})\n\n{response}",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // Chat normal (sin contexto RPG)
             if (AIService.IsChatMode(message.Chat.Id) && !message.Text.StartsWith("/"))
             {
                 var aiService = new AIService();
