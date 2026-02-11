@@ -52,9 +52,31 @@ namespace BotTelegram.Commands
             _service.Save(reminder);
 
             var formattedTime = dueAt.ToString("dd/MM/yyyy HH:mm");
+            
+            // Botones de acciones post-creación
+            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔄 Hacer Recurrente", $"recur:{reminder.Id}"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Ver Todos", "list")
+                },
+                new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("➕ Crear Otro", "show_remember_help"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú", "start")
+                }
+            });
+            
             await bot.SendMessage(
                 message.Chat.Id,
-                $"✅ Recordatorio guardado:\n📝 {taskText}\n⏰ {formattedTime}",
+                $"✅ *Recordatorio creado!*\n\n" +
+                $"📝 {taskText}\n" +
+                $"⏰ {formattedTime}\n" +
+                $"🆔 `{reminder.Id}`\n\n" +
+                $"💡 *¿Qué quieres hacer ahora?*",
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                replyMarkup: keyboard,
                 cancellationToken: ct);
         }
 

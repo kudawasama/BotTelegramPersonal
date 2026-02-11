@@ -13,39 +13,55 @@ namespace BotTelegram.Commands
             Message message,
             CancellationToken ct)
         {
-            // Crear botones inline para acceso rápido
+            // Crear botones con todas las acciones
             var keyboard = new InlineKeyboardMarkup(new[]
             {
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("📋 Ver recordatorios", "list")
+                    InlineKeyboardButton.WithCallbackData("⏰ Crear", "show_remember_help"),
+                    InlineKeyboardButton.WithCallbackData("📋 Lista", "list"),
+                    InlineKeyboardButton.WithCallbackData("🕐 Rápidos", "quick_times")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("✏️ Editar", "help_edit"),
+                    InlineKeyboardButton.WithCallbackData("🗑️ Eliminar", "help_delete"),
+                    InlineKeyboardButton.WithCallbackData("🔄 Recurrente", "help_recur")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
                 }
             });
 
             await client.SendMessage(
                 chatId: message.Chat.Id,
                 text:
-@"📌 Comandos disponibles:
+@"📚 *AYUDA - Bot de Recordatorios*
 
-✅ Crear recordatorios:
-/remember <texto> en <tiempo> - Crear recordatorio
-  Ejemplos: /remember Tomar agua en 10 min
-           /remember Reunión mañana a las 14:30
-           /remember Viaje en 3 días
+*✅ CREAR RECORDATORIOS:*
+`/remember <texto> en <tiempo>`
 
-📋 Ver y gestionar:
-/list - Listar recordatorios pendientes
-/delete <id> - Eliminar un recordatorio
-/edit <id> <nuevo texto> - Modificar un recordatorio
+*📝 Ejemplos:*
+• `/remember Tomar agua en 10 min`
+• `/remember Reunión mañana a las 14:30`
+• `/remember Viaje en 3 días`
+• `/remember Llamar mamá hoy a las 19:00`
 
-❓ Otros:
-/start - Iniciar el bot
-/help - Ver este mensaje
+*🕐 Tiempos soportados:*
+• `en 10 segundos` / `en 5 min`
+• `en 2 horas` / `en 3 días`
+• `hoy a las 18:00`
+• `mañana a las 09:00`
 
-🕐 Formatos de tiempo soportados:
-- en 10 segundos / en 5 min / en 2 horas / en 3 días
-- hoy a las 18:00
-- mañana a las 09:00",
+*📋 GESTIONAR:*
+• `/list` - Ver todos los recordatorios
+• `/delete <id>` - Eliminar uno
+• `/edit <id> <texto>` - Modificar
+• `/recur <id> <tipo>` - Hacer recurrente
+
+*🎯 Click en los botones abajo para acciones rápidas*",
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
                 cancellationToken: ct
             );

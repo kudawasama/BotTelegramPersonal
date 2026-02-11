@@ -4,7 +4,7 @@
 
 ---
 
-## 📊 Estado actual (v1.0)
+## 📊 Estado actual (v1.1)
 
 ✅ **Completado:**
 - Bot de Telegram con comandos básicos
@@ -13,6 +13,9 @@
 - API REST completa
 - Deploy en Replit 24/7
 - Recordatorios recurrentes
+- ⭐ **Botones inline interactivos** (InlineKeyboardMarkup)
+- ⭐ **FAQ/Manual completo** integrado en el bot
+- ⭐ **UX mejorada** con menús intuitivos y atajos rápidos
 
 ---
 
@@ -55,13 +58,25 @@
 - [ ] Swagger/OpenAPI para API
 - [ ] Video tutorial
 - [ ] Ejemplos en múltiples lenguajes
-- [ ] FAQ completo
+- [✓] FAQ completo 🎉
 
 #### 2.3 UX del bot
-- [ ] Botones inline en Telegram (`InlineKeyboardMarkup`)
-- [ ] Confirmaciones interactivas
+- [✓] Botones inline en Telegram (`InlineKeyboardMarkup`) 🎉
+- [✓] Confirmaciones interactivas 🎉
 - [ ] Reacciones con emojis
 - [ ] Búsqueda de recordatorios
+
+#### 2.4 Nuevas funcionalidades multimedia 🆕
+- [ ] **🎤 Transcripción de audio** (OpenAI Whisper)
+  - Crear recordatorios con notas de voz
+  - Procesamiento automático de voz a texto
+  - Soporte multi-idioma
+  - Ver detalles en [FEATURES_ROADMAP.md](FEATURES_ROADMAP.md)
+- [ ] **🌐 Búsqueda web inteligente** (Bing Search API)
+  - Comando `/search` para búsquedas simples
+  - Comando `/ask` para respuestas con IA (opcional)
+  - Integración con OpenAI GPT para respuestas inteligentes
+  - Ver detalles en [FEATURES_ROADMAP.md](FEATURES_ROADMAP.md)
 
 **Tiempo estimado:** 3-4 semanas
 
@@ -77,9 +92,10 @@
 
 #### 3.2 Inteligencia artificial
 - [ ] Parsing mejorado con NLP
-- [ ] Sugerencias automáticas
-- [ ] Categorización automática
-- [ ] Detección de contexto
+- [ ] Sugerencias automáticas basadas en historial
+- [ ] Categorización automática de recordatorios
+- [ ] Detección de contexto y patrones
+- [ ] Integración completa de transcripción y búsqueda web (Fase 2.4)
 
 #### 3.3 Colaboración
 - [ ] Compartir recordatorios entre usuarios

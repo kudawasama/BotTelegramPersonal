@@ -66,6 +66,13 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/faq"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando FaqCommand");
+                await FaqCommand.Execute(bot, message, ct);
+                return;
+            }
+
             Console.WriteLine("   [CommandRouter] → Ejecutando UnknownCommand");
             await new UnknownCommand().Execute(bot, message, ct);
         }
