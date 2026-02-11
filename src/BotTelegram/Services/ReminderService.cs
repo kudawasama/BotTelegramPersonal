@@ -5,23 +5,53 @@ namespace BotTelegram.Services
 {
     public class ReminderService
     {
-        private static readonly string DataDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data");
-        private static readonly string FilePath = Path.Combine(DataDir, "reminders.json");
+        private readonly string _filePath;
 
         public ReminderService()
         {
-            if (!Directory.Exists(DataDir))
-                Directory.CreateDirectory(DataDir);
-            if (!File.Exists(FilePath))
-                File.WriteAllText(FilePath, "[]");
+            // Buscar la raíz del proyecto (donde está BotTelegram.csproj)
+            var currentDir = Directory.GetCurrentDirectory();
+            var projectRoot = currentDir;
+            
+            while (!File.Exists(Path.Combine(projectRoot, "BotTelegram.csproj")))
+            {
+                var parent = Directory.GetParent(projectRoot);
+                if (parent == null)
+                {
+                    projectRoot = currentDir;
+                    break;
+                }
+                projectRoot = parent.FullName;
+            }
+
+            // Guardar en /data en la raíz del proyecto (no en bin/)
+            var dataDir = Path.Combine(projectRoot, "data");
+            if (!Directory.Exists(dataDir))
+            {
+                Directory.CreateDirectory(dataDir);
+                Console.WriteLine($"[ReminderService] 📁 Creada carpeta: {dataDir}");
+            }
+            
+            _filePath = Path.Combine(dataDir, "reminders.json");
+            Console.WriteLine($"[ReminderService] 📁 Usando ruta: {_filePath}");
+            
+            if (!File.Exists(_filePath))
+            {
+                File.WriteAllText(_filePath, "[]");
+                Console.WriteLine($"[ReminderService] ✅ Creado archivo vacío");
+            }
         }
 
         public List<Reminder> GetAll()
         {
             try
             {
-                var json = File.ReadAllText(FilePath);
-                return JsonSerializer.Deserialize<List<Reminder>>(json) ?? new List<Reminder>();
+                var json = File.ReadAllText(_filePath);
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                return JsonSerializer.Deserialize<List<Reminder>>(json, options) ?? new List<Reminder>();
             }
             catch (Exception ex)
             {
@@ -48,8 +78,13 @@ namespace BotTelegram.Services
         {
             try
             {
-                var json = JsonSerializer.Serialize(reminders, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(FilePath, json);
+                var options = new JsonSerializerOptions 
+                { 
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                };
+                var json = JsonSerializer.Serialize(reminders, options);
+                File.WriteAllText(_filePath, json);
             }
             catch (Exception ex)
             {

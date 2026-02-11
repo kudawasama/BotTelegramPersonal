@@ -2,6 +2,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using BotTelegram.Services;
+using System.Text;
 
 namespace BotTelegram.Commands
 {
@@ -14,41 +15,95 @@ namespace BotTelegram.Commands
             Message message,
             CancellationToken ct)
         {
-            var reminders = _service.GetAll()
-                .Where(r => r.ChatId == message.Chat.Id && !r.Notified)
-                .OrderBy(r => r.DueAt)
-                .ToList();
-
-            if (!reminders.Any())
+            try
             {
-                await bot.SendMessage(message.Chat.Id, "📭 No tienes recordatorios pendientes.", cancellationToken: ct);
-                return;
-            }
+                Console.WriteLine($"[ListCommand] Obteniendo recordatorios para ChatId {message.Chat.Id}");
+                
+                var allReminders = _service.GetAll()
+                    .Where(r => r.ChatId == message.Chat.Id)
+                    .OrderBy(r => r.DueAt)
+                    .ToList();
 
-            var text = "📝 Tus recordatorios:\n\n";
-            var buttons = new List<List<InlineKeyboardButton>>();
+                Console.WriteLine($"[ListCommand] Total encontrados: {allReminders.Count}");
 
-            foreach (var r in reminders)
-            {
-                var recurrenceStr = r.Recurrence != BotTelegram.Models.RecurrenceType.None ? $" [🔄 {r.Recurrence}]" : "";
-                text += $"🔹 `{r.Id}`\n⏰ {r.DueAt:dd/MM HH:mm} - {r.Text}{recurrenceStr}\n\n";
-
-                // Agregar botones para este recordatorio
-                buttons.Add(new List<InlineKeyboardButton>
+                if (!allReminders.Any())
                 {
-                    InlineKeyboardButton.WithCallbackData($"🗑️ Eliminar {r.Id}", $"delete:{r.Id}"),
-                    InlineKeyboardButton.WithCallbackData($"🔄 Recurrencia", $"recur:{r.Id}")
-                });
+                    await bot.SendMessage(
+                        message.Chat.Id,
+                        "📭 No tienes recordatorios guardados.\n\nUsa /remember para crear uno.",
+                        cancellationToken: ct);
+                    return;
+                }
+
+                var pendientes = allReminders.Where(r => !r.Notified).ToList();
+                var completados = allReminders.Where(r => r.Notified).ToList();
+
+                var sb = new StringBuilder();
+                sb.AppendLine("📋 *TUS RECORDATORIOS*\n");
+
+                if (pendientes.Any())
+                {
+                    sb.AppendLine("⏰ *PENDIENTES:*");
+                    foreach (var r in pendientes)
+                    {
+                        var timeLeft = r.DueAt - DateTimeOffset.Now;
+                        var timeStr = FormatTimeLeft(timeLeft);
+                        var recurrenceStr = r.Recurrence != BotTelegram.Models.RecurrenceType.None ? $" 🔄 {r.Recurrence}" : "";
+                        
+                        sb.AppendLine($"• `{r.Id}` - {r.Text}");
+                        sb.AppendLine($"  ⏰ {r.DueAt:dd/MM HH:mm} ({timeStr}){recurrenceStr}");
+                        sb.AppendLine();
+                    }
+                }
+                else
+                {
+                    sb.AppendLine("✅ No hay recordatorios pendientes\n");
+                }
+
+                if (completados.Any())
+                {
+                    sb.AppendLine("\n✅ *COMPLETADOS (últimos 5):*");
+                    foreach (var r in completados.TakeLast(5))
+                    {
+                        sb.AppendLine($"• ~~{r.Text}~~");
+                        sb.AppendLine($"  ✓ {r.DueAt:dd/MM HH:mm}");
+                    }
+                }
+
+                sb.AppendLine("\n💡 *Comandos útiles:*");
+                sb.AppendLine("`/delete <id>` - Eliminar");
+                sb.AppendLine("`/edit <id> <texto>` - Modificar");
+                sb.AppendLine("`/recur <id> <tipo>` - Recurrencia");
+
+                await bot.SendMessage(
+                    message.Chat.Id,
+                    sb.ToString(),
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    cancellationToken: ct);
+
+                Console.WriteLine("[ListCommand] ✅ Lista enviada");
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ListCommand] ❌ Error: {ex.Message}");
+                await bot.SendMessage(
+                    message.Chat.Id,
+                    "❌ Error al obtener recordatorios. Intenta de nuevo.",
+                    cancellationToken: ct);
+            }
+        }
 
-            var keyboard = new InlineKeyboardMarkup(buttons);
-
-            await bot.SendMessage(
-                message.Chat.Id, 
-                text, 
-                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                replyMarkup: keyboard,
-                cancellationToken: ct);
+        private string FormatTimeLeft(TimeSpan timeLeft)
+        {
+            if (timeLeft.TotalDays >= 1)
+                return $"en {(int)timeLeft.TotalDays} días";
+            if (timeLeft.TotalHours >= 1)
+                return $"en {(int)timeLeft.TotalHours}h";
+            if (timeLeft.TotalMinutes >= 1)
+                return $"en {(int)timeLeft.TotalMinutes} min";
+            if (timeLeft.TotalSeconds > 0)
+                return $"en {(int)timeLeft.TotalSeconds}s";
+            return "vencido";
         }
     }
 }
