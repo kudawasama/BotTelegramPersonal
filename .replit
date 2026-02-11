@@ -1,0 +1,8 @@
+run = "cd src/BotTelegram && dotnet run"
+language = "dotnet"
+
+[nix]
+channel = "stable-23_11"
+
+[deployment]
+run = ["sh", "-c", "cd src/BotTelegram && dotnet run"]
