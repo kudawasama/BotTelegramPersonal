@@ -32,6 +32,10 @@ namespace BotTelegram.Commands
                 {
                     InlineKeyboardButton.WithCallbackData("🤖 Chatear con IA", "show_chat_help"),
                     InlineKeyboardButton.WithCallbackData("📚 FAQ / Manual", "faq_menu")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🎮 Juego RPG", "rpg_main")
                 }
             });
 

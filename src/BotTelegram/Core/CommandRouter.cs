@@ -80,6 +80,13 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/rpg"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando RpgCommand (Juego RPG)");
+                await new RpgCommand().Execute(bot, message, ct);
+                return;
+            }
+
             Console.WriteLine("   [CommandRouter] → Ejecutando UnknownCommand");
             await new UnknownCommand().Execute(bot, message, ct);
         }

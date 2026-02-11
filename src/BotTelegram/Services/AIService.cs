@@ -277,6 +277,112 @@ Formato de respuestas:
             _conversations.Remove(chatId);
             Console.WriteLine($"[AIService] 🗑️ Conversación eliminada para ChatId {chatId}");
         }
+        
+        // ============================================
+        // RPG NARRATIVE GENERATION
+        // ============================================
+        
+        public async Task<string> GenerateRpgNarrative(
+            string playerName,
+            string playerClass,
+            int playerLevel,
+            string actionType,
+            string location,
+            string? enemyName = null,
+            string? eventResult = null)
+        {
+            try
+            {
+                Console.WriteLine($"[AIService] 🎮 Generando narrativa RPG: {actionType}");
+                
+                var prompt = $@"Eres el narrador épico de 'Leyenda del Void', un RPG incremental oscuro y desafiante.
+
+**Contexto del Jugador:**
+- Nombre: {playerName}
+- Clase: {playerClass}
+- Nivel: {playerLevel}
+- Ubicación actual: {location}
+
+**Evento:** {actionType}
+{(enemyName != null ? $"- Enemigo: {enemyName}" : "")}
+{(eventResult != null ? $"- Resultado: {eventResult}" : "")}
+
+**Tu tarea:**
+Narra este evento en 2-3 párrafos cortos con estilo épico pero conciso.
+- Usa lenguaje evocativo e inmersivo
+- Sé dramático pero no te extiendas demasiado
+- Incluye detalles sensoriales (sonidos, olores, sensaciones)
+- Si hay combate, describe la acción vívidamente
+- Termina con un gancho que impulse la siguiente acción
+
+**Tono:** Oscuro, épico, inmersivo. Como un DM de D&D experimentado.
+
+Responde SOLO con la narrativa, sin introducciones ni explicaciones:";
+                
+                var messages = new List<object>
+                {
+                    new { role = "system", content = "Eres un narrador maestro de RPGs, especializado en crear narrativas épicas y concisas." },
+                    new { role = "user", content = prompt }
+                };
+                
+                var requestBody = new
+                {
+                    model = "llama-3.1-8b-instant",
+                    messages = messages,
+                    temperature = 0.8, // Más creatividad para narrativa
+                    max_tokens = 400
+                };
+                
+                var response = await _client.PostAsJsonAsync(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    requestBody);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[AIService] ❌ Error API: {response.StatusCode}");
+                    return GetFallbackNarrative(actionType, enemyName);
+                }
+                
+                var result = await response.Content.ReadFromJsonAsync<GroqResponse>();
+                var narrative = result?.Choices?[0]?.Message?.Content?.Trim() 
+                               ?? GetFallbackNarrative(actionType, enemyName);
+                
+                Console.WriteLine($"[AIService] ✅ Narrativa generada ({narrative.Length} chars)");
+                return narrative;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AIService] ❌ Error generando narrativa: {ex.Message}");
+                return GetFallbackNarrative(actionType, enemyName);
+            }
+        }
+        
+        private string GetFallbackNarrative(string actionType, string? enemyName)
+        {
+            return actionType.ToLower() switch
+            {
+                "explore" when enemyName != null => 
+                    $"🌲 Avanzas cautelosamente por el sendero oscuro. De pronto, " +
+                    $"¡{enemyName} emerge de las sombras con un rugido salvaje!\n\n" +
+                    $"El aire se vuelve tenso. Tu mano se mueve hacia tu arma...",
+                
+                "victory" when enemyName != null => 
+                    $"⚔️ Con un último golpe demoledor, derribas a {enemyName}. " +
+                    $"La criatura cae al suelo con un gemido final. Victoria es tuya.\n\n" +
+                    $"Recuperas el aliento, revisando tus heridas...",
+                
+                "train" => 
+                    "🛡️ Pasas horas perfeccionando tus técnicas. El sudor corre por tu frente " +
+                    "mientras repites los movimientos una y otra vez. Sientes que mejoras.",
+                
+                "rest" => 
+                    "😴 Te recuestas junto al fuego de la taberna. El calor reconforta tus " +
+                    "músculos cansados mientras recuperas fuerzas para la próxima aventura.",
+                
+                _ => 
+                    "🎮 Continúas tu aventura en el reino de Valentia..."
+            };
+        }
     }
 
     public class ChatMessage
