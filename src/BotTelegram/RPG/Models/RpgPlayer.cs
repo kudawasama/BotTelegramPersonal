@@ -76,6 +76,22 @@ namespace BotTelegram.RPG.Models
         public List<string> UnlockedHiddenClasses { get; set; } = new(); // IDs de clases ocultas desbloqueadas
         public string? ActiveHiddenClass { get; set; } // Clase oculta activa (opcional, puede no usar ninguna)
         
+        // ═══════════════════════════════════════
+        // PET SYSTEM (Sistema de Mascotas)
+        // ═══════════════════════════════════════
+        public List<RpgPet> ActivePets { get; set; } = new(); // Mascotas en combate (máx 1-3 según clase)
+        public List<RpgPet> PetInventory { get; set; } = new(); // Todas las mascotas domadas
+        
+        [JsonIgnore]
+        public int MaxActivePets => ActiveHiddenClass switch
+        {
+            "beast_tamer" => 1,
+            "beast_lord" => 3,
+            "necromancer_lord" => 3, // Para minions no-muertos
+            "lich_king" => 5,
+            _ => 1
+        };
+        
         // Progress
         public string CurrentLocation { get; set; } = "Taberna de Puerto Esperanza";
         public DateTime LastActionTime { get; set; } = DateTime.UtcNow;

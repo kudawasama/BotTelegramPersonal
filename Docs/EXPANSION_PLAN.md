@@ -39,8 +39,42 @@
 ---
 
 ### 🚧 **FASE 2: SISTEMA DE MASCOTAS**
-**Estado:** 🔜 **PENDIENTE**  
-**Progreso:** 0%
+**Estado:** � **EN PROGRESO** (70% completado)  
+**Progreso Actualizado:** 12 de Febrero de 2026
+
+#### ✅ Componentes Completados:
+- ✅ **Modelo RpgPet:** Sistema completo con Bond (0-1000), Loyalty (5 niveles), Stats, Abilities
+- ✅ **PetDatabase:** 6 familias de mascotas con 3 etapas evolutivas c/u (18 especies totales)  
+  * 🐺 Caninos: Wolf → Wolf Alfa → Fenrir
+  * 🐻 Osos: Bear → Armored Bear → Ursakar
+  * 🐉 Dragones: Baby Dragon → Young Dragon → Ancestral Dragon
+  * 🐱 Felinos: Wildcat → Shadow Panther → Spectral Smilodon
+  * 🦅 Aves: Eagle → Royal Eagle → Phoenix
+  * 🐍 Reptiles: Snake → Basilisk → Jörmungandr
+- ✅ **PetTamingService:** Mecánicas de domado completas
+  * `AttemptTame()`: 40% chance base + Charisma bonus + Weakness bonus
+  * `PetBeast()`: Acariciar bestia (+bond, 15% instant tame)
+  * `CalmBeast()`: Calmar durante combate (20 mana, 2 turnos passive)
+  * `FeedPet()`: Alimentar (+20 bond, +30% HP)
+- ✅ **Sistema de Loyalty:** 5 niveles con stat bonuses
+  * Hostile (0-199): -30% stats
+  * Neutral (200-399): 0% bonus
+  * Friendly (400-599): +20% stats
+  * Loyal (600-799): +50% stats
+  * Devoted (800-1000): +100% stats (¡DOBLE PODER!)
+- ✅ **Sistema de Evolución:** 3 etapas con requisitos (Level, Bond, Kills, Boss Kills)
+
+#### ⏳ Pendiente:
+- ⏳ Integrar mascotas en combate (turnos: Jugador → Pet → Enemigo)
+- ⏳ UI en exploración para domar/acariciar bestias
+- ⏳ Sistema de XP para mascotas
+- ⏳ Habilidades únicas por especie
+
+#### Archivos Creados/Modificados:
+- `src/BotTelegram/RPG/Models/RpgPet.cs` (NEW)
+- `src/BotTelegram/RPG/Services/PetDatabase.cs` (NEW)
+- `src/BotTelegram/RPG/Services/PetTamingService.cs` (NEW)
+- `src/BotTelegram/RPG/Models/RpgPlayer.cs` (MODIFIED: +ActivePets, +PetInventory)
 
 ---
 
