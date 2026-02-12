@@ -65,6 +65,17 @@ namespace BotTelegram.RPG.Models
         // Legacy skills (deprecado - usar UnlockedSkills)
         public List<RpgSkill> Skills { get; set; } = new();
         
+        // ═══════════════════════════════════════
+        // PASSIVES SYSTEM (Habilidades pasivas permanentes)
+        // ═══════════════════════════════════════
+        public List<string> UnlockedPassives { get; set; } = new(); // IDs de pasivas desbloqueadas
+        
+        // ═══════════════════════════════════════
+        // HIDDEN CLASSES (Clases ocultas desbloqueables)
+        // ═══════════════════════════════════════
+        public List<string> UnlockedHiddenClasses { get; set; } = new(); // IDs de clases ocultas desbloqueadas
+        public string? ActiveHiddenClass { get; set; } // Clase oculta activa (opcional, puede no usar ninguna)
+        
         // Progress
         public string CurrentLocation { get; set; } = "Taberna de Puerto Esperanza";
         public DateTime LastActionTime { get; set; } = DateTime.UtcNow;
