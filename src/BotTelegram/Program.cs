@@ -81,6 +81,17 @@ bot.StartReceiving(
 Console.WriteLine("✅ StartReceiving() iniciado");
 Console.WriteLine("✅ API web iniciada");
 Console.WriteLine("\n📱 Telegram Bot: Presiona ENTER para salir");
-Console.ReadLine();
+var isHosted = Console.IsInputRedirected
+    || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER"))
+    || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PORT"));
+
+if (isHosted)
+{
+    await Task.Delay(System.Threading.Timeout.InfiniteTimeSpan);
+}
+else
+{
+    Console.ReadLine();
+}
 Console.WriteLine("🛑 Bot detenido");
 
