@@ -40,4 +40,4 @@ namespace BotTelegram.RPG.Models
         public DateTime? UnlockedAt { get; set; }
         public Dictionary<string, int> CurrentProgress { get; set; } = new(); // Action ID → Current count
         public Dictionary<string, bool> RequirementsMet { get; set; } = new(); // Action ID → Met?
-    }
+    }}

@@ -53,3 +53,4 @@ namespace BotTelegram.RPG.Models
         ElementalAffinity,        // Resistencia elemental
         BladeDancer              // Combo no se resetea al fallar
     }
+}
