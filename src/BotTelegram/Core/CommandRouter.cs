@@ -88,6 +88,13 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/pets"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando PetsCommand (Gestión de Mascotas)");
+                await new PetsCommand().Execute(bot, message, ct);
+                return;
+            }
+
             Console.WriteLine("   [CommandRouter] → Ejecutando UnknownCommand");
             await new UnknownCommand().Execute(bot, message, ct);
         }
