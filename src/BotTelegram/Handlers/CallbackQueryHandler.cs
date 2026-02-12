@@ -2071,7 +2071,7 @@ Si quieres que olvide el contexto anterior:
                     Message = callbackQuery.Message,
                     Data = "rpg_my_classes"
                 };
-                await HandleCallbackQuery(newCallback, ct);
+                await Handle(bot, newCallback, ct);
                 return;
             }
             

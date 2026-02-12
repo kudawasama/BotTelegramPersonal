@@ -8511,24 +8511,32 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\jose.cespedes\\.nuget\\packages\\": {}
+    "C:\\Users\\ASUS\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\jose.cespedes\\Documents\\GitHub\\BotTelegram\\src\\BotTelegram\\BotTelegram.csproj",
+      "projectUniqueName": "C:\\Users\\ASUS\\OneDrive\\Documentos\\GitHub\\BotTelegramPersonal-1\\src\\BotTelegram\\BotTelegram.csproj",
       "projectName": "BotTelegram",
-      "projectPath": "C:\\Users\\jose.cespedes\\Documents\\GitHub\\BotTelegram\\src\\BotTelegram\\BotTelegram.csproj",
-      "packagesPath": "C:\\Users\\jose.cespedes\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\jose.cespedes\\Documents\\GitHub\\BotTelegram\\src\\BotTelegram\\obj\\",
+      "projectPath": "C:\\Users\\ASUS\\OneDrive\\Documentos\\GitHub\\BotTelegramPersonal-1\\src\\BotTelegram\\BotTelegram.csproj",
+      "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\ASUS\\OneDrive\\Documentos\\GitHub\\BotTelegramPersonal-1\\src\\BotTelegram\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\jose.cespedes\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\ASUS\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -8547,7 +8555,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.100"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
@@ -8607,7 +8615,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.110/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

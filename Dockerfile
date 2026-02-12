@@ -22,7 +22,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Render expone PORT env var
-ENV ASPNETCORE_URLS=http://+:${PORT:-5001}
+# Para Fly.io - el puerto se configura via variable de entorno PORT
+# No configurar ASPNETCORE_URLS aquí
+EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "BotTelegram.dll"]
