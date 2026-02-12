@@ -15,7 +15,7 @@ namespace BotTelegram.RPG.Services
         public CombatResult PlayerAttack(RpgPlayer player, RpgEnemy enemy, bool useMagic = false)
         {
             var result = new CombatResult();
-            player.CombatTurnCount++;
+            StartPlayerTurn(player);
             
             // Verificar si está aturdido
             if (player.StatusEffects.Any(e => e.Type == StatusEffectType.Stunned))
@@ -139,39 +139,7 @@ namespace BotTelegram.RPG.Services
             // Check if enemy is dead
             if (enemy.HP <= 0)
             {
-                result.EnemyDefeated = true;
-                result.XPGained = enemy.XPReward;
-                result.GoldGained = enemy.GoldReward;
-                
-                // Track para skill unlocks
-                TrackEnemyDefeated(player);
-                TrackCombatSurvived(player); // También trackea low_hp_combat si HP < 30%
-                if (player.ComboCount >= 5)
-                {
-                    TrackCombo(player, player.ComboCount);
-                }
-                
-                // Auto-desbloquear skills al terminar combate
-                var newSkills = SkillDatabase.CheckAndUnlockSkills(player);
-                if (newSkills.Any())
-                {
-                    result.UnlockedSkills = newSkills;
-                }
-                
-                player.Gold += result.GoldGained;
-                player.TotalKills++;
-                player.TotalGoldEarned += result.GoldGained;
-                _rpgService.AddXP(player, result.XPGained);
-                
-                player.IsInCombat = false;
-                player.CurrentEnemy = null;
-                player.ComboCount = 0;
-                player.CombatTurnCount = 0;
-                player.StatusEffects.Clear();
-                
-                AddCombatLog(player, "Victoria", $"✅ {enemy.Name} derrotado");
-                
-                Console.WriteLine($"[Combat] ✅ ¡{enemy.Name} derrotado! +{result.XPGained} XP, +{result.GoldGained} oro");
+                ApplyVictoryRewards(player, enemy, result);
                 return result;
             }
             
@@ -219,7 +187,7 @@ namespace BotTelegram.RPG.Services
         {
             var result = new CombatResult();
             result.PlayerDefended = true;
-            player.CombatTurnCount++;
+            StartPlayerTurn(player);
             
             // Romper combo al defender
             if (player.ComboCount > 0)
@@ -294,7 +262,7 @@ namespace BotTelegram.RPG.Services
         
         public bool TryToFlee(RpgPlayer player, RpgEnemy enemy)
         {
-            player.CombatTurnCount++;
+            StartPlayerTurn(player);
             
             // Romper combo
             player.ComboCount = 0;
@@ -537,6 +505,28 @@ namespace BotTelegram.RPG.Services
             {
                 narrative += "💫 *Estás ATURDIDO y no puedes actuar*\n\n";
             }
+            else if (!string.IsNullOrEmpty(result.SkillFailureReason))
+            {
+                narrative += $"❌ *{result.SkillFailureReason}*\n\n";
+            }
+            else if (result.SkillUsed)
+            {
+                narrative += $"✨ **{result.SkillName}**\n";
+                if (result.SkillDamage > 0)
+                {
+                    var hits = result.SkillHits > 1 ? $" ({result.SkillHits} golpes)" : "";
+                    narrative += $"💥 Daño: {result.SkillDamage}{hits}\n";
+                }
+                if (result.SkillHealed > 0)
+                {
+                    narrative += $"💚 Cura: +{result.SkillHealed} HP\n";
+                }
+                if (result.InflictedEffect != null)
+                {
+                    narrative += $"🩸 *¡Infligiste {GetEffectName(result.InflictedEffect.Value)}!*\n";
+                }
+                narrative += "\n";
+            }
             else if (result.PlayerDefended)
             {
                 narrative += "🛡️ *Adoptas postura defensiva*\n\n";
@@ -606,6 +596,11 @@ namespace BotTelegram.RPG.Services
                 narrative += $"✅ **¡{enemy.Emoji} {enemy.Name} derrotado!**\n\n";
                 narrative += $"🎖️ +{result.XPGained} XP\n";
                 narrative += $"💰 +{result.GoldGained} oro\n\n";
+                
+                if (result.LootDrop != null)
+                {
+                    narrative += $"💎 Loot: **{result.LootDrop.Name}** {result.LootDrop.RarityEmoji}\n\n";
+                }
                 
                 // Mostrar resumen de combate
                 if (player.CombatLog.Count > 0)
@@ -748,6 +743,12 @@ namespace BotTelegram.RPG.Services
         public int PlayerDamage { get; set; }
         public bool PlayerDefended { get; set; }
         public bool PlayerStunned { get; set; }
+        public bool SkillUsed { get; set; }
+        public string? SkillName { get; set; }
+        public string? SkillFailureReason { get; set; }
+        public int SkillDamage { get; set; }
+        public int SkillHits { get; set; }
+        public int SkillHealed { get; set; }
         
         // Sistema de probabilidades (jugador)
         public double HitChancePercent { get; set; }
@@ -778,6 +779,7 @@ namespace BotTelegram.RPG.Services
         
         public int XPGained { get; set; }
         public int GoldGained { get; set; }
+        public RpgEquipment? LootDrop { get; set; }
         
         // Sistema de combos
         public int ComboBonus { get; set; }

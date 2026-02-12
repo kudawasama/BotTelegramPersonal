@@ -133,6 +133,10 @@ Solo los más valientes pueden enfrentar este destino...
                 },
                 new[]
                 {
+                    InlineKeyboardButton.WithCallbackData("🏪 Tienda", "rpg_shop")
+                },
+                new[]
+                {
                     InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_skills"),
                     InlineKeyboardButton.WithCallbackData("📈 Counters", "rpg_counters")
                 },
@@ -161,6 +165,10 @@ Solo los más valientes pueden enfrentar este destino...
                 {
                     InlineKeyboardButton.WithCallbackData("🧪 Usar Ítem", "rpg_combat_item"),
                     InlineKeyboardButton.WithCallbackData("🏃 Huir", "rpg_combat_flee")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_combat_skills")
                 },
                 new[]
                 {

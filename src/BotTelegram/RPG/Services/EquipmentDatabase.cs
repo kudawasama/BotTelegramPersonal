@@ -565,5 +565,60 @@ namespace BotTelegram.RPG.Services
             
             return candidates[_random.Next(candidates.Count)].Clone();
         }
+
+        /// <summary>
+        /// Genera un listado de items para la tienda
+        /// </summary>
+        public static List<RpgEquipment> GetShopItems(int playerLevel, int count = 6)
+        {
+            var candidates = GetAllEquipment()
+                .Where(e => e.RequiredLevel <= playerLevel + 2)
+                .ToList();
+            
+            if (candidates.Count == 0)
+            {
+                candidates = GetAllEquipment().Where(e => e.RequiredLevel == 1).ToList();
+            }
+            
+            var results = new List<RpgEquipment>();
+            var available = new List<RpgEquipment>(candidates);
+            
+            for (var i = 0; i < count && available.Count > 0; i++)
+            {
+                var totalWeight = available.Sum(e => GetRarityWeight(e.Rarity));
+                var roll = _random.NextDouble() * totalWeight;
+                var acc = 0.0;
+                RpgEquipment? selected = null;
+                
+                foreach (var item in available)
+                {
+                    acc += GetRarityWeight(item.Rarity);
+                    if (roll <= acc)
+                    {
+                        selected = item;
+                        break;
+                    }
+                }
+                
+                selected ??= available[_random.Next(available.Count)];
+                results.Add(selected.Clone());
+                available.Remove(selected);
+            }
+            
+            return results;
+        }
+        
+        private static double GetRarityWeight(EquipmentRarity rarity)
+        {
+            return rarity switch
+            {
+                EquipmentRarity.Common => 50,
+                EquipmentRarity.Uncommon => 30,
+                EquipmentRarity.Rare => 15,
+                EquipmentRarity.Epic => 4,
+                EquipmentRarity.Legendary => 1,
+                _ => 10
+            };
+        }
     }
 }

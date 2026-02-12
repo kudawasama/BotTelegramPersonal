@@ -446,6 +446,58 @@ namespace BotTelegram.RPG.Services
         }
         
         // Game Mechanics
+        public (bool Success, string Message) EquipItem(RpgPlayer player, string equipmentId)
+        {
+            var item = player.EquipmentInventory.FirstOrDefault(e => e.Id == equipmentId);
+            if (item == null)
+            {
+                return (false, "❌ No tienes ese equipo en el inventario.");
+            }
+            
+            if (player.Level < item.RequiredLevel)
+            {
+                return (false, $"❌ Necesitas nivel {item.RequiredLevel} para equipar esto.");
+            }
+            
+            var current = GetEquippedByType(player, item.Type);
+            if (current != null)
+            {
+                player.EquipmentInventory.Add(current);
+            }
+            
+            ApplyEquipmentResources(player, current, item);
+            SetEquippedByType(player, item);
+            player.EquipmentInventory.Remove(item);
+            
+            return (true, $"✅ Equipaste {item.Name}.");
+        }
+        
+        public (bool Success, string Message) UnequipItem(RpgPlayer player, EquipmentType type)
+        {
+            var current = GetEquippedByType(player, type);
+            if (current == null)
+            {
+                return (false, "❌ No tienes nada equipado en ese slot.");
+            }
+            
+            ApplyEquipmentResources(player, current, null);
+            player.EquipmentInventory.Add(current);
+            ClearEquippedByType(player, type);
+            
+            return (true, $"✅ Desequipaste {current.Name}.");
+        }
+        
+        public List<RpgEquipment> GetEquipmentInventory(RpgPlayer player, EquipmentType? type = null)
+        {
+            var items = player.EquipmentInventory ?? new List<RpgEquipment>();
+            if (!type.HasValue)
+            {
+                return items;
+            }
+            
+            return items.Where(e => e.Type == type.Value).ToList();
+        }
+        
         public void AddXP(RpgPlayer player, int xp)
         {
             player.XP += xp;
@@ -505,6 +557,68 @@ namespace BotTelegram.RPG.Services
         public void RestoreHP(RpgPlayer player, int amount)
         {
             player.HP = Math.Min(player.MaxHP, player.HP + amount);
+        }
+
+        private static RpgEquipment? GetEquippedByType(RpgPlayer player, EquipmentType type)
+        {
+            return type switch
+            {
+                EquipmentType.Weapon => player.EquippedWeaponNew,
+                EquipmentType.Armor => player.EquippedArmorNew,
+                EquipmentType.Accessory => player.EquippedAccessoryNew,
+                _ => null
+            };
+        }
+        
+        private static void SetEquippedByType(RpgPlayer player, RpgEquipment item)
+        {
+            switch (item.Type)
+            {
+                case EquipmentType.Weapon:
+                    player.EquippedWeaponNew = item;
+                    break;
+                case EquipmentType.Armor:
+                    player.EquippedArmorNew = item;
+                    break;
+                case EquipmentType.Accessory:
+                    player.EquippedAccessoryNew = item;
+                    break;
+            }
+        }
+        
+        private static void ClearEquippedByType(RpgPlayer player, EquipmentType type)
+        {
+            switch (type)
+            {
+                case EquipmentType.Weapon:
+                    player.EquippedWeaponNew = null;
+                    break;
+                case EquipmentType.Armor:
+                    player.EquippedArmorNew = null;
+                    break;
+                case EquipmentType.Accessory:
+                    player.EquippedAccessoryNew = null;
+                    break;
+            }
+        }
+        
+        private static void ApplyEquipmentResources(RpgPlayer player, RpgEquipment? oldItem, RpgEquipment? newItem)
+        {
+            var oldHp = oldItem?.BonusHP ?? 0;
+            var oldMana = oldItem?.BonusMana ?? 0;
+            var oldStamina = oldItem?.BonusStamina ?? 0;
+            
+            var newHp = newItem?.BonusHP ?? 0;
+            var newMana = newItem?.BonusMana ?? 0;
+            var newStamina = newItem?.BonusStamina ?? 0;
+            
+            player.MaxHP = Math.Max(1, player.MaxHP - oldHp + newHp);
+            player.MaxMana = Math.Max(0, player.MaxMana - oldMana + newMana);
+            player.MaxStamina = Math.Max(0, player.MaxStamina - oldStamina + newStamina);
+            
+            player.HP = Math.Min(player.HP, player.MaxHP);
+            player.Mana = Math.Min(player.Mana, player.MaxMana);
+            player.Stamina = Math.Min(player.Stamina, player.MaxStamina);
         }
         
         // Enemy Generation
