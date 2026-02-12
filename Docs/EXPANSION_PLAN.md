@@ -78,9 +78,21 @@
 
 ---
 
-### 🚧 **FASE 3: EXPANSIÓN DE CLASES OCULTAS**
-**Estado:** 🔜 **PENDIENTE**  
-**Progreso:** 0%
+### ✅ **FASE 3: EXPANSIÓN DE CLASES OCULTAS**
+**Estado:** ✅ **COMPLETADA** (Commit: cd12f39 - Fecha: 2025)  
+**Progreso:** 100%
+
+**Implementación:**
+- ✅ 10 nuevas clases ocultas agregadas (Fortress Knight, Immovable Mountain, Berserker Blood Rage, Arcane Siphoner, Life Weaver, Puppet Master, Time Bender, Elemental Overlord, Beast Lord, Lich King, Void Summoner)
+- ✅ 40 nuevos pasivos implementados en PassiveDatabase.cs
+- ✅ Requisitos de las 6 clases originales aumentados 2x-5x
+- ✅ Total: 16 clases ocultas, 78 pasivos
+- ✅ Líneas agregadas: ~1186 líneas de código
+
+**Archivos Modificados:**
+- `src/BotTelegram/RPG/Services/HiddenClassDatabase.cs` (+644 líneas)
+- `src/BotTelegram/RPG/Services/PassiveDatabase.cs` (+491 líneas)
+- `src/BotTelegram/RPG/Models/Passive.cs` (+51 líneas)
 
 ---
 
