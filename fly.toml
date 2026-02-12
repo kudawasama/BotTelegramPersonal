@@ -1,0 +1,21 @@
+# Configuración de Fly.io para BotTelegram
+app = "bottelegram"
+primary_region = "scl" # Santiago, Chile - más cercano a ti
+
+[build]
+
+[env]
+  ASPNETCORE_ENVIRONMENT = "Production"
+  DOTNET_PRINT_TELEMETRY_MESSAGE = "false"
+
+[http_service]
+  internal_port = 10000
+  force_https = true
+  auto_stop_machines = false  # Mantener siempre activo
+  auto_start_machines = true
+  min_machines_running = 1    # Siempre 1 instancia corriendo
+
+[[vm]]
+  memory = '256mb'  # Free tier
+  cpu_kind = 'shared'
+  cpus = 1
