@@ -533,9 +533,9 @@ namespace BotTelegram.RPG.Services
         /// <summary>
         /// Genera loot random para un enemigo derrotado
         /// </summary>
-        public static RpgEquipment? GenerateLoot(int playerLevel, double dropChance = 0.15)
+        public static RpgEquipment? GenerateLoot(int playerLevel, double dropChance = 0.08)
         {
-            // 15% chance base de drop
+            // 8% chance base de drop (reducido de 15% para mayor dificultad)
             if (_random.NextDouble() > dropChance)
                 return null;
             

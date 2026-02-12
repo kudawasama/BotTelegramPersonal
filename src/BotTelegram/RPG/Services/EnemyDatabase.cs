@@ -19,14 +19,14 @@ namespace BotTelegram.RPG.Services
                     Description = "Un lobo hambriento que defiende su territorio",
                     Type = EnemyType.Beast,
                     Behavior = EnemyBehavior.Aggressive,
-                    HP = 35, MaxHP = 35,            // +40% (era 25)
-                    Attack = 18, MagicPower = 0,    // +50% (era 12)
-                    PhysicalDefense = 12, MagicResistance = 5,  // +50% (era 8/3)
-                    Accuracy = 18, Evasion = 15, Speed = 7,     // +20% (era 15/12)
+                    HP = 55, MaxHP = 55,            // +120% (era 25) - REBALANCEADO
+                    Attack = 28, MagicPower = 0,    // +133% (era 12) - REBALANCEADO
+                    PhysicalDefense = 20, MagicResistance = 8,  // +150%/167% - REBALANCEADO
+                    Accuracy = 22, Evasion = 18, Speed = 8,     // +47%/50%/60% - REBALANCEADO
                     PrimaryDamageType = DamageType.Piercing,
                     Weaknesses = new() { { DamageType.Fire, 1.3 } },
                     Resistances = new() { { DamageType.Ice, 0.3 } },
-                    XPReward = 25, GoldReward = 20  // +25/33% recompensas
+                    XPReward = 15, GoldReward = 12  // -40% rewards para progresión más lenta
                 },
                 
                 // ═══ GOBLIN ═══
@@ -37,14 +37,14 @@ namespace BotTelegram.RPG.Services
                     Description = "Criatura pequeña pero astuta con armas improvisadas",
                     Type = EnemyType.Humanoid,
                     Behavior = EnemyBehavior.Coward,
-                    HP = 30, MaxHP = 30,            // +50% (era 20)
-                    Attack = 15, MagicPower = 0,    // +50% (era 10)
-                    PhysicalDefense = 8, MagicResistance = 8,  // +60% (era 5/5)
-                    Accuracy = 15, Evasion = 13, Speed = 7,    // +25/30% (era 12/10)
+                    HP = 48, MaxHP = 48,            // +140% (era 20) - REBALANCEADO
+                    Attack = 24, MagicPower = 0,    // +140% (era 10) - REBALANCEADO
+                    PhysicalDefense = 13, MagicResistance = 12,  // +160%/140% - REBALANCEADO
+                    Accuracy = 19, Evasion = 16, Speed = 8,    // +58%/60%/60% - REBALANCEADO
                     PrimaryDamageType = DamageType.Slashing,
                     Weaknesses = new() { { DamageType.Fire, 1.5 } },
                     StatusImmunities = new() { StatusEffectType.Poisoned },
-                    XPReward = 20, GoldReward = 25  // +33/25% recompensas
+                    XPReward = 12, GoldReward = 15  // -40% rewards
                 },
                 
                 // ═══ ESQUELETO ═══
@@ -55,10 +55,10 @@ namespace BotTelegram.RPG.Services
                     Description = "Muerto viviente reanimado por magia oscura",
                     Type = EnemyType.Undead,
                     Behavior = EnemyBehavior.Passive,
-                    HP = 28, MaxHP = 28,            // +55% (era 18)
-                    Attack = 20, MagicPower = 0,    // +43% (era 14)
-                    PhysicalDefense = 5, MagicResistance = 15,  // +67/50% (era 3/10)
-                    Accuracy = 13, Evasion = 7, Speed = 5,      // +30/40% (era 10/5)
+                    HP = 44, MaxHP = 44,            // +144% (era 18) - REBALANCEADO
+                    Attack = 32, MagicPower = 0,    // +129% (era 14) - REBALANCEADO
+                    PhysicalDefense = 8, MagicResistance = 22,  // +167%/120% - REBALANCEADO
+                    Accuracy = 17, Evasion = 10, Speed = 6,      // +70%/100%/20% - REBALANCEADO
                     PrimaryDamageType = DamageType.Slashing,
                     Weaknesses = new() 
                     { 
@@ -76,7 +76,7 @@ namespace BotTelegram.RPG.Services
                         StatusEffectType.Poisoned, 
                         StatusEffectType.Bleeding 
                     },
-                    XPReward = 23, GoldReward = 16  // +28/33% recompensas
+                    XPReward = 14, GoldReward = 10  // -40% rewards
                 },
                 
                 // ═══ SLIME ═══
@@ -87,10 +87,10 @@ namespace BotTelegram.RPG.Services
                     Description = "Criatura gelatinosa que se mueve lentamente",
                     Type = EnemyType.Aberration,
                     Behavior = EnemyBehavior.Passive,
-                    HP = 45, MaxHP = 45,            // +50% (era 30)
-                    Attack = 9, MagicPower = 0,     // +50% (era 6)
-                    PhysicalDefense = 4, MagicResistance = 4,  // +100% (era 2/2)
-                    Accuracy = 10, Evasion = 5, Speed = 3,     // +25/67/50% (era 8/3/2)
+                    HP = 72, MaxHP = 72,            // +140% (era 30) - REBALANCEADO
+                    Attack = 14, MagicPower = 0,     // +133% (era 6) - REBALANCEADO
+                    PhysicalDefense = 6, MagicResistance = 6,  // +200%/200% - REBALANCEADO
+                    Accuracy = 13, Evasion = 7, Speed = 4,     // +63%/133%/100% - REBALANCEADO
                     PrimaryDamageType = DamageType.Acid,
                     Weaknesses = new() 
                     { 
@@ -104,7 +104,7 @@ namespace BotTelegram.RPG.Services
                     },
                     StatusImmunities = new() { StatusEffectType.Poisoned },
                     CanPoison = true,
-                    XPReward = 16, GoldReward = 14  // +33/40% recompensas
+                    XPReward = 10, GoldReward = 8  // -40% rewards
                 }
             };
         }
@@ -121,14 +121,14 @@ namespace BotTelegram.RPG.Services
                     Description = "Guerrero brutal con armadura pesada",
                     Type = EnemyType.Humanoid,
                     Behavior = EnemyBehavior.Aggressive,
-                    HP = 80, MaxHP = 80,            // +45% (era 55)
-                    Attack = 26, MagicPower = 0,    // +44% (era 18)
-                    PhysicalDefense = 22, MagicResistance = 8,  // +47/60% (era 15/5)
-                    Accuracy = 16, Evasion = 9, Speed = 6,      // +33/50% (era 12/6)
+                    HP = 110, MaxHP = 110,            // +100% (era 55) - REBALANCEADO
+                    Attack = 36, MagicPower = 0,    // +100% (era 18) - REBALANCEADO
+                    PhysicalDefense = 30, MagicResistance = 10,  // +100% - REBALANCEADO
+                    Accuracy = 18, Evasion = 12, Speed = 7,      // +50%/100% - REBALANCEADO
                     PrimaryDamageType = DamageType.Slashing,
                     Weaknesses = new() { { DamageType.Magical, 1.3 } },
                     Resistances = new() { { DamageType.Physical, 0.2 } },
-                    XPReward = 55, GoldReward = 40  // +37/33% recompensas
+                    XPReward = 33, GoldReward = 24  // -40% rewards
                 },
                 
                 // ═══ GOLEM DE PIEDRA ═══
@@ -139,10 +139,10 @@ namespace BotTelegram.RPG.Services
                     Description = "Constructo animado de roca sólida, lento pero resistente",
                     Type = EnemyType.Construct,
                     Behavior = EnemyBehavior.Defensive,
-                    HP = 120, MaxHP = 120,          // +50% (era 80)
-                    Attack = 32, MagicPower = 0,    // +45% (era 22)
-                    PhysicalDefense = 50, MagicResistance = 8,  // +43/60% (era 35/5)
-                    Accuracy = 11, Evasion = 3, Speed = 4,      // +37/50/33% (era 8/2/3)
+                    HP = 160, MaxHP = 160,          // +100% (era 80) - REBALANCEADO
+                    Attack = 44, MagicPower = 0,    // +100% (era 22) - REBALANCEADO
+                    PhysicalDefense = 70, MagicResistance = 10,  // +100% - REBALANCEADO
+                    Accuracy = 11, Evasion = 4, Speed = 4,      // +37%/100%/33% - REBALANCEADO
                     PrimaryDamageType = DamageType.Bludgeoning,
                     Weaknesses = new() 
                     { 
@@ -161,7 +161,7 @@ namespace BotTelegram.RPG.Services
                         StatusEffectType.Bleeding,
                         StatusEffectType.Stunned
                     },
-                    XPReward = 70, GoldReward = 35  // +40/40% recompensas
+                    XPReward = 42, GoldReward = 21  // -40% rewards
                 },
                 
                 // ═══ ARAÑA GIGANTE ═══
@@ -172,16 +172,16 @@ namespace BotTelegram.RPG.Services
                     Description = "Arácnido colosal con veneno mortal",
                     Type = EnemyType.Beast,
                     Behavior = EnemyBehavior.Intelligent,
-                    HP = 60, MaxHP = 60,            // +50% (era 40)
-                    Attack = 22, MagicPower = 0,    // +47% (era 15)
-                    PhysicalDefense = 12, MagicResistance = 12,  // +50/50% (era 8/8)
-                    Accuracy = 24, Evasion = 20, Speed = 10,     // +33/33/25% (era 18/15/8)
+                    HP = 80, MaxHP = 80,            // +100% (era 40) - REBALANCEADO
+                    Attack = 30, MagicPower = 0,    // +100% (era 15) - REBALANCEADO
+                    PhysicalDefense = 16, MagicResistance = 16,  // +100% - REBALANCEADO
+                    Accuracy = 27, Evasion = 23, Speed = 12,     // +50%/53%/50% - REBALANCEADO
                     PrimaryDamageType = DamageType.Piercing,
                     Weaknesses = new() { { DamageType.Fire, 2.0 } },
                     Resistances = new() { { DamageType.Poison, 0.8 } },
                     StatusImmunities = new() { StatusEffectType.Poisoned },
                     CanPoison = true,
-                    XPReward = 50, GoldReward = 35  // +43/40% recompensas
+                    XPReward = 30, GoldReward = 21  // -40% rewards
                 },
                 
                 // ═══ ELEMENTAL DE FUEGO ═══
@@ -244,16 +244,16 @@ namespace BotTelegram.RPG.Services
                     Description = "Gigante de hielo con regeneración constante",
                     Type = EnemyType.Beast,
                     Behavior = EnemyBehavior.Aggressive,
-                    HP = 150, MaxHP = 150,          // +50% (era 100)
-                    Attack = 38, MagicPower = 22,   // +46/47% (era 26/15)
-                    PhysicalDefense = 30, MagicResistance = 22,  // +50/47% (era 20/15)
-                    Accuracy = 16, Evasion = 9, Speed = 6,       // +33/50/20% (era 12/6/5)
+                    HP = 250, MaxHP = 250,          // +150% (era 100) - REBALANCEADO
+                    Attack = 65, MagicPower = 38,   // +150% (era 26/15) - REBALANCEADO
+                    PhysicalDefense = 50, MagicResistance = 38,  // +150% - REBALANCEADO
+                    Accuracy = 18, Evasion = 12, Speed = 7,       // +50%/100%/40% - REBALANCEADO
                     PrimaryDamageType = DamageType.Bludgeoning,
                     Weaknesses = new() { { DamageType.Fire, 2.0 } },
                     Immunities = new() { DamageType.Ice },
                     Resistances = new() { { DamageType.Physical, 0.3 } },
                     CanRegenerate = true,
-                    XPReward = 95, GoldReward = 80  // +36/33% recompensas
+                    XPReward = 57, GoldReward = 48  // -40% rewards
                 },
                 
                 // ═══ DEMONIO MENOR ═══
@@ -264,10 +264,10 @@ namespace BotTelegram.RPG.Services
                     Description = "Ser infernal que domina la magia oscura",
                     Type = EnemyType.Demon,
                     Behavior = EnemyBehavior.Intelligent,
-                    HP = 110, MaxHP = 110,          // +47% (era 75)
-                    Attack = 22, MagicPower = 44,   // +47/47% (era 15/30)
-                    PhysicalDefense = 18, MagicResistance = 36,  // +50/44% (era 12/25)
-                    Accuracy = 24, Evasion = 22, Speed = 10,     // +33/37/25% (era 18/16/8)
+                    HP = 188, MaxHP = 188,          // +150% (era 75) - REBALANCEADO
+                    Attack = 38, MagicPower = 75,   // +153% (era 15/30) - REBALANCEADO
+                    PhysicalDefense = 30, MagicResistance = 63,  // +150%/152% - REBALANCEADO
+                    Accuracy = 27, Evasion = 25, Speed = 12,     // +50%/56%/50% - REBALANCEADO
                     PrimaryDamageType = DamageType.Fire,
                     Weaknesses = new() 
                     { 
@@ -277,7 +277,7 @@ namespace BotTelegram.RPG.Services
                     Immunities = new() { DamageType.Fire, DamageType.Dark },
                     Resistances = new() { { DamageType.Magical, 0.5 } },
                     CanTeleport = true,
-                    XPReward = 105, GoldReward = 75  // +40/36% recompensas
+                    XPReward = 63, GoldReward = 45  // -40% rewards
                 },
                 
                 // ═══ CABALLERO OSCURO ═══
@@ -288,10 +288,10 @@ namespace BotTelegram.RPG.Services
                     Description = "Guerrero corrupto con armadura maldita",
                     Type = EnemyType.Undead,
                     Behavior = EnemyBehavior.Balanced,
-                    HP = 125, MaxHP = 125,          // +47% (era 85)
-                    Attack = 40, MagicPower = 18,   // +43/50% (era 28/12)
-                    PhysicalDefense = 40, MagicResistance = 26,  // +43/44% (era 28/18)
-                    Accuracy = 27, Evasion = 16, Speed = 9,      // +35/33/29% (era 20/12/7)
+                    HP = 213, MaxHP = 213,          // +150% (era 85) - REBALANCEADO
+                    Attack = 70, MagicPower = 30,   // +150% (era 28/12) - REBALANCEADO
+                    PhysicalDefense = 70, MagicResistance = 45,  // +150% - REBALANCEADO
+                    Accuracy = 30, Evasion = 18, Speed = 10,      // +50%/50%/43% - REBALANCEADO
                     PrimaryDamageType = DamageType.Slashing,
                     Weaknesses = new() { { DamageType.Holy, 1.8 } },
                     Resistances = new() 
@@ -305,7 +305,7 @@ namespace BotTelegram.RPG.Services
                         StatusEffectType.Poisoned,
                         StatusEffectType.Bleeding
                     },
-                    XPReward = 90, GoldReward = 95  // +38/36% recompensas
+                    XPReward = 54, GoldReward = 57  // -40% rewards
                 },
                 
                 // ═══ ESPECTRO ═══
@@ -316,10 +316,10 @@ namespace BotTelegram.RPG.Services
                     Description = "Fantasma intangible que drena vida",
                     Type = EnemyType.Undead,
                     Behavior = EnemyBehavior.Intelligent,
-                    HP = 88, MaxHP = 88,            // +47% (era 60)
-                    Attack = 15, MagicPower = 40,   // +50/43% (era 10/28)
-                    PhysicalDefense = 8, MagicResistance = 42,  // +60/40% (era 5/30)
-                    Accuracy = 27, Evasion = 34, Speed = 11,    // +35/36/22% (era 20/25/9)
+                    HP = 150, MaxHP = 150,            // +150% (era 60) - REBALANCEADO
+                    Attack = 25, MagicPower = 70,   // +150% (era 10/28) - REBALANCEADO
+                    PhysicalDefense = 13, MagicResistance = 75,  // +160%/150% - REBALANCEADO
+                    Accuracy = 30, Evasion = 38, Speed = 13,    // +50%/52%/44% - REBALANCEADO
                     PrimaryDamageType = DamageType.Dark,
                     Weaknesses = new() 
                     { 

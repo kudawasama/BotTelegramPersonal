@@ -27,11 +27,11 @@ namespace BotTelegram.RPG.Services
             }
             
             // ═══════════════════════════════════════
-            // SISTEMA DE PROBABILIDADES FIJAS
+            // SISTEMA DE PROBABILIDADES FIJAS (REBALANCEADO)
             // ═══════════════════════════════════════
             
             // 1. CALCULAR HIT CHANCE (probabilidad de golpear)
-            double baseHitChance = 85.0; // Base 85%
+            double baseHitChance = 65.0; // Base 65% (reducido de 85% para mayor dificultad)
             double accuracyBonus = (player.Accuracy - enemy.Evasion) * 0.5; // Cada punto de diferencia = 0.5%
             double hitChance = Math.Clamp(baseHitChance + accuracyBonus, 10.0, 95.0); // Min 10%, Max 95%
             

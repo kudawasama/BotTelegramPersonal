@@ -226,7 +226,7 @@ namespace BotTelegram.RPG.Models
         }
         
         [JsonIgnore]
-        public int XPNeeded => Level * 100;
+        public int XPNeeded => (int)(100 * Math.Pow(1.15, Level - 1)); // Fórmula exponencial para progresión más lenta
         
         [JsonIgnore]
         public string ClassEmoji => Class switch
