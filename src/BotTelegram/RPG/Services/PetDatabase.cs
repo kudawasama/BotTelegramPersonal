@@ -95,6 +95,7 @@ namespace BotTelegram.RPG.Services
                     EvolutionStage = 1,
                     NextEvolution = "dragon_2",
                     Rarity = PetRarity.Rare,
+                    AttackType = AttackType.Magical,
                     BaseStats = new PetStats { HP = 60, Attack = 35, Defense = 20, Speed = 7, MagicPower = 40 },
                     Abilities = new List<string> { "flame_breath" },
                     EvolutionRequirements = new EvolutionReqs { Level = 20, Bond = 500, Kills = 100, BossKills = 10 }
@@ -106,6 +107,7 @@ namespace BotTelegram.RPG.Services
                     EvolutionStage = 2,
                     NextEvolution = "dragon_3",
                     Rarity = PetRarity.Epic,
+                    AttackType = AttackType.Magical,
                     BaseStats = new PetStats { HP = 180, Attack = 90, Defense = 60, Speed = 12, MagicPower = 110 },
                     Abilities = new List<string> { "flame_breath", "dragon_claw", "wing_gust", "fireball" },
                     EvolutionRequirements = new EvolutionReqs { Level = 40, Bond = 800, Kills = 300, BossKills = 100 }
@@ -117,6 +119,7 @@ namespace BotTelegram.RPG.Services
                     EvolutionStage = 3,
                     NextEvolution = null,
                     Rarity = PetRarity.Mythical,
+                    AttackType = AttackType.Magical,
                     BaseStats = new PetStats { HP = 400, Attack = 200, Defense = 140, Speed = 18, MagicPower = 280 },
                     Abilities = new List<string> { "flame_breath", "dragon_claw", "wing_gust", "fireball", "inferno", "dragon_rage", "immortal_flame" },
                     EvolutionRequirements = null,
@@ -140,7 +143,7 @@ namespace BotTelegram.RPG.Services
                     Species = "Pantera Sombra",
                     Emoji = "🐈‍⬛",
                     EvolutionStage = 2,
-OneEvolution = "cat_3",
+                    NextEvolution = "cat_3",
                     Rarity = PetRarity.Rare,
                     BaseStats = new PetStats { HP = 100, Attack = 80, Defense = 30, Speed = 22, MagicPower = 0 },
                     Abilities = new List<string> { "quick_strike", "shadow_pounce", "evasion_boost" },
@@ -203,6 +206,7 @@ OneEvolution = "cat_3",
                     EvolutionStage = 1,
                     NextEvolution = "snake_2",
                     Rarity = PetRarity.Common,
+                    AttackType = AttackType.Magical,
                     BaseStats = new PetStats { HP = 45, Attack = 22, Defense = 12, Speed = 10, MagicPower = 15 },
                     Abilities = new List<string> { "poison_bite" },
                     EvolutionRequirements = new EvolutionReqs { Level = 15, Bond = 400, Kills = 50, BossKills = 0 }
@@ -214,6 +218,7 @@ OneEvolution = "cat_3",
                     EvolutionStage = 2,
                     NextEvolution = "snake_3",
                     Rarity = PetRarity.Rare,
+                    AttackType = AttackType.Magical,
                     BaseStats = new PetStats { HP = 110, Attack = 60, Defense = 35, Speed = 14, MagicPower = 50 },
                     Abilities = new List<string> { "poison_bite", "petrifying_gaze", "venom_spit" },
                     EvolutionRequirements = new EvolutionReqs { Level = 35, Bond = 700, Kills = 200, BossKills = 50 }
@@ -225,6 +230,7 @@ OneEvolution = "cat_3",
                     EvolutionStage = 3,
                     NextEvolution = null,
                     Rarity = PetRarity.Mythical,
+                    AttackType = AttackType.Magical,
                     BaseStats = new PetStats { HP = 350, Attack = 130, Defense = 90, Speed = 16, MagicPower = 150 },
                     Abilities = new List<string> { "poison_bite", "petrifying_gaze", "venom_spit", "world_serpent_coil", "toxic_deluge" },
                     EvolutionRequirements = null,
@@ -251,6 +257,7 @@ OneEvolution = "cat_3",
                 Name = string.IsNullOrWhiteSpace(customName) ? speciesData.Species : customName,
                 Rarity = speciesData.Rarity,
                 EvolutionStage = speciesData.EvolutionStage,
+                AttackType = speciesData.AttackType,
                 HP = speciesData.BaseStats.HP,
                 MaxHP = speciesData.BaseStats.HP,
                 Attack = speciesData.BaseStats.Attack,
@@ -314,6 +321,7 @@ OneEvolution = "cat_3",
             pet.Defense = nextSpeciesData.BaseStats.Defense;
             pet.Speed = nextSpeciesData.BaseStats.Speed;
             pet.MagicPower = nextSpeciesData.BaseStats.MagicPower;
+            pet.AttackType = nextSpeciesData.AttackType;
             
             // Actualizar habilidades
             pet.Abilities = new List<string>(nextSpeciesData.Abilities);
@@ -335,6 +343,7 @@ OneEvolution = "cat_3",
         public int EvolutionStage { get; set; } = 1;
         public string? NextEvolution { get; set; }
         public PetRarity Rarity { get; set; }
+        public AttackType AttackType { get; set; } = AttackType.Physical; // Físico o Mágico
         public PetStats BaseStats { get; set; } = new();
         public List<string> Abilities { get; set; } = new();
         public EvolutionReqs? EvolutionRequirements { get; set; }

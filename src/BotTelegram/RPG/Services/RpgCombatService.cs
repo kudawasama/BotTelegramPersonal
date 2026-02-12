@@ -143,6 +143,20 @@ namespace BotTelegram.RPG.Services
                 return result;
             }
             
+            // ═══ FASE 2: TURNOS DE MASCOTAS ═══
+            // Las mascotas atacan después del jugador pero antes del contraataque enemigo
+            if (player.ActivePets?.Any(p => p.HP > 0) == true)
+            {
+                ProcessPetTurns(player, enemy, result);
+                
+                // Verificar si el enemigo fue derrotado por las mascotas
+                if (enemy.HP <= 0)
+                {
+                    ApplyVictoryRewards(player, enemy, result);
+                    return result;
+                }
+            }
+            
             // Procesar efectos de estado antes del contraataque
             ProcessStatusEffects(player, enemy, result);
             
@@ -181,6 +195,219 @@ namespace BotTelegram.RPG.Services
             }
             
             return result;
+        }
+        
+        // ═══════════════════════════════════════
+        // FASE 2: SISTEMA DE TURNOS DE MASCOTAS
+        // ═══════════════════════════════════════
+        
+        /// <summary>
+        /// Procesa los turnos de todas las mascotas activas del jugador
+        /// </summary>
+        private void ProcessPetTurns(RpgPlayer player, RpgEnemy enemy, CombatResult result)
+        {
+            if (player.ActivePets == null || player.ActivePets.Count == 0 || enemy.HP <= 0)
+            {
+                return; // No hay mascotas o enemigo ya derrotado
+            }
+            
+            foreach (var pet in player.ActivePets.Where(p => p.HP > 0).ToList())
+            {
+                // Verificar si la mascota está aturdida
+                if (pet.StatusEffects.Any(e => e.Type == StatusEffectType.Stunned))
+                {
+                    AddCombatLog(player, $"🐾 {pet.Name}", "💫 Aturdido - No ataca");
+                    continue;
+                }
+                
+                var petResult = PetAttack(player, pet, enemy);
+                result.PetTurns.Add(petResult);
+                result.TotalPetDamage += petResult.Damage;
+                
+                // Si el enemigo fue derrotado por la mascota
+                if (enemy.HP <= 0)
+                {
+                    pet.TotalKills++;
+                    if (enemy.IsBoss)
+                    {
+                        pet.BossKills++;
+                    }
+                    break;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Ejecuta el ataque de una mascota individual
+        /// </summary>
+        private PetTurnResult PetAttack(RpgPlayer player, RpgPet pet, RpgEnemy enemy)
+        {
+            var petResult = new PetTurnResult
+            {
+                PetName = pet.Name,
+                Emoji = GetPetEmoji(pet.Species)
+            };
+            
+            // ═══ CALCULAR HIT CHANCE ═══
+            double baseHitChance = 70.0; // Base 70% para mascotas
+            
+            // Bonus de loyalty (mascotas leales son más precisas)
+            double loyaltyBonus = pet.Loyalty switch
+            {
+                PetLoyalty.Hostile => -20.0,
+                PetLoyalty.Neutral => 0.0,
+                PetLoyalty.Friendly => 5.0,
+                PetLoyalty.Loyal => 10.0,
+                PetLoyalty.Devoted => 15.0,
+                _ => 0.0
+            };
+            
+            // Bonus por nivel y agilidad
+            double levelBonus = (pet.Level - enemy.Level) * 2.0;
+            double speedBonus = (pet.Speed - enemy.Evasion) * 0.5;
+            
+            double hitChance = Math.Clamp(baseHitChance + loyaltyBonus + levelBonus + speedBonus, 20.0, 95.0);
+            
+            double hitRoll = _random.Next(0, 10000) / 100.0;
+            petResult.HitChance = hitChance;
+            petResult.HitRoll = hitRoll;
+            petResult.Hit = hitRoll <= hitChance;
+            
+            if (!petResult.Hit)
+            {
+                AddCombatLog(player, $"{petResult.Emoji} {pet.Name}", "💨 ¡Falla el ataque!");
+                return petResult;
+            }
+            
+            // ═══ CALCULAR DAÑO ═══
+            int baseDamage = pet.EffectiveAttack; // Ya incluye loyalty bonus
+            
+            // Variación de daño (85-115% para mascotas)
+            baseDamage = (int)(baseDamage * (_random.Next(85, 116) / 100.0));
+            
+            // Aplicar comportamiento de la mascota
+            baseDamage = ApplyPetBehavior(pet, enemy, baseDamage, petResult);
+            
+            // Reducción por defensa enemiga
+            int defense = pet.AttackType == AttackType.Magical ? enemy.MagicResistance : enemy.PhysicalDefense;
+            int damageReduction = defense / 2;
+            int finalDamage = Math.Max(1, baseDamage - damageReduction);
+            
+            // ═══ CRÍTICO ═══
+            double critChance = 5.0 + (pet.Level * 0.5); // Base 5% + nivel
+            if (pet.Loyalty == PetLoyalty.Devoted)
+            {
+                critChance += 10.0; // +10% crit si está devoto
+            }
+            
+            double critRoll = _random.Next(0, 10000) / 100.0;
+            petResult.Critical = critRoll <= critChance;
+            
+            if (petResult.Critical)
+            {
+                finalDamage = (int)(finalDamage * 1.75);
+            }
+            
+            // Aplicar daño
+            enemy.HP -= finalDamage;
+            pet.TotalDamageDealt += finalDamage;
+            petResult.Damage = finalDamage;
+            petResult.AttackType = pet.AttackType;
+            
+            // ═══ LOG ═══
+            string critText = petResult.Critical ? " ⚡ CRÍTICO" : "";
+            string behaviorText = GetBehaviorText(pet.PetBehavior);
+            AddCombatLog(player, $"{petResult.Emoji} {pet.Name}", 
+                $"{behaviorText} {finalDamage} daño{critText}");
+            
+            // ═══ EFECTOS ESPECIALES ═══
+            CheckPetSpecialEffects(pet, enemy, petResult);
+            
+            // XP para la mascota
+            if (enemy.HP <= 0)
+            {
+                pet.EvolutionXP += (int)(enemy.Level * 50 * (enemy.IsBoss ? 3 : 1));
+            }
+            
+            return petResult;
+        }
+        
+        /// <summary>
+        /// Aplica el comportamiento de la mascota al daño
+        /// </summary>
+        private int ApplyPetBehavior(RpgPet pet, RpgEnemy enemy, int baseDamage, PetTurnResult result)
+        {
+            double hpPercent = (double)enemy.HP / enemy.MaxHP;
+            
+            return pet.PetBehavior switch
+            {
+                PetBehavior.Aggressive => (int)(baseDamage * 1.2), // +20% daño siempre
+                PetBehavior.Defensive => hpPercent < 0.3 ? (int)(baseDamage * 1.4) : (int)(baseDamage * 0.8), // +40% si enemigo bajo HP
+                PetBehavior.Balanced => baseDamage, // Sin modificación
+                PetBehavior.Supportive => (int)(baseDamage * 0.7), // -30% daño (se enfoca en buffs)
+                PetBehavior.Smart => hpPercent > 0.7 ? (int)(baseDamage * 1.3) : baseDamage, // +30% si enemigo con mucho HP
+                _ => baseDamage
+            };
+        }
+        
+        /// <summary>
+        /// Verifica efectos especiales de mascotas (veneno, burn, etc.)
+        /// </summary>
+        private void CheckPetSpecialEffects(RpgPet pet, RpgEnemy enemy, PetTurnResult result)
+        {
+            // Dragones tienen chance de quemar
+            if (pet.Species.StartsWith("dragon_") && _random.Next(100) < 20)
+            {
+                var burnEffect = new StatusEffect(StatusEffectType.Burning, 3, pet.MagicPower / 2);
+                enemy.StatusEffects.Add(burnEffect);
+                result.InflictedEffect = StatusEffectType.Burning;
+            }
+            
+            // Serpientes tienen chance de envenenar
+            if (pet.Species.StartsWith("snake_") && _random.Next(100) < 25)
+            {
+                var poisonEffect = new StatusEffect(StatusEffectType.Poisoned, 4, pet.Attack / 3);
+                enemy.StatusEffects.Add(poisonEffect);
+                result.InflictedEffect = StatusEffectType.Poisoned;
+            }
+            
+            // Osos tienen chance de aturdir
+            if (pet.Species.StartsWith("bear_") && _random.Next(100) < 15)
+            {
+                var stunEffect = new StatusEffect(StatusEffectType.Stunned, 1, 0);
+                enemy.StatusEffects.Add(stunEffect);
+                result.InflictedEffect = StatusEffectType.Stunned;
+            }
+        }
+        
+        /// <summary>
+        /// Obtiene el emoji según la especie de la mascota
+        /// </summary>
+        private string GetPetEmoji(string species)
+        {
+            if (species.StartsWith("wolf_")) return "🐺";
+            if (species.StartsWith("bear_")) return "🐻";
+            if (species.StartsWith("dragon_")) return "🐉";
+            if (species.StartsWith("wildcat_")) return "🐱";
+            if (species.StartsWith("eagle_")) return "🦅";
+            if (species.StartsWith("snake_")) return "🐍";
+            return "🐾";
+        }
+        
+        /// <summary>
+        /// Obtiene el texto descriptivo del comportamiento
+        /// </summary>
+        private string GetBehaviorText(PetBehavior behavior)
+        {
+            return behavior switch
+            {
+                PetBehavior.Aggressive => "🔥 Embiste:",
+                PetBehavior.Defensive => "🛡️ Protege:",
+                PetBehavior.Balanced => "⚔️ Ataca:",
+                PetBehavior.Supportive => "💚 Ayuda:",
+                PetBehavior.Smart => "🧠 Calcula:",
+                _ => "⚔️ Ataca:"
+            };
         }
         
         public CombatResult PlayerDefend(RpgPlayer player, RpgEnemy enemy)
@@ -792,12 +1019,29 @@ namespace BotTelegram.RPG.Services
         // Skills desbloqueadas al terminar combate
         public List<RpgSkill> UnlockedSkills { get; set; } = new();
         
+        // Sistema de mascotas (FASE 2)
+        public List<PetTurnResult> PetTurns { get; set; } = new();
+        public int TotalPetDamage { get; set; }
+        
         // Legacy (compatibilidad)
         [Obsolete("Use HitChancePercent y HitRoll instead")]
         public int PlayerRoll { get; set; }
         
         [Obsolete("Use EnemyHitChancePercent y EnemyHitRoll instead")]
         public int EnemyRoll { get; set; }
+    }
+    
+    public class PetTurnResult
+    {
+        public string PetName { get; set; } = "";
+        public bool Hit { get; set; }
+        public bool Critical { get; set; }
+        public int Damage { get; set; }
+        public double HitChance { get; set; }
+        public double HitRoll { get; set; }
+        public AttackType AttackType { get; set; }
+        public StatusEffectType? InflictedEffect { get; set; }
+        public string Emoji { get; set; } = "🐾";
     }
     
     public enum AttackType

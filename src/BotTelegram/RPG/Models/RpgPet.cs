@@ -33,6 +33,9 @@ namespace BotTelegram.RPG.Models
         public List<string> Abilities { get; set; } = new(); // IDs de habilidades
         public List<StatusEffect> StatusEffects { get; set; } = new(); // Buffs/debuffs activos
         
+        // Tipo de ataque
+        public AttackType AttackType { get; set; } = AttackType.Physical; // Físico o Mágico
+        
         // Evolución
         public int EvolutionStage { get; set; } = 1; // 1=Basic, 2=Advanced, 3=Ultimate
         public int EvolutionXP { get; set; } = 0;
