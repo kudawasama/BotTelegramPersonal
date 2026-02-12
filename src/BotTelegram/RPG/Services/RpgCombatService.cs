@@ -1044,9 +1044,4 @@ namespace BotTelegram.RPG.Services
         public string Emoji { get; set; } = "🐾";
     }
     
-    public enum AttackType
-    {
-        Physical,  // Usa defensa física
-        Magical    // Usa resistencia mágica
-    }
 }

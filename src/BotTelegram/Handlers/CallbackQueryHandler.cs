@@ -118,6 +118,11 @@ namespace BotTelegram.Handlers
                 {
                     await HandleExitChatCallback(bot, chatId, messageId, ct);
                 }
+                // Pet System Callbacks (FASE 2)
+                else if (data.StartsWith("pets_"))
+                {
+                    await HandlePetsCallback(bot, callbackQuery, data, ct);
+                }
                 // RPG Callbacks
                 else if (data == "rpg_main" || data.StartsWith("rpg_"))
                 {
@@ -1332,54 +1337,88 @@ Si quieres que olvide el contexto anterior:
             
             Console.WriteLine($"[RPG] Callback: {data}");
             
-            // Helper: Generate combat menu
-            var GetCombatKeyboard = () => new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+            // Helper: Generate combat menu (FASE 2: con botones para domar bestias)
+            var GetCombatKeyboard = (BotTelegram.RPG.Models.RpgPlayer player, BotTelegram.RPG.Models.RpgEnemy enemy) =>
             {
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
                 // Fila 1: Ataques básicos
-                new[]
+                rows.Add(new[]
                 {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Físico", "rpg_combat_physical"),
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔮 Mágico", "rpg_combat_magic")
-                },
+                });
+                
+                // FASE 2: Si es bestia y está debilitada, agregar botones de domar
+                if (enemy.Type == BotTelegram.RPG.Models.EnemyType.Beast)
+                {
+                    double hpPercent = (double)enemy.HP / enemy.MaxHP;
+                    
+                    if (hpPercent <= 0.5)
+                    {
+                        rows.Add(new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Domar", "rpg_combat_tame"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💚 Acariciar", "rpg_combat_pet")
+                        });
+                    }
+                    
+                    // Botón de calmar (disponible siempre si hay mana)
+                    if (player.Mana >= 20)
+                    {
+                        rows.Add(new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎶 Calmar Bestia (20 mana)", "rpg_combat_calm")
+                        });
+                    }
+                }
+                
                 // Fila 2: Ataques especiales
-                new[]
+                rows.Add(new[]
                 {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💨 Envestida", "rpg_combat_charge"),
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎯 Preciso", "rpg_combat_precise"),
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💥 Pesado", "rpg_combat_heavy")
-                },
+                });
+                
                 // Fila 3: Defensas
-                new[]
+                rows.Add(new[]
                 {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🛡️ Bloquear", "rpg_combat_block"),
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🌀 Esquivar", "rpg_combat_dodge"),
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💫 Contraatacar", "rpg_combat_counter")
-                },
+                });
+                
                 // Fila 4: Movimiento
-                new[]
+                rows.Add(new[]
                 {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🦘 Saltar", "rpg_combat_jump"),
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏃 Retroceder", "rpg_combat_retreat"),
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚡ Avanzar", "rpg_combat_advance")
-                },
+                });
+                
                 // Fila 5: Especiales
-                new[]
+                rows.Add(new[]
                 {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧘 Meditar", "rpg_combat_meditate"),
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("👁️ Observar", "rpg_combat_observe"),
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⏸️ Esperar", "rpg_combat_wait")
-                },
+                });
+                
                 // Fila 6: Skills
-                new[]
+                rows.Add(new[]
                 {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_combat_skills")
-                },
-                // Fila 6: Huir
-                new[]
+                });
+                
+                // Fila 7: Huir
+                rows.Add(new[]
                 {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏃💨 Huir", "rpg_combat_flee")
-                }
-            });
+                });
+                
+                return new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows);
+            };
 
             var BuildEquipmentMenuText = (BotTelegram.RPG.Models.RpgPlayer player) =>
             {
@@ -2296,7 +2335,7 @@ Si quieres que olvide el contexto anterior:
                     $"💡 _Usa 👁️Observar para ver debilidades_\n\n" +
                     $"¿Qué haces?",
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                    replyMarkup: GetCombatKeyboard(),
+                    replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
                     cancellationToken: ct);
                 return;
             }
@@ -2404,7 +2443,7 @@ Si quieres que olvide el contexto anterior:
                     messageId,
                     text,
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                    replyMarkup: GetCombatKeyboard(),
+                    replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
                     cancellationToken: ct);
                 return;
             }
@@ -2528,7 +2567,7 @@ Si quieres que olvide el contexto anterior:
                         messageId,
                         narrative + "\n\n*¿Qué haces?*",
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: GetCombatKeyboard(),
+                        replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
                         cancellationToken: ct);
                 }
                 return;
@@ -2679,6 +2718,211 @@ Si quieres que olvide el contexto anterior:
             }
             
             // ═══════════════════════════════════════════════════════════════
+            // FASE 2: HANDLERS DE ACCIÓN CON BESTIAS
+            // ═══════════════════════════════════════════════════════════════
+            
+            // Combat - Tame Beast
+            if (data == "rpg_combat_tame")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var petTamingService = new BotTelegram.RPG.Services.PetTamingService(rpgService);
+                var (success, message, pet) = petTamingService.AttemptTame(currentPlayer, enemy);
+                
+                if (success && pet != null)
+                {
+                    // Agregar mascota al inventario
+                    if (currentPlayer.PetInventory == null)
+                    {
+                        currentPlayer.PetInventory = new List<BotTelegram.RPG.Models.RpgPet>();
+                    }
+                    currentPlayer.PetInventory.Add(pet);
+                    
+                    // Salir del combate
+                    currentPlayer.IsInCombat = false;
+                    currentPlayer.CurrentEnemy = null;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    await bot.EditMessageText(
+                        chatId,
+                        messageId,
+                        $"🐾 **¡DOMADO EXITOSO!**\n\n" +
+                        $"{message}\n\n" +
+                        $"Nueva mascota: {pet.Name} {pet.RarityEmoji}\n" +
+                        $"Lv.{pet.Level} | Bond: {pet.Bond}/1000\n\n" +
+                        $"💡 Usa /pets para gestionar tus mascotas",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[]
+                            {
+                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Ver Mascotas", "pets_main"),
+                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main")
+                            }
+                        }),
+                        cancellationToken: ct);
+                }
+                else
+                {
+                    // Fallo al domar, el enemigo ataca
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, message, showAlert: false, cancellationToken: ct);
+                    
+                    // El enemigo contraataca
+                    var combatResult = new BotTelegram.RPG.Services.RpgCombatService().PlayerDefend(currentPlayer, enemy);
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    var narrative = $"❌ **Fallo al domar**\n\n{message}\n\n";
+                    narrative += $"El enemigo contraataca...\n";
+                    narrative += $"❤️ HP: {currentPlayer.HP}/{currentPlayer.MaxHP}\n";
+                    narrative += $"🔥 Enemigo: {enemy.HP}/{enemy.MaxHP}";
+                    
+                    if (currentPlayer.HP <= 0)
+                    {
+                        narrative += "\n\n💀 **Game Over**";
+                        await bot.EditMessageText(
+                            chatId,
+                            messageId,
+                            narrative,
+                            parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                            replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                            {
+                                new[]
+                                {
+                                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main")
+                                }
+                            }),
+                            cancellationToken: ct);
+                        currentPlayer.HP = currentPlayer.MaxHP / 2;
+                        rpgService.SavePlayer(currentPlayer);
+                    }
+                    else
+                    {
+                        await bot.EditMessageText(
+                            chatId,
+                            messageId,
+                            narrative + "\n\n¿Qué haces?",
+                            parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                            replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                            cancellationToken: ct);
+                    }
+                }
+                return;
+            }
+            
+            // Combat - Pet Beast (Acariciar)
+            if (data == "rpg_combat_pet")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var petTamingService = new BotTelegram.RPG.Services.PetTamingService(rpgService);
+                var actionTracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
+                
+                var (success, message, pet) = petTamingService.PetBeast(currentPlayer, enemy, actionTracker);
+                
+                if (success && pet != null)
+                {
+                    // Domado instantáneo
+                    if (currentPlayer.PetInventory == null)
+                    {
+                        currentPlayer.PetInventory = new List<BotTelegram.RPG.Models.RpgPet>();
+                    }
+                    currentPlayer.PetInventory.Add(pet);
+                    
+                    currentPlayer.IsInCombat = false;
+                    currentPlayer.CurrentEnemy = null;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    await bot.EditMessageText(
+                        chatId,
+                        messageId,
+                        $"💚 **¡DOMADO INSTANTÁNEO!**\n\n" +
+                        $"Acariciaste a la bestia y ahora confía en ti!\n\n" +
+                        $"Nueva mascota: {pet.Name} {pet.RarityEmoji}\n" +
+                        $"Bond inicial: {pet.Bond}/1000",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[]
+                            {
+                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Ver Mascotas", "pets_main"),
+                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main")
+                            }
+                        }),
+                        cancellationToken: ct);
+                }
+                else
+                {
+                    // Bond aumentado pero no domado aún
+                    rpgService.SavePlayer(currentPlayer);
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, message, showAlert: false, cancellationToken: ct);
+                    
+                    var narrative = $"💚 **Acariciaste a la bestia**\n\n";
+                    narrative += $"{message}\n\n";
+                    narrative += $"❤️ HP: {currentPlayer.HP}/{currentPlayer.MaxHP}\n";
+                    narrative += $"🔥 Enemigo: {enemy.HP}/{enemy.MaxHP}";
+                    
+                    await bot.EditMessageText(
+                        chatId,
+                        messageId,
+                        narrative + "\n\n¿Qué haces?",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                        cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // Combat - Calm Beast
+            if (data == "rpg_combat_calm")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                if (currentPlayer.Mana < 20)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes suficiente mana (necesitas 20)", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var petTamingService = new BotTelegram.RPG.Services.PetTamingService(rpgService);
+                var actionTracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
+                
+                var (success, message2) = petTamingService.CalmBeast(currentPlayer, enemy, actionTracker);
+                rpgService.SavePlayer(currentPlayer);
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, message2, showAlert: false, cancellationToken: ct);
+                
+                var narrative = $"🎶 **Calmaste a la bestia**\n\n";
+                narrative += $"{message2}\n\n";
+                narrative += $"❤️ HP: {currentPlayer.HP}/{currentPlayer.MaxHP}\n";
+                narrative += $"💧 Mana: {currentPlayer.Mana}/{currentPlayer.MaxMana}\n";
+                narrative += $"🔥 Enemigo: {enemy.HP}/{enemy.MaxHP} (Pasivo 2 turnos)";
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    narrative + "\n\n¿Qué haces?",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // ═══════════════════════════════════════════════════════════════
             // NUEVOS HANDLERS DE COMBATE - ATAQUES
             // ═══════════════════════════════════════════════════════════════
             
@@ -2721,7 +2965,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -2772,7 +3016,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -2816,7 +3060,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -2860,7 +3104,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -2904,7 +3148,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -2944,7 +3188,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -2980,7 +3224,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -3024,7 +3268,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -3064,7 +3308,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -3100,7 +3344,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -3136,7 +3380,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -3176,7 +3420,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -3219,7 +3463,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -3255,7 +3499,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
                 }
                 return;
             }
@@ -3624,7 +3868,7 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
         /// <summary>
         /// Convierte action IDs a nombres legibles en español
         /// </summary>
-        private string GetActionName(string actionId)
+        private static string GetActionName(string actionId)
         {
             return actionId switch
             {
@@ -3699,6 +3943,441 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 
                 _ => actionId.Replace("_", " ").Replace("skill ", "")
             };
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // FASE 2: HANDLERS DE CALLBACKS DEL SISTEMA DE MASCOTAS
+        // ═══════════════════════════════════════════════════════════════
+        
+        private static async Task HandlePetsCallback(
+            ITelegramBotClient bot,
+            Telegram.Bot.Types.CallbackQuery callbackQuery,
+            string data,
+            CancellationToken ct)
+        {
+            var chatId = callbackQuery.Message!.Chat.Id;
+            var messageId = callbackQuery.Message.MessageId;
+            var rpgService = new BotTelegram.RPG.Services.RpgService();
+            var petTamingService = new BotTelegram.RPG.Services.PetTamingService(rpgService);
+            
+            var player = rpgService.GetPlayer(chatId);
+            if (player == null)
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Necesitas crear un personaje primero", cancellationToken: ct);
+                return;
+            }
+            
+            // pets_list_all - Listar todas las mascotas
+            if (data == "pets_list_all")
+            {
+                var text = "🐾 **LISTA COMPLETA DE MASCOTAS**\n\n";
+                
+                if (player.PetInventory == null || player.PetInventory.Count == 0)
+                {
+                    text += "❌ No tienes ninguna mascota domada.\n\n";
+                    text += "💡 Encuentra bestias en exploración y dómalas en combate.";
+                }
+                else
+                {
+                    foreach (var pet in player.PetInventory.OrderByDescending(p => p.Level).ThenBy(p => p.Name))
+                    {
+                        var emoji = GetPetEmoji(pet.Species);
+                        var isActive = player.ActivePets?.Contains(pet) ?? false;
+                        var activeTag = isActive ? "⚔️ " : "💤 ";
+                        
+                        text += $"{activeTag}{emoji} **{pet.Name}** {pet.RarityEmoji}\n";
+                        text += $"   Lv.{pet.Level} | HP: {pet.HP}/{pet.MaxHP}\n";
+                        text += $"   {pet.LoyaltyEmoji} {pet.Loyalty} | Bond: {pet.Bond}/1000\n";
+                        text += $"   ATK: {pet.EffectiveAttack} | DEF: {pet.EffectiveDefense} | SPD: {pet.Speed}\n";
+                        text += $"   Kills: {pet.TotalKills} | Boss: {pet.BossKills}\n\n";
+                    }
+                }
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Gestionar Activas", "pets_manage_active"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🍖 Alimentar", "pets_feed_menu")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⭐ Evolucionar", "pets_evolve_menu"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "pets_main")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // pets_manage_active - Gestionar mascotas activas
+            if (data == "pets_manage_active")
+            {
+                var text = "⚔️ **GESTIONAR MASCOTAS ACTIVAS**\n\n";
+                text += $"Límite: {player.ActivePets?.Count ?? 0}/{player.MaxActivePets}\n\n";
+                
+                if (player.PetInventory == null || player.PetInventory.Count == 0)
+                {
+                    text += "❌ No tienes mascotas para activar.";
+                }
+                else
+                {
+                    text += "Selecciona una mascota para activar/desactivar:\n\n";
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var emoji = GetPetEmoji(pet.Species);
+                        var isActive = player.ActivePets?.Contains(pet) ?? false;
+                        var status = isActive ? "✅ ACTIVA" : "💤 Inactiva";
+                        text += $"{emoji} {pet.Name} (Lv.{pet.Level}) - {status}\n";
+                    }
+                }
+                
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                if (player.PetInventory != null)
+                {
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var isActive = player.ActivePets?.Contains(pet) ?? false;
+                        var buttonText = isActive ? $"❌ Desactivar {pet.Name}" : $"✅ Activar {pet.Name}";
+                        rows.Add(new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData(buttonText, $"pets_toggle_{pet.Id}")
+                        });
+                    }
+                }
+                
+                rows.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "pets_main")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // pets_toggle_{id} - Activar/Desactivar mascota
+            if (data.StartsWith("pets_toggle_"))
+            {
+                var petId = data.Replace("pets_toggle_", "");
+                var (success, message) = petTamingService.ToggleActivePet(player, petId);
+                
+                if (success)
+                {
+                    rpgService.SavePlayer(player);
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, message, cancellationToken: ct);
+                
+                // Recargar menú de gestión
+                await HandlePetsCallback(bot, callbackQuery, "pets_manage_active", ct);
+                return;
+            }
+            
+            // pets_feed_menu - Menú de alimentación
+            if (data == "pets_feed_menu")
+            {
+                var text = "🍖 **ALIMENTAR MASCOTAS**\n\n";
+                text += $"💰 Oro disponible: **{player.Gold}**\n";
+                text += "Costo: **5 oro** por mascota\n\n";
+                text += "💚 Beneficios:\n";
+                text += "• +20 puntos de Bond\n";
+                text += "• +30% HP restaurado\n";
+                text += "• Mejora la lealtad\n\n";
+                
+                if (player.PetInventory == null || player.PetInventory.Count == 0)
+                {
+                    text += "❌ No tienes mascotas para alimentar.";
+                }
+                else
+                {
+                    text += "Selecciona una mascota:\n\n";
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var emoji = GetPetEmoji(pet.Species);
+                        var hpPercent = (double)pet.HP / pet.MaxHP * 100;
+                        text += $"{emoji} {pet.Name} - Bond: {pet.Bond}/1000 (HP: {hpPercent:F0}%)\n";
+                    }
+                }
+                
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                if (player.PetInventory != null && player.Gold >= 5)
+                {
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        rows.Add(new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🍖 Alimentar {pet.Name}", $"pets_feed_{pet.Id}")
+                        });
+                    }
+                }
+                
+                rows.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "pets_main")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // pets_feed_{id} - Alimentar mascota específica
+            if (data.StartsWith("pets_feed_"))
+            {
+                var petId = data.Replace("pets_feed_", "");
+                var pet = player.PetInventory?.FirstOrDefault(p => p.Id == petId);
+                
+                if (pet == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Mascota no encontrada", cancellationToken: ct);
+                    return;
+                }
+                
+                var (success, message) = petTamingService.FeedPet(player, pet);
+                
+                if (success)
+                {
+                    rpgService.SavePlayer(player);
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, message, showAlert: true, cancellationToken: ct);
+                
+                // Recargar menú de alimentación
+                await HandlePetsCallback(bot, callbackQuery, "pets_feed_menu", ct);
+                return;
+            }
+            
+            // pets_evolve_menu - Menú de evolución
+            if (data == "pets_evolve_menu")
+            {
+                var text = "⭐ **EVOLUCIONAR MASCOTAS**\n\n";
+                text += "Las mascotas pueden evolucionar 3 veces:\n";
+                text += "🌱 Básica → 🌿 Avanzada → 🌳 Definitiva\n\n";
+                
+                var canEvolveCount = 0;
+                if (player.PetInventory != null)
+                {
+                    foreach (var pet in player.PetInventory)
+                    {
+                        var speciesData = BotTelegram.RPG.Services.PetDatabase.GetSpeciesData(pet.Species);
+                        if (speciesData?.EvolutionRequirements != null)
+                        {
+                            var reqs = speciesData.EvolutionRequirements;
+                            if (pet.CheckEvolution(reqs.Bond, reqs.Kills, reqs.BossKills))
+                            {
+                                canEvolveCount++;
+                            }
+                        }
+                    }
+                }
+                
+                if (canEvolveCount > 0)
+                {
+                    text += $"✨ Tienes **{canEvolveCount}** mascota(s) lista(s) para evolucionar!\n\n";
+                }
+                else
+                {
+                    text += "❌ Ninguna mascota lista para evolucionar aún.\n\n";
+                }
+                
+                if (player.PetInventory != null && player.PetInventory.Count > 0)
+                {
+                    text += "**TUS MASCOTAS:**\n\n";
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var emoji = GetPetEmoji(pet.Species);
+                        var speciesData = BotTelegram.RPG.Services.PetDatabase.GetSpeciesData(pet.Species);
+                        
+                        text += $"{emoji} **{pet.Name}** - Etapa {pet.EvolutionStage}/3\n";
+                        
+                        if (speciesData?.EvolutionRequirements != null && pet.EvolutionStage < 3)
+                        {
+                            var reqs = speciesData.EvolutionRequirements;
+                            var canEvolve = pet.CheckEvolution(reqs.Bond, reqs.Kills, reqs.BossKills);
+                            
+                            if (canEvolve)
+                            {
+                                text += $"   ✅ LISTA PARA EVOLUCIONAR!\n";
+                            }
+                            else
+                            {
+                                text += $"   Necesita: Lv.{pet.GetRequiredLevelForEvolution()} ";
+                                text += $"| Bond: {pet.Bond}/{reqs.Bond} ";
+                                text += $"| Kills: {pet.TotalKills}/{reqs.Kills}\n";
+                            }
+                        }
+                        else if (pet.EvolutionStage >= 3)
+                        {
+                            text += $"   🌟 FORMA FINAL\n";
+                        }
+                        
+                        text += "\n";
+                    }
+                }
+                
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                if (player.PetInventory != null)
+                {
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var speciesData = BotTelegram.RPG.Services.PetDatabase.GetSpeciesData(pet.Species);
+                        if (speciesData?.EvolutionRequirements != null && pet.EvolutionStage < 3)
+                        {
+                            var reqs = speciesData.EvolutionRequirements;
+                            if (pet.CheckEvolution(reqs.Bond, reqs.Kills, reqs.BossKills))
+                            {
+                                rows.Add(new[]
+                                {
+                                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"⭐ Evolucionar {pet.Name}", $"pets_evolve_{pet.Id}")
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                rows.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "pets_main")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // pets_evolve_{id} - Evolucionar mascota
+            if (data.StartsWith("pets_evolve_"))
+            {
+                var petId = data.Replace("pets_evolve_", "");
+                var pet = player.PetInventory?.FirstOrDefault(p => p.Id == petId);
+                
+                if (pet == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Mascota no encontrada", cancellationToken: ct);
+                    return;
+                }
+                
+                var evolved = BotTelegram.RPG.Services.PetDatabase.EvolvePet(pet);
+                
+                if (evolved)
+                {
+                    rpgService.SavePlayer(player);
+                    var emoji = GetPetEmoji(pet.Species);
+                    var message = $"✨ ¡{pet.Name} ha evolucionado a etapa {pet.EvolutionStage}!\n{emoji} Stats mejorados significativamente!";
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, message, showAlert: true, cancellationToken: ct);
+                }
+                else
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No se pudo evolucionar la mascota", cancellationToken: ct);
+                }
+                
+                // Recargar menú de evolución
+                await HandlePetsCallback(bot, callbackQuery, "pets_evolve_menu", ct);
+                return;
+            }
+            
+            // pets_guide - Guía del sistema de mascotas
+            if (data == "pets_guide")
+            {
+                var text = "📖 **GUÍA DEL SISTEMA DE MASCOTAS**\n\n";
+                text += "**🐾 ¿Cómo domar mascotas?**\n";
+                text += "1. Encuentra una **Bestia** en exploración\n";
+                text += "2. Reduce su HP por debajo del **50%**\n";
+                text += "3. Usa el botón **🐾 Domar** en combate\n";
+                text += "4. Chance: 40% + Charisma% + Debilidad%\n\n";
+                
+                text += "**💖 Sistema de Bond (Lealtad)**\n";
+                text += "• 0-199: 💢 Hostile (-30% stats)\n";
+                text += "• 200-399: 😐 Neutral (0% bonus)\n";
+                text += "• 400-599: 😊 Friendly (+20% stats)\n";
+                text += "• 600-799: 💙 Loyal (+50% stats)\n";
+                text += "• 800-1000: 💖 Devoted (+100% stats!)\n\n";
+                
+                text += "**⭐ Evolución (3 etapas)**\n";
+                text += "• Etapa 1 → 2: Nivel 15, Bond 400, 50 kills\n";
+                text += "• Etapa 2 → 3: Nivel 35, Bond 700, 200 kills\n\n";
+                
+                text += "**⚔️ En Combate**\n";
+                text += "• Tus mascotas atacan después de ti\n";
+                text += "• Límite: 1-5 pets según tu clase oculta\n";
+                text += "• Tipos: Physical o Magical\n\n";
+                
+                text += "**🍖 Cuidados**\n";
+                text += "• Alimentar: 5 oro (+20 bond, +30% HP)\n";
+                text += "• Aumenta bond ganando combates juntos\n";
+                text += "• Pierde bond si la mascota muere\n\n";
+                
+                text += "**🐉 Familias de Mascotas**\n";
+                text += "🐺 Caninos (Physical) - Veloces y feroces\n";
+                text += "🐻 Osos (Physical) - Tanques resistentes\n";
+                text += "🐉 Dragones (Magical) - Poder elemental\n";
+                text += "🐱 Felinos (Physical) - Críticos mortales\n";
+                text += "🦅 Aves (Physical) - Evasión suprema\n";
+                text += "🐍 Reptiles (Magical) - Veneno letal\n";
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "pets_main")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // pets_main - Volver al menú principal de pets (ejecutar comando)
+            if (data == "pets_main")
+            {
+                await bot.DeleteMessage(chatId, messageId, ct);
+                var petsCommand = new BotTelegram.RPG.Commands.PetsCommand();
+                await petsCommand.Execute(bot, callbackQuery.Message, ct);
+                return;
+            }
+        }
+        
+        private static string GetPetEmoji(string species)
+        {
+            if (species.StartsWith("wolf_")) return "🐺";
+            if (species.StartsWith("bear_")) return "🐻";
+            if (species.StartsWith("dragon_")) return "🐉";
+            if (species.StartsWith("cat_") || species.StartsWith("wildcat_")) return "🐱";
+            if (species.StartsWith("eagle_")) return "🦅";
+            if (species.StartsWith("snake_")) return "🐍";
+            return "🐾";
         }
     }
 }
