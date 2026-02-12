@@ -2071,7 +2071,7 @@ Si quieres que olvide el contexto anterior:
                     Message = callbackQuery.Message,
                     Data = "rpg_my_classes"
                 };
-                await HandleCallback(newCallback, ct);
+                await HandleCallbackQuery(newCallback, ct);
                 return;
             }
             
@@ -2827,57 +2827,51 @@ Si quieres que olvide el contexto anterior:
                 var petTamingService = new BotTelegram.RPG.Services.PetTamingService(rpgService);
                 var actionTracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
                 
-                var (success, message, pet) = petTamingService.PetBeast(currentPlayer, enemy, actionTracker);
+                var (success, message) = petTamingService.PetBeast(currentPlayer, enemy, actionTracker);
                 
-                if (success && pet != null)
+                if (success)
                 {
-                    // Domado instantáneo
-                    if (currentPlayer.PetInventory == null)
+                    // Acción completada (puede o no haber domado instantáneo)
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    // Si el mensaje contiene "Evento especial", significa que hubo domado instantáneo
+                    bool wasInstantTame = message.Contains("Evento especial");
+                    
+                    if (wasInstantTame)
                     {
-                        currentPlayer.PetInventory = new List<BotTelegram.RPG.Models.RpgPet>();
-                    }
-                    currentPlayer.PetInventory.Add(pet);
-                    
-                    currentPlayer.IsInCombat = false;
-                    currentPlayer.CurrentEnemy = null;
-                    rpgService.SavePlayer(currentPlayer);
-                    
-                    await bot.EditMessageText(
-                        chatId,
-                        messageId,
-                        $"💚 **¡DOMADO INSTANTÁNEO!**\n\n" +
-                        $"Acariciaste a la bestia y ahora confía en ti!\n\n" +
-                        $"Nueva mascota: {pet.Name} {pet.RarityEmoji}\n" +
-                        $"Bond inicial: {pet.Bond}/1000",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-                        {
-                            new[]
+                        await bot.EditMessageText(
+                            chatId,
+                            messageId,
+                            message,
+                            parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                            replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
                             {
-                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Ver Mascotas", "pets_main"),
-                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main")
-                            }
-                        }),
-                        cancellationToken: ct);
-                }
-                else
-                {
-                    // Bond aumentado pero no domado aún
-                    rpgService.SavePlayer(currentPlayer);
-                    await bot.AnswerCallbackQuery(callbackQuery.Id, message, showAlert: false, cancellationToken: ct);
-                    
-                    var narrative = $"💚 **Acariciaste a la bestia**\n\n";
-                    narrative += $"{message}\n\n";
-                    narrative += $"❤️ HP: {currentPlayer.HP}/{currentPlayer.MaxHP}\n";
-                    narrative += $"🔥 Enemigo: {enemy.HP}/{enemy.MaxHP}";
-                    
-                    await bot.EditMessageText(
-                        chatId,
-                        messageId,
-                        narrative + "\n\n¿Qué haces?",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
-                        cancellationToken: ct);
+                                new[]
+                                {
+                                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Ver Mascotas", "pets_main"),
+                                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main")
+                                }
+                            }),
+                            cancellationToken: ct);
+                    }
+                    else
+                    {
+                        // Bond aumentado pero no domado aún
+                        await bot.AnswerCallbackQuery(callbackQuery.Id, message, showAlert: false, cancellationToken: ct);
+                        
+                        var narrative = $"💚 **Acariciaste a la bestia**\n\n";
+                        narrative += $"{message}\n\n";
+                        narrative += $"❤️ HP: {currentPlayer.HP}/{currentPlayer.MaxHP}\n";
+                        narrative += $"🔥 Enemigo: {enemy.HP}/{enemy.MaxHP}";
+                        
+                        await bot.EditMessageText(
+                            chatId,
+                            messageId,
+                            narrative + "\n\n¿Qué haces?",
+                            parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                            replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                            cancellationToken: ct);
+                    }
                 }
                 return;
             }
@@ -4073,12 +4067,9 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
             if (data.StartsWith("pets_toggle_"))
             {
                 var petId = data.Replace("pets_toggle_", "");
-                var (success, message) = petTamingService.ToggleActivePet(player, petId);
+                var message = petTamingService.ToggleActivePet(player, petId);
                 
-                if (success)
-                {
-                    rpgService.SavePlayer(player);
-                }
+                rpgService.SavePlayer(player);
                 
                 await bot.AnswerCallbackQuery(callbackQuery.Id, message, cancellationToken: ct);
                 
@@ -4153,12 +4144,8 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                     return;
                 }
                 
-                var (success, message) = petTamingService.FeedPet(player, pet);
-                
-                if (success)
-                {
-                    rpgService.SavePlayer(player);
-                }
+                var message = petTamingService.FeedPet(player, pet);
+                rpgService.SavePlayer(player);
                 
                 await bot.AnswerCallbackQuery(callbackQuery.Id, message, showAlert: true, cancellationToken: ct);
                 

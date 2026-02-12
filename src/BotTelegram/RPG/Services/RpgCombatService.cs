@@ -228,7 +228,7 @@ namespace BotTelegram.RPG.Services
                 if (enemy.HP <= 0)
                 {
                     pet.TotalKills++;
-                    if (enemy.IsBoss)
+                    if (enemy.Difficulty == EnemyDifficulty.Boss || enemy.Difficulty == EnemyDifficulty.WorldBoss)
                     {
                         pet.BossKills++;
                     }
@@ -316,7 +316,7 @@ namespace BotTelegram.RPG.Services
             
             // ═══ LOG ═══
             string critText = petResult.Critical ? " ⚡ CRÍTICO" : "";
-            string behaviorText = GetBehaviorText(pet.PetBehavior);
+            string behaviorText = GetBehaviorText(pet.Behavior);
             AddCombatLog(player, $"{petResult.Emoji} {pet.Name}", 
                 $"{behaviorText} {finalDamage} daño{critText}");
             
@@ -326,7 +326,8 @@ namespace BotTelegram.RPG.Services
             // XP para la mascota
             if (enemy.HP <= 0)
             {
-                pet.EvolutionXP += (int)(enemy.Level * 50 * (enemy.IsBoss ? 3 : 1));
+                bool isBoss = enemy.Difficulty == EnemyDifficulty.Boss || enemy.Difficulty == EnemyDifficulty.WorldBoss;
+                pet.EvolutionXP += (int)(enemy.Level * 50 * (isBoss ? 3 : 1));
             }
             
             return petResult;
@@ -339,7 +340,7 @@ namespace BotTelegram.RPG.Services
         {
             double hpPercent = (double)enemy.HP / enemy.MaxHP;
             
-            return pet.PetBehavior switch
+            return pet.Behavior switch
             {
                 PetBehavior.Aggressive => (int)(baseDamage * 1.2), // +20% daño siempre
                 PetBehavior.Defensive => hpPercent < 0.3 ? (int)(baseDamage * 1.4) : (int)(baseDamage * 0.8), // +40% si enemigo bajo HP
