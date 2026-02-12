@@ -142,11 +142,17 @@ Solo los más valientes pueden enfrentar este destino...
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("💬 Chat IA", "rpg_ai_chat"),
-                    InlineKeyboardButton.WithCallbackData("⚙️ Opciones", "rpg_options")
+                    InlineKeyboardButton.WithCallbackData("🌟 Progreso", "rpg_progress"),
+                    InlineKeyboardButton.WithCallbackData("💎 Pasivas", "rpg_passives")
                 },
                 new[]
                 {
+                    InlineKeyboardButton.WithCallbackData("🧘 Acciones", "rpg_actions"),
+                    InlineKeyboardButton.WithCallbackData("💬 Chat IA", "rpg_ai_chat")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("⚙️ Opciones", "rpg_options"),
                     InlineKeyboardButton.WithCallbackData("🏠 Menú Bot", "start")
                 }
             });

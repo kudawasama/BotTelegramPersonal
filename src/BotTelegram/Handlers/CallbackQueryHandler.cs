@@ -1838,6 +1838,428 @@ Si quieres que olvide el contexto anterior:
                 return;
             }
             
+            // ═══════════════════════════════════════════════════════════════
+            // MENÚ DE PROGRESO (Clases Ocultas)
+            // ═══════════════════════════════════════════════════════════════
+            if (data == "rpg_progress")
+            {
+                var tracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
+                var allClasses = BotTelegram.RPG.Services.HiddenClassDatabase.GetAll();
+                
+                var text = "🌟 **PROGRESO DE CLASES OCULTAS**\n\n";
+                
+                if (currentPlayer.UnlockedHiddenClasses.Count > 0)
+                {
+                    text += "✅ **Clases Desbloqueadas:**\n";
+                    foreach (var classId in currentPlayer.UnlockedHiddenClasses)
+                    {
+                        var hClass = BotTelegram.RPG.Services.HiddenClassDatabase.GetById(classId);
+                        if (hClass != null)
+                        {
+                            var isActive = currentPlayer.ActiveHiddenClass == classId;
+                            text += $"{hClass.Emoji} **{hClass.Name}** {(isActive ? "⚡ ACTIVA" : "")}\n";
+                        }
+                    }
+                    text += "\n";
+                }
+                
+                text += "📈 **Progreso hacia Nuevas Clases:**\n\n";
+                
+                var availableClasses = allClasses.Where(c => !currentPlayer.UnlockedHiddenClasses.Contains(c.Id)).Take(3).ToList();
+                
+                if (availableClasses.Count == 0)
+                {
+                    text += "🎉 ¡Has desbloqueado todas las clases ocultas!\n\n";
+                }
+                else
+                {
+                    foreach (var hClass in availableClasses)
+                    {
+                        var progress = tracker.GetClassProgress(currentPlayer, hClass.Id);
+                        var percentage = tracker.GetClassProgressPercentage(currentPlayer, hClass.Id);
+                        
+                        text += $"{hClass.Emoji} **{hClass.Name}** [{percentage:F0}%]\n";
+                        
+                        // Mostrar primeros 3 requisitos
+                        var reqCount = 0;
+                        foreach (var (actionId, requiredCount) in hClass.RequiredActions.Take(3))
+                        {
+                            var currentCount = progress.CurrentProgress.GetValueOrDefault(actionId, 0);
+                            var met = currentCount >= requiredCount;
+                            var actionName = GetActionName(actionId);
+                            text += $"  {(met ? "✅" : "🔸")} {actionName}: {currentCount}/{requiredCount}\n";
+                            reqCount++;
+                        }
+                        
+                        if (hClass.RequiredActions.Count > 3)
+                        {
+                            text += $"  ... y {hClass.RequiredActions.Count - 3} más\n";
+                        }
+                        text += "\n";
+                    }
+                }
+                
+                var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                // Botón para ver clases desbloqueadas
+                if (currentPlayer.UnlockedHiddenClasses.Count > 0)
+                {
+                    buttons.Add(new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🌟 Mis Clases", "rpg_my_classes")
+                    });
+                }
+                
+                buttons.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Mis Clases (activar/desactivar)
+            if (data == "rpg_my_classes")
+            {
+                var text = "🌟 **MIS CLASES OCULTAS**\n\n";
+                
+                if (currentPlayer.UnlockedHiddenClasses.Count == 0)
+                {
+                    text += "❌ Aún no has desbloqueado ninguna clase oculta.\n\n";
+                    text += "Completa acciones específicas para desbloquearlas.";
+                }
+                else
+                {
+                    text += "Clases que puedes activar:\n\n";
+                    
+                    foreach (var classId in currentPlayer.UnlockedHiddenClasses)
+                    {
+                        var hClass = BotTelegram.RPG.Services.HiddenClassDatabase.GetById(classId);
+                        if (hClass != null)
+                        {
+                            var isActive = currentPlayer.ActiveHiddenClass == classId;
+                            text += $"{hClass.Emoji} **{hClass.Name}** {(isActive ? "⚡" : "")}\n";
+                            text += $"   {hClass.Description}\n\n";
+                            text += "   **Bonuses:**\n";
+                            if (hClass.StrengthBonus != 0) text += $"   • STR: +{hClass.StrengthBonus}\n";
+                            if (hClass.IntelligenceBonus != 0) text += $"   • INT: +{hClass.IntelligenceBonus}\n";
+                            if (hClass.DexterityBonus != 0) text += $"   • DEX: +{hClass.DexterityBonus}\n";
+                            if (hClass.ConstitutionBonus != 0) text += $"   • CON: +{hClass.ConstitutionBonus}\n";
+                            if (hClass.WisdomBonus != 0) text += $"   • WIS: +{hClass.WisdomBonus}\n";
+                            if (hClass.CharismaBonus != 0) text += $"   • CHA: +{hClass.CharismaBonus}\n";
+                            text += "\n";
+                        }
+                    }
+                }
+                
+                var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                // Botones para activar/desactivar cada clase
+                foreach (var classId in currentPlayer.UnlockedHiddenClasses)
+                {
+                    var hClass = BotTelegram.RPG.Services.HiddenClassDatabase.GetById(classId);
+                    if (hClass != null)
+                    {
+                        var isActive = currentPlayer.ActiveHiddenClass == classId;
+                        var buttonText = isActive ? $"❌ Desactivar {hClass.Name}" : $"⚡ Activar {hClass.Name}";
+                        buttons.Add(new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData(buttonText, $"rpg_toggle_class_{classId}")
+                        });
+                    }
+                }
+                
+                buttons.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Progreso", "rpg_progress")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Activar/Desactivar clase
+            if (data.StartsWith("rpg_toggle_class_"))
+            {
+                var classId = data.Replace("rpg_toggle_class_", "");
+                var tracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
+                
+                if (currentPlayer.ActiveHiddenClass == classId)
+                {
+                    // Desactivar
+                    tracker.DeactivateHiddenClass(currentPlayer);
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "✅ Clase desactivada", cancellationToken: ct);
+                }
+                else
+                {
+                    // Activar
+                    var success = tracker.ActivateHiddenClass(currentPlayer, classId);
+                    if (success)
+                    {
+                        var hClass = BotTelegram.RPG.Services.HiddenClassDatabase.GetById(classId);
+                        await bot.AnswerCallbackQuery(callbackQuery.Id, $"⚡ {hClass?.Name} activada!", cancellationToken: ct);
+                    }
+                    else
+                    {
+                        await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Error al activar clase", cancellationToken: ct);
+                    }
+                }
+                
+                // Refresh menu
+                await bot.DeleteMessage(chatId, messageId, ct);
+                var tempMsg = await bot.SendMessage(chatId, "Actualizando...", cancellationToken: ct);
+                await Task.Delay(100);
+                await bot.DeleteMessage(chatId, tempMsg.MessageId, ct);
+                
+                // Re-mostrar menú using callback
+                var newCallback = new CallbackQuery
+                {
+                    Id = callbackQuery.Id,
+                    From = callbackQuery.From,
+                    Message = callbackQuery.Message,
+                    Data = "rpg_my_classes"
+                };
+                await HandleCallback(newCallback, ct);
+                return;
+            }
+            
+            // ═══════════════════════════════════════════════════════════════
+            // MENÚ DE PASIVAS
+            // ═══════════════════════════════════════════════════════════════
+            if (data == "rpg_passives")
+            {
+                var text = "💎 **PASIVAS ACTIVAS**\n\n";
+                
+                if (currentPlayer.UnlockedPassives.Count == 0)
+                {
+                    text += "❌ Aún no has desbloqueado ninguna pasiva.\n\n";
+                    text += "Completa acciones para desbloquear pasivas permanentes:\n";
+                    text += "• 100 críticos → Critical Mastery\n";
+                    text += "• 200 enemigos → Life Steal\n";
+                    text += "• 50 meditaciones → Regeneration\n";
+                    text += "• ¡Y muchas más!\n";
+                }
+                else
+                {
+                    var passives = BotTelegram.RPG.Services.PassiveDatabase.GetUnlockedByPlayer(currentPlayer);
+                    
+                    // Agrupar por tipo
+                    var combatPassives = passives.Where(p => 
+                        p.Type == BotTelegram.RPG.Models.PassiveType.CriticalChanceBonus ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.CriticalDamageBonus ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.PhysicalDamageBonus ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.MagicalDamageBonus ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.Bloodlust ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.LifeSteal ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.SpellVamp
+                    ).ToList();
+                    
+                    var survivalPassives = passives.Where(p => 
+                        p.Type == BotTelegram.RPG.Models.PassiveType.MaxHPBonus ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.MaxManaBonus ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.MaxStaminaBonus ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.SecondWind ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.Regeneration ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.Meditation
+                    ).ToList();
+                    
+                    var utilityPassives = passives.Where(p => 
+                        p.Type == BotTelegram.RPG.Models.PassiveType.GoldFindBonus ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.XPBonus ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.LootDropBonus ||
+                        p.Type == BotTelegram.RPG.Models.PassiveType.MerchantFriend
+                    ).ToList();
+                    
+                    var specialPassives = passives.Except(combatPassives).Except(survivalPassives).Except(utilityPassives).ToList();
+                    
+                    if (combatPassives.Count > 0)
+                    {
+                        text += "⚔️ **COMBATE:**\n";
+                        foreach (var passive in combatPassives)
+                        {
+                            text += $"  {passive.Emoji} {passive.Name}\n";
+                            text += $"     {passive.Description}\n";
+                        }
+                        text += "\n";
+                    }
+                    
+                    if (survivalPassives.Count > 0)
+                    {
+                        text += "🛡️ **SUPERVIVENCIA:**\n";
+                        foreach (var passive in survivalPassives)
+                        {
+                            text += $"  {passive.Emoji} {passive.Name}\n";
+                            text += $"     {passive.Description}\n";
+                        }
+                        text += "\n";
+                    }
+                    
+                    if (utilityPassives.Count > 0)
+                    {
+                        text += "💰 **UTILIDAD:**\n";
+                        foreach (var passive in utilityPassives)
+                        {
+                            text += $"  {passive.Emoji} {passive.Name}\n";
+                            text += $"     {passive.Description}\n";
+                        }
+                        text += "\n";
+                    }
+                    
+                    if (specialPassives.Count > 0)
+                    {
+                        text += "🌟 **ESPECIALES:**\n";
+                        foreach (var passive in specialPassives)
+                        {
+                            text += $"  {passive.Emoji} {passive.Name}\n";
+                            text += $"     {passive.Description}\n";
+                        }
+                        text += "\n";
+                    }
+                    
+                    text += $"📊 **Total:** {passives.Count} pasivas activas";
+                }
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // ═══════════════════════════════════════════════════════════════
+            // MENÚ DE ACCIONES ESPECIALES
+            // ═══════════════════════════════════════════════════════════════
+            if (data == "rpg_actions")
+            {
+                var text = "🧘 **ACCIONES ESPECIALES**\n\n";
+                text += "Realiza acciones para progresar hacia clases ocultas:\n\n";
+                
+                text += "🧘 **Meditar** (Costo: 0 Energía)\n";
+                text += "   Recupera mana y progresa hacia varias clases.\n\n";
+                
+                text += "😴 **Descansar** (Costo: 0 Energía)\n";
+                text += "   Recupera HP y Stamina completamente.\n\n";
+                
+                // Acciones de bestias (solo si tiene pasiva)
+                if (currentPlayer.UnlockedPassives.Contains("beast_whisperer"))
+                {
+                    text += "🐾 **Interactuar con Bestias**\n";
+                    text += "   Puedes acariciar, calmar y domar bestias.\n";
+                    text += "   Disponible durante exploración.\n\n";
+                }
+                
+                text += "⚡ **Entrenar**\n";
+                text += "   Practica habilidades de combate.\n\n";
+                
+                text += "💼 **Trabajar**\n";
+                text += "   Gana oro honradamente.\n\n";
+                
+                var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧘 Meditar", "rpg_action_meditate"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("😴 Descansar", "rpg_rest")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚡ Entrenar", "rpg_train"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💼 Trabajar", "rpg_work")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                    }
+                };
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Acción: Meditar
+            if (data == "rpg_action_meditate")
+            {
+                var tracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
+                
+                // Recuperar mana (50% del máximo)
+                var manaRecovered = (int)(currentPlayer.MaxMana * 0.5);
+                currentPlayer.Mana = Math.Min(currentPlayer.Mana + manaRecovered, currentPlayer.MaxMana);
+                
+                // Trackear acción
+                tracker.TrackAction(currentPlayer, "meditation");
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                var text = "🧘 **MEDITACIÓN**\n\n";
+                text += "Te sientas en posición de loto y despejas tu mente...\n\n";
+                text += $"💠 Recuperaste {manaRecovered} mana\n";
+                text += $"💠 Mana actual: {currentPlayer.Mana}/{currentPlayer.MaxMana}\n\n";
+                
+                // Mostrar progreso hacia clases
+                var meditationCount = tracker.GetActionCount(currentPlayer, "meditation");
+                text += $"📊 Has meditado {meditationCount} veces\n\n";
+                
+                // Mostrar qué clases requieren meditación
+                var classesNeedingMeditation = BotTelegram.RPG.Services.HiddenClassDatabase.GetAll()
+                    .Where(c => !currentPlayer.UnlockedHiddenClasses.Contains(c.Id) && 
+                                c.RequiredActions.ContainsKey("meditation"))
+                    .Take(2);
+                
+                if (classesNeedingMeditation.Any())
+                {
+                    text += "🌟 **Progreso hacia clases:**\n";
+                    foreach (var hClass in classesNeedingMeditation)
+                    {
+                        var required = hClass.RequiredActions["meditation"];
+                        text += $"{hClass.Emoji} {hClass.Name}: {meditationCount}/{required}\n";
+                    }
+                }
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧘 Meditar de nuevo", "rpg_action_meditate"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
             // Explore
             if (data == "rpg_explore")
             {
@@ -3194,5 +3616,87 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
             // Default
             await bot.AnswerCallbackQuery(callbackQuery.Id, "🚧 Función en desarrollo", cancellationToken: ct);
         }
-    }
-}
+        
+        // ═══════════════════════════════════════════════════════════════
+        // HELPER METHODS
+        // ═══════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Convierte action IDs a nombres legibles en español
+        /// </summary>
+        private string GetActionName(string actionId)
+        {
+            return actionId switch
+            {
+                // Combate
+                "physical_attack" => "Ataques físicos",
+                "magic_attack" => "Ataques mágicos",
+                "critical_hit" => "Golpes críticos",
+                "dodge_success" => "Esquivas exitosas",
+                "defend" => "Defensas",
+                "counter_attack" => "Contraataques",
+                "perfect_parry" => "Parrys perfectos",
+                
+                // Progreso
+                "level_up" => "Subir de nivel",
+                "enemy_kill" => "Enemigos derrotados",
+                "boss_kill" => "Jefes derrotados",
+                "beast_kills" => "Bestias derrotadas",
+                "undead_kills" => "No-muertos derrotados",
+                
+                // Exploración
+                "meditation" => "Meditaciones",
+                "rest" => "Descansos",
+                "explore" => "Exploraciones",
+                "treasure_found" => "Tesoros encontrados",
+                "loot_found" => "Loot recolectado",
+                
+                // Interacción con bestias
+                "pet_beast" => "Acariciar bestias",
+                "calm_beast" => "Calmar bestias",
+                "tame_beast" => "Domar bestias",
+                
+                // Combos
+                "combo_5plus" => "Combos 5+ hits",
+                "combo_10plus" => "Combos 10+ hits",
+                "combo_20plus" => "Combos 20+ hits",
+                "combo_10x" => "Combos 10x",
+                "combo_20x" => "Combos 20x",
+                
+                // Combate avanzado
+                "stealth_kill" => "Asesinatos sigilosos",
+                "backstab" => "Ataques por la espalda",
+                "no_damage_combat" => "Combates sin daño",
+                "low_hp_victory" => "Victorias con HP baja",
+                "low_hp_combat" => "Combates con HP baja",
+                
+                // Magia
+                "fire_spell_cast" => "Hechizos de fuego",
+                "water_spell_cast" => "Hechizos de agua",
+                "earth_spell_cast" => "Hechizos de tierra",
+                "air_spell_cast" => "Hechizos de aire",
+                "combo_spell" => "Combinaciones elementales",
+                "dark_magic_cast" => "Magia oscura",
+                "heal_cast" => "Curaciones",
+                "divine_bless" => "Bendiciones",
+                "revive_ally" => "Resurrecciones",
+                
+                // Nigromancia
+                "summon_undead" => "Invocar no-muertos",
+                "life_drain" => "Drenar vida",
+                "desecrate" => "Profanaciones",
+                "sacrifice" => "Sacrificios",
+                
+                // Sigilo
+                "vanish" => "Desvanecimientos",
+                
+                // Skills
+                "skill_used" => "Habilidades usadas",
+                
+                // Recursos
+                "gold_earned" => "Oro acumulado",
+                "damage_taken" => "Daño recibido",
+                
+                _ => actionId.Replace("_", " ").Replace("skill ", "")
+            };
+        }
