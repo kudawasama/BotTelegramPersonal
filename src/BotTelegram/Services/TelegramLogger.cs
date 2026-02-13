@@ -9,10 +9,11 @@ namespace BotTelegram.Services
     /// </summary>
     public class TelegramLogger
     {
+        // Usar volumen persistente de Fly.io
         private static readonly string _logsPath = Path.Combine(
             Directory.GetCurrentDirectory(),
-            "logs",
-            "telegram"
+            "data",
+            "logs"
         );
 
         private static readonly object _fileLock = new();
@@ -20,9 +21,17 @@ namespace BotTelegram.Services
         static TelegramLogger()
         {
             // Crear directorios si no existen
-            if (!Directory.Exists(_logsPath))
+            try
             {
-                Directory.CreateDirectory(_logsPath);
+                if (!Directory.Exists(_logsPath))
+                {
+                    Directory.CreateDirectory(_logsPath);
+                    Console.WriteLine($"📁 Directorio de logs creado: {_logsPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Error creando directorio de logs: {ex.Message}");
             }
         }
 
@@ -40,16 +49,18 @@ namespace BotTelegram.Services
                     var filePath = Path.Combine(_logsPath, fileName);
 
                     var timestamp = date.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                    var logLine = $"[{timestamp}] ACTION: {action} | User: {username} | Details: {details}";
+                    var logLine = $"[{timestamp}] ✓ ACTION | {action} | User: @{username} ({chatId}) | {details}";
 
+                    // Escribir en archivo
                     File.AppendAllText(filePath, logLine + Environment.NewLine);
-
-                    Console.WriteLine($"✓ Log guardado: {fileName}");
+                    
+                    // También escribir en console para que se vea en Fly logs
+                    Console.WriteLine($"📝 {logLine}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error guardando log: {ex.Message}");
+                Console.WriteLine($"❌ Error guardando log de usuario: {ex.Message} | Stack: {ex.StackTrace}");
             }
         }
 
@@ -67,14 +78,18 @@ namespace BotTelegram.Services
                     var filePath = Path.Combine(_logsPath, fileName);
 
                     var timestamp = date.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                    var logLine = $"[{timestamp}] EVENT: {eventType} | Character: {characterName} | ChatID: {chatId} | Details: {details}";
+                    var logLine = $"[{timestamp}] 🎮 RPG | {eventType} | Character: {characterName} ({chatId}) | {details}";
 
+                    // Escribir en archivo
                     File.AppendAllText(filePath, logLine + Environment.NewLine);
+                    
+                    // También en console
+                    Console.WriteLine($"🎮 {logLine}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error guardando log RPG: {ex.Message}");
+                Console.WriteLine($"❌ Error guardando log RPG: {ex.Message} | Stack: {ex.StackTrace}");
             }
         }
 
@@ -92,18 +107,26 @@ namespace BotTelegram.Services
                     var filePath = Path.Combine(_logsPath, fileName);
 
                     var timestamp = date.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                    var logLine = $"[{timestamp}] ERROR: {errorType} | ChatID: {chatId} | Message: {message}";
+                    var logLine = $"[{timestamp}] ❌ ERROR | {errorType} ({chatId}) | {message}";
                     if (exception != null)
                     {
-                        logLine += $" | Exception: {exception.Message} | StackTrace: {exception.StackTrace}";
+                        logLine += $" | {exception.GetType().Name}: {exception.Message}";
                     }
 
+                    // Escribir en archivo
                     File.AppendAllText(filePath, logLine + Environment.NewLine);
+                    
+                    // En console
+                    Console.WriteLine($"❌ {logLine}");
+                    if (exception != null && exception.StackTrace != null)
+                    {
+                        Console.WriteLine($"   Stack: {exception.StackTrace}");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error guardando log de error: {ex.Message}");
+                Console.WriteLine($"❌ CRITICAL - Error guardando log de error: {ex.Message}");
             }
         }
 
@@ -121,9 +144,13 @@ namespace BotTelegram.Services
                     var filePath = Path.Combine(_logsPath, fileName);
 
                     var timestamp = date.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                    var logLine = $"[{timestamp}] STATE_CHANGE: {characterName} | {oldState} -> {newState} | Reason: {reason} | ChatID: {chatId}";
+                    var logLine = $"[{timestamp}] 🔄 STATE | {oldState} → {newState} | {characterName} ({chatId}) | Reason: {reason}";
 
+                    // Escribir en archivo
                     File.AppendAllText(filePath, logLine + Environment.NewLine);
+                    
+                    // En console
+                    Console.WriteLine($"🔄 {logLine}");
                 }
             }
             catch (Exception ex)
