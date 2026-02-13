@@ -572,7 +572,7 @@ namespace BotTelegram.Handlers
                 .ToList();
 
             var text = $"📋 *TUS RECORDATORIOS PENDIENTES*\n📊 Página {page}/{totalPages}\n\n";
-            var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
+            var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
 
             foreach (var r in remindersPagina)
             {
@@ -1707,7 +1707,7 @@ Si quieres que olvide el contexto anterior:
                 text += $"📄 Página **{page}/{totalPages}** | Total: {allRequirements.Count} skills\n";
                 
                 // Construir teclado con navegación
-                var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
+                var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
                 
                 if (totalPages > 1)
                 {
@@ -1798,7 +1798,7 @@ Si quieres que olvide el contexto anterior:
                 text += $"📄 Página **{page}/{totalPages}** | {lockedSkills.Count} skills bloqueadas\n";
                 
                 // Construir teclado con navegación
-                var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
+                var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
                 
                 if (totalPages > 1)
                 {
@@ -1940,7 +1940,7 @@ Si quieres que olvide el contexto anterior:
                 text += $"📄 Página **{page}/{totalPages}**\n";
                 
                 // Construir teclado
-                var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
+                var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
                 
                 // Navegación
                 if (totalPages > 1)
@@ -2230,7 +2230,7 @@ Si quieres que olvide el contexto anterior:
                 inventoryText += $"📊 Espacios: **{currentPlayer.Inventory.Count}/20** | Página **{page}/{totalPages}**";
                 
                 // Construir teclado
-                var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
+                var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
                 
                 // Navegación
                 if (totalPages > 1)
