@@ -18,6 +18,14 @@ namespace BotTelegram.Commands
             Console.WriteLine($"   [RememberCommand] Procesando: {message.Text}");
             var input = message.Text!.Replace("/remember", "").Trim();
 
+            // 🎯 LOG: Registrar intento de creación de recordatorio
+            TelegramLogger.LogUserAction(
+                chatId: message.Chat.Id,
+                username: message.From?.Username ?? "unknown",
+                action: "/remember",
+                details: $"Input: {(string.IsNullOrWhiteSpace(input) ? "(empty)" : input.Substring(0, Math.Min(50, input.Length)))}"
+            );
+
             // Validación de entrada
             if (string.IsNullOrWhiteSpace(input))
             {

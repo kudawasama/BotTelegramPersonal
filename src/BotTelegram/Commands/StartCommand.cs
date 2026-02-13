@@ -3,6 +3,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Threading;
 using System.Threading.Tasks;
+using BotTelegram.Services;
 
 namespace BotTelegram.Commands
 {
@@ -14,6 +15,14 @@ namespace BotTelegram.Commands
             CancellationToken ct)
         {
             Console.WriteLine($"   [StartCommand] Enviando mensaje de bienvenida");
+            
+            // 🎯 LOG: Registrar comando /start
+            TelegramLogger.LogUserAction(
+                chatId: message.Chat.Id,
+                username: message.From?.Username ?? "unknown",
+                action: "/start",
+                details: "Menu principal desplegado"
+            );
             
             // Menú principal reorganizado por categorías
             var keyboard = new InlineKeyboardMarkup(new[]

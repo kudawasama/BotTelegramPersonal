@@ -21,6 +21,14 @@ namespace BotTelegram.Commands
             {
                 Console.WriteLine($"[ListCommand] Obteniendo recordatorios para ChatId {message.Chat.Id} (página {page})");
                 
+                // 🎯 LOG: Registrar comando /list
+                TelegramLogger.LogUserAction(
+                    chatId: message.Chat.Id,
+                    username: message.From?.Username ?? "unknown",
+                    action: "/list",
+                    details: $"Pagina: {page}"
+                );
+                
                 var allReminders = _service.GetAll()
                     .Where(r => r.ChatId == message.Chat.Id)
                     .OrderBy(r => r.DueAt)

@@ -3,6 +3,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Threading;
 using System.Threading.Tasks;
+using BotTelegram.Services;
 
 namespace BotTelegram.Commands
 {
@@ -13,6 +14,14 @@ namespace BotTelegram.Commands
             Message message,
             CancellationToken ct)
         {
+            // 🎯 LOG: Registrar comando /help
+            TelegramLogger.LogUserAction(
+                chatId: message.Chat.Id,
+                username: message.From?.Username ?? "unknown",
+                action: "/help",
+                details: "Menu de ayuda solicitado"
+            );
+            
             // Crear botones con todas las acciones
             var keyboard = new InlineKeyboardMarkup(new[]
             {

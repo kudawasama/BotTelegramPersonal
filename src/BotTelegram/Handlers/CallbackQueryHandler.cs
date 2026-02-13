@@ -23,6 +23,15 @@ namespace BotTelegram.Handlers
             var data = callbackQuery.Data;
             var chatId = callbackQuery.Message.Chat.Id;
             var messageId = callbackQuery.Message.MessageId;
+            var username = callbackQuery.From.Username ?? "unknown";
+
+            // 🎯 LOG: Registrar TODA interacción de callback
+            TelegramLogger.LogUserAction(
+                chatId: chatId,
+                username: username,
+                action: $"callback:{data}",
+                details: $"MessageId: {messageId}"
+            );
 
             try
             {

@@ -3,6 +3,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using BotTelegram.RPG.Services;
 using BotTelegram.RPG.Models;
+using BotTelegram.Services;
 
 namespace BotTelegram.RPG.Commands
 {
@@ -22,6 +23,14 @@ namespace BotTelegram.RPG.Commands
         {
             var chatId = message.Chat.Id;
             var player = _rpgService.GetPlayer(chatId);
+            
+            // 🎯 LOG: Registrar comando /rpg
+            TelegramLogger.LogUserAction(
+                chatId: chatId,
+                username: message.From?.Username ?? "unknown",
+                action: "/rpg",
+                details: player == null ? "New player (welcome screen)" : $"Existing player: {player.Name} (Lv.{player.Level})"
+            );
             
             if (player == null)
             {
