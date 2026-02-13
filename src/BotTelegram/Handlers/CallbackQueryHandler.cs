@@ -1988,8 +1988,15 @@ Si quieres que olvide el contexto anterior:
             // ═══════════════════════════════════════════════════════════════
             // MENÚ DE PROGRESO (Clases Ocultas)
             // ═══════════════════════════════════════════════════════════════
-            if (data == "rpg_progress")
+            // Progress menu (paginado para clases ocultas)
+            if (data == "rpg_progress" || data.StartsWith("rpg_progress:"))
             {
+                int page = 1;
+                if (data.Contains(":"))
+                {
+                    int.TryParse(data.Split(':')[1], out page);
+                }
+                
                 var tracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
                 var allClasses = BotTelegram.RPG.Services.HiddenClassDatabase.GetAll();
                 
@@ -2012,7 +2019,7 @@ Si quieres que olvide el contexto anterior:
                 
                 text += "📈 **Progreso hacia Nuevas Clases:**\n\n";
                 
-                var availableClasses = allClasses.Where(c => !currentPlayer.UnlockedHiddenClasses.Contains(c.Id)).Take(3).ToList();
+                var availableClasses = allClasses.Where(c => !currentPlayer.UnlockedHiddenClasses.Contains(c.Id)).ToList();
                 
                 if (availableClasses.Count == 0)
                 {
@@ -2020,7 +2027,12 @@ Si quieres que olvide el contexto anterior:
                 }
                 else
                 {
-                    foreach (var hClass in availableClasses)
+                    // Paginación - 3 clases por página
+                    const int perPage = 3;
+                    var totalPages = (int)Math.Ceiling(availableClasses.Count / (double)perPage);
+                    var pageClasses = availableClasses.Skip((page - 1) * perPage).Take(perPage).ToList();
+                    
+                    foreach (var hClass in pageClasses)
                     {
                         var progress = tracker.GetClassProgress(currentPlayer, hClass.Id);
                         var percentage = tracker.GetClassProgressPercentage(currentPlayer, hClass.Id);
@@ -2044,9 +2056,24 @@ Si quieres que olvide el contexto anterior:
                         }
                         text += "\n";
                     }
+                    
+                    text += $"📊 **Página {page}/{totalPages}** | {availableClasses.Count} clases disponibles";
                 }
                 
                 var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                // Botones de navegación si hay múltiples páginas
+                if (availableClasses.Count > 3)
+                {
+                    var navRow = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
+                    var totalPages = (int)Math.Ceiling(availableClasses.Count / 3.0);
+                    if (page > 1)
+                        navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⬅️ Anterior", $"rpg_progress:{page - 1}"));
+                    if (page < totalPages)
+                        navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("➡️ Siguiente", $"rpg_progress:{page + 1}"));
+                    if (navRow.Any())
+                        buttons.Add(navRow.ToArray());
+                }
                 
                 // Botón para ver clases desbloqueadas
                 if (currentPlayer.UnlockedHiddenClasses.Count > 0)
@@ -2186,8 +2213,15 @@ Si quieres que olvide el contexto anterior:
             // ═══════════════════════════════════════════════════════════════
             // MENÚ DE PASIVAS
             // ═══════════════════════════════════════════════════════════════
-            if (data == "rpg_passives")
+            // Passives menu (paginado)
+            if (data == "rpg_passives" || data.StartsWith("rpg_passives:"))
             {
+                int page = 1;
+                if (data.Contains(":"))
+                {
+                    int.TryParse(data.Split(':')[1], out page);
+                }
+                
                 var text = "💎 **PASIVAS ACTIVAS**\n\n";
                 
                 if (currentPlayer.UnlockedPassives.Count == 0)
@@ -2232,51 +2266,58 @@ Si quieres que olvide el contexto anterior:
                     
                     var specialPassives = passives.Except(combatPassives).Except(survivalPassives).Except(utilityPassives).ToList();
                     
-                    if (combatPassives.Count > 0)
+                    // Sistema de paginación - mostrar 8 por página
+                    const int perPage = 8;
+                    var allGroups = new List<(string title, List<BotTelegram.RPG.Models.Passive> items)>
                     {
-                        text += "⚔️ **COMBATE:**\n";
-                        foreach (var passive in combatPassives)
+                        ("⚔️ **COMBATE:**", combatPassives),
+                        ("🛡️ **SUPERVIVENCIA:**", survivalPassives),
+                        ("💰 **UTILIDAD:**", utilityPassives),
+                        ("🌟 **ESPECIALES:**", specialPassives)
+                    };
+                    
+                    var flatList = allGroups.SelectMany(g => g.items.Select(i => (g.title, item: i))).ToList();
+                    var totalPages = (int)Math.Ceiling(flatList.Count / (double)perPage);
+                    var pageItems = flatList.Skip((page - 1) * perPage).Take(perPage).ToList();
+                    
+                    string lastTitle = "";
+                    foreach (var (title, passive) in pageItems)
+                    {
+                        if (title != lastTitle)
                         {
-                            text += $"  {passive.Emoji} {passive.Name}\n";
-                            text += $"     {passive.Description}\n";
+                            text += $"\n{title}\n";
+                            lastTitle = title;
                         }
-                        text += "\n";
+                        text += $"  {passive.Emoji} {passive.Name}\n";
+                        text += $"     {passive.Description}\n";
                     }
                     
-                    if (survivalPassives.Count > 0)
-                    {
-                        text += "🛡️ **SUPERVIVENCIA:**\n";
-                        foreach (var passive in survivalPassives)
-                        {
-                            text += $"  {passive.Emoji} {passive.Name}\n";
-                            text += $"     {passive.Description}\n";
-                        }
-                        text += "\n";
-                    }
+                    text += $"\n📊 **Página {page}/{totalPages}** | Total: {passives.Count} pasivas";
                     
-                    if (utilityPassives.Count > 0)
+                    // Botones de navegación
+                    var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                    if (totalPages > 1)
                     {
-                        text += "💰 **UTILIDAD:**\n";
-                        foreach (var passive in utilityPassives)
-                        {
-                            text += $"  {passive.Emoji} {passive.Name}\n";
-                            text += $"     {passive.Description}\n";
-                        }
-                        text += "\n";
+                        var navRow = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
+                        if (page > 1)
+                            navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⬅️ Anterior", $"rpg_passives:{page - 1}"));
+                        if (page < totalPages)
+                            navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("➡️ Siguiente", $"rpg_passives:{page + 1}"));
+                        buttons.Add(navRow.ToArray());
                     }
-                    
-                    if (specialPassives.Count > 0)
+                    buttons.Add(new[]
                     {
-                        text += "🌟 **ESPECIALES:**\n";
-                        foreach (var passive in specialPassives)
-                        {
-                            text += $"  {passive.Emoji} {passive.Name}\n";
-                            text += $"     {passive.Description}\n";
-                        }
-                        text += "\n";
-                    }
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                    });
                     
-                    text += $"📊 **Total:** {passives.Count} pasivas activas";
+                    await bot.EditMessageText(
+                        chatId,
+                        messageId,
+                        text,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
+                        cancellationToken: ct);
+                    return;
                 }
                 
                 await bot.EditMessageText(

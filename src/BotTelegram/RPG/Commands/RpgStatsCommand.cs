@@ -146,8 +146,22 @@ namespace BotTelegram.RPG.Commands
             
             stats += equipment;
             
-            // Skills desbloqueadas
+            // Skills y pasivas
             stats += $"\n✨ **Skills Desbloqueadas**: {player.UnlockedSkills.Count}/16\n";
+            stats += $"💎 **Pasivas Activas**: {player.UnlockedPassives.Count}\n";
+            stats += $"🌟 **Clases Ocultas**: {player.UnlockedHiddenClasses.Count}\n\n";
+            
+            // TOP 5 contadores de acciones
+            if (player.ActionCounters.Any())
+            {
+                stats += "📊 **Top Acciones Realizadas:**\n";
+                foreach (var (action, count) in player.ActionCounters.OrderByDescending(x => x.Value).Take(5))
+                {
+                    var actionName = GetActionDisplayName(action);
+                    stats += $"  • {actionName}: {count}\n";
+                }
+                stats += "\n";
+            }
             
             var keyboard = new InlineKeyboardMarkup(new[]
             {
@@ -173,6 +187,30 @@ namespace BotTelegram.RPG.Commands
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
                 cancellationToken: ct);
+        }
+        
+        private string GetActionDisplayName(string actionKey)
+        {
+            return actionKey switch
+            {
+                "physical_attack" => "⚔️ Ataques físicos",
+                "magic_attack" => "🔮 Ataques mágicos",
+                "critical_hit" => "💥 Críticos",
+                "block" => "🛡️ Bloqueos",
+                "dodge" => "💨 Esquivas",
+                "heal" => "💚 Curaciones",
+                "meditation" => "🧘 Meditaciones",
+                "enemy_killed" => "☠️ Enemigos eliminados",
+                "combo_3" => "🎯 Combos x3+",
+                "gold_earned" => "💰 Oro ganado",
+                "damage_dealt" => "💢 Daño infligido",
+                "damage_taken" => "💔 Daño recibido",
+                "explore" => "🗺️ Exploraciones",
+                "rest" => "😴 Descansos",
+                "work" => "💼 Trabajos",
+                "tame" => "🐾 Domados",
+                _ => actionKey
+            };
         }
     }
 }
