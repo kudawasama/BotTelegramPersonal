@@ -1527,6 +1527,12 @@ Si quieres que olvide el contexto anterior:
                     
                     var player = rpgService.CreateNewPlayer(chatId, playerName, characterClass);
                     
+                    TelegramLogger.LogUserAction(
+                        chatId,
+                        callbackQuery.From.Username ?? "Unknown",
+                        "character_created",
+                        $"Created {player.Class} named {player.Name}");
+                    
                     await bot.EditMessageText(
                         chatId,
                         messageId,
@@ -2458,6 +2464,12 @@ Si quieres que olvide el contexto anterior:
                 currentPlayer.CurrentEnemy = enemy;
                 rpgService.SavePlayer(currentPlayer);
                 
+                TelegramLogger.LogRpgEvent(
+                    chatId,
+                    currentPlayer.Name,
+                    "explore_encounter",
+                    $"Encountered {enemy.Name} (Nv.{enemy.Level}, {difficulty}). Energy left: {currentPlayer.Energy}");
+                
                 await bot.DeleteMessage(chatId, messageId, ct);
                 await bot.SendMessage(
                     chatId,
@@ -2916,6 +2928,12 @@ Si quieres que olvide el contexto anterior:
                 
                 rpgService.SavePlayer(currentPlayer);
                 
+                TelegramLogger.LogRpgEvent(
+                    chatId,
+                    currentPlayer.Name,
+                    "combat_attack",
+                    $"Attacked {enemy.Name}. Hit: {result.PlayerHit}. Damage: {result.PlayerDamage}. Enemy HP: {enemy.HP}");
+                
                 if (result.EnemyDefeated)
                 {
                     await bot.EditMessageText(
@@ -3146,33 +3164,8 @@ Si quieres que olvide el contexto anterior:
             // Options menu
             if (data == "rpg_options")
             {
-                await bot.EditMessageText(
-                    chatId,
-                    messageId,
-                    "⚙️ **OPCIONES**\n\n" +
-                    "Configuración de tu personaje:\n\n" +
-                    "**Info del sistema:**\n" +
-                    $"👤 Jugador: {currentPlayer.Name}\n" +
-                    $"⚔️ Clase: {currentPlayer.Class}\n" +
-                    $"📊 Nivel: {currentPlayer.Level}\n" +
-                    $"💰 Oro: {currentPlayer.Gold}\n" +
-                    $"❤️ HP: {currentPlayer.HP}/{currentPlayer.MaxHP}\n" +
-                    $"⚡ Energía: {currentPlayer.Energy}/{currentPlayer.MaxEnergy}\n\n" +
-                    "💡 Más opciones próximamente...",
-                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-                    {
-                        new[]
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎒 Inventario", "rpg_inventory")
-                        },
-                        new[]
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
-                        }
-                    }),
-                    cancellationToken: ct);
+                await bot.DeleteMessage(chatId, messageId, ct);
+                await rpgCommand.ShowOptionsMenu(bot, chatId, currentPlayer, ct);
                 return;
             }
             
@@ -4402,6 +4395,12 @@ Responde en español en máximo 2-3 líneas con una estrategia concreta (¿ataca
                 currentPlayer.Gold += 30;
                 rpgService.SavePlayer(currentPlayer);
                 
+                TelegramLogger.LogRpgEvent(
+                    chatId,
+                    currentPlayer.Name,
+                    "work_action",
+                    $"Worked for +30 gold. Energy: {currentPlayer.Energy}");
+                
                 await bot.AnswerCallbackQuery(
                     callbackQuery.Id,
                     "💼 Trabajaste en la taberna. +30 oro",
@@ -4540,6 +4539,10 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
 • Enemigos derrotados: {player.Level * 2}
 • Tiempo jugado: {(DateTime.UtcNow - player.CreatedAt).TotalHours:F1}h
 
+**📦 BACKUP Y RESTAURACIÓN:**
+💾 *Exportar* - Guarda tu personaje en archivo JSON
+📥 *Importar* - Restaura personaje desde backup
+
 **⚠️ ACCIONES:**
 🗑️ *Borrar Personaje* - Empieza de nuevo
 📊 *Ver Stats Completos* - Detalles de atributos
@@ -4553,6 +4556,11 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
                     {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💾 Exportar", "rpg_export_character"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📥 Importar", "rpg_import_character")
+                        },
                         new[]
                         {
                             Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
@@ -4621,6 +4629,131 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                         }
                     }),
                     cancellationToken: ct);
+                return;
+            }
+            
+            // ═══════════════════════════════════════════════════════════════
+            // EXPORT / IMPORT CHARACTER (FASE 5 - PERSISTENCIA)
+            // ═══════════════════════════════════════════════════════════════
+            
+            // Export character to JSON
+            if (data == "rpg_export_character")
+            {
+                var player = rpgService.GetPlayer(chatId);
+                if (player == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No hay personaje para exportar", cancellationToken: ct);
+                    return;
+                }
+                
+                var json = rpgService.ExportPlayerData(player);
+                
+                if (string.IsNullOrEmpty(json))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Error al exportar personaje", cancellationToken: ct);
+                    return;
+                }
+                
+                // Convertir JSON a bytes
+                var bytes = System.Text.Encoding.UTF8.GetBytes(json);
+                var fileName = $"{player.Name}_Lv{player.Level}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+                
+                using (var stream = new System.IO.MemoryStream(bytes))
+                {
+                    await bot.SendDocument(
+                        chatId,
+                        new Telegram.Bot.Types.InputFileStream(stream, fileName),
+                        caption: $"💾 **BACKUP DE PERSONAJE**\n\n" +
+                                $"👤 **{player.Name}** - {player.Class} Nv.{player.Level}\n" +
+                                $"📅 Exportado: {DateTime.Now:dd/MM/yyyy HH:mm}\n\n" +
+                                $"💡 *Guarda este archivo en un lugar seguro.*\n" +
+                                $"Puedes importarlo con **⚙️ Opciones → 📥 Importar**",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        cancellationToken: ct);
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "✅ Personaje exportado", cancellationToken: ct);
+                return;
+            }
+            
+            // Import character from JSON
+            if (data == "rpg_import_character")
+            {
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    "📥 **IMPORTAR PERSONAJE**\n\n" +
+                    "**Paso 1:** Envía el archivo JSON de tu personaje\n" +
+                    "**Paso 2:** El sistema validará los datos\n" +
+                    "**Paso 3:** Tu personaje será restaurado\n\n" +
+                    "⚠️ *Aviso:* Si ya tienes un personaje, será **reemplazado**.\n\n" +
+                    "📎 **Envía el archivo .json ahora** o cancela.",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("❌ Cancelar", "rpg_options")
+                        }
+                    }),
+                    cancellationToken: ct);
+                
+                // Marcar que estamos esperando un archivo
+                BotTelegram.RPG.Services.RpgService.SetAwaitingImport(chatId, true);
+                
+                return;
+            }
+            
+            // Download logs
+            if (data == "rpg_download_logs")
+            {
+                try
+                {
+                    var userLogs = BotTelegram.Services.TelegramLogger.GetUserLogFiles(chatId);
+                    
+                    if (userLogs.Count == 0)
+                    {
+                        await bot.AnswerCallbackQuery(callbackQuery.Id, "📭 No hay logs disponibles aún", showAlert: true, cancellationToken: ct);
+                        return;
+                    }
+                    
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, $"📊 Descargando {userLogs.Count} archivo(s) de log...", cancellationToken: ct);
+                    
+                    // Enviar cada archivo de log
+                    foreach (var logFile in userLogs)
+                    {
+                        using (var stream = System.IO.File.OpenRead(logFile))
+                        {
+                            var fileName = System.IO.Path.GetFileName(logFile);
+                            await bot.SendDocument(
+                                chatId,
+                                new Telegram.Bot.Types.InputFileStream(stream, fileName),
+                                caption: $"📋 *Log: {fileName}*\n\nÚsalo para auditoría y análisis de pruebas.",
+                                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                                cancellationToken: ct);
+                        }
+                    }
+                    
+                    await bot.SendMessage(
+                        chatId,
+                        "✅ **Logs descargados exitosamente**\n\n" +
+                        $"📦 Total de archivos: {userLogs.Count}\n" +
+                        "💾 Están listos para análisis y auditoría",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[]
+                            {
+                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver a Opciones", "rpg_options")
+                            }
+                        }),
+                        cancellationToken: ct);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"❌ Error descargando logs: {ex.Message}");
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Error al descargar logs", showAlert: true, cancellationToken: ct);
+                }
                 return;
             }
             

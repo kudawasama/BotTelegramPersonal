@@ -11,6 +11,7 @@ namespace BotTelegram.RPG.Services
         
         // Sistema de estados para creación de personajes
         private static readonly HashSet<long> _awaitingName = new();
+        private static readonly HashSet<long> _awaitingImport = new();
         private static readonly object _stateLock = new();
         
         public static void SetAwaitingName(long chatId, bool awaiting)
@@ -29,6 +30,25 @@ namespace BotTelegram.RPG.Services
             lock (_stateLock)
             {
                 return _awaitingName.Contains(chatId);
+            }
+        }
+        
+        public static void SetAwaitingImport(long chatId, bool awaiting)
+        {
+            lock (_stateLock)
+            {
+                if (awaiting)
+                    _awaitingImport.Add(chatId);
+                else
+                    _awaitingImport.Remove(chatId);
+            }
+        }
+        
+        public static bool IsAwaitingImport(long chatId)
+        {
+            lock (_stateLock)
+            {
+                return _awaitingImport.Contains(chatId);
             }
         }
         
@@ -73,7 +93,15 @@ namespace BotTelegram.RPG.Services
                 {
                     var json = File.ReadAllText(_filePath);
                     var players = JsonSerializer.Deserialize<List<RpgPlayer>>(json) ?? new List<RpgPlayer>();
-                    return players.FirstOrDefault(p => p.ChatId == chatId);
+                    var player = players.FirstOrDefault(p => p.ChatId == chatId);
+                    
+                    // MIGRACIÓN AUTOMÁTICA: Actualizar campos nuevos sin borrar progreso
+                    if (player != null)
+                    {
+                        MigratePlayerData(player);
+                    }
+                    
+                    return player;
                 }
                 catch (Exception ex)
                 {
@@ -648,6 +676,199 @@ namespace BotTelegram.RPG.Services
             
             return EnemyDatabase.ScaleEnemy(template, playerLevel, levelDiff);
         }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // SISTEMA DE EXPORT/IMPORT Y MIGRACIÓN (FASE 5 - PERSISTENCIA)
+        // ═══════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Exporta el personaje como JSON para backup
+        /// </summary>
+        public string ExportPlayerData(RpgPlayer player)
+        {
+            try
+            {
+                var options = new JsonSerializerOptions 
+                { 
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never
+                };
+                
+                var json = JsonSerializer.Serialize(player, options);
+                Console.WriteLine($"[RpgService] 📤 Personaje exportado: {player.Name} (Lv.{player.Level})");
+                return json;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[RpgService] ❌ Error exportando personaje: {ex.Message}");
+                return string.Empty;
+            }
+        }
+        
+        /// <summary>
+        /// Importa un personaje desde JSON
+        /// </summary>
+        public RpgPlayer? ImportPlayerData(string json, long chatId)
+        {
+            try
+            {
+                var player = JsonSerializer.Deserialize<RpgPlayer>(json);
+                
+                if (player == null)
+                {
+                    Console.WriteLine($"[RpgService] ❌ JSON inválido al importar");
+                    return null;
+                }
+                
+                // Asegurar que use el chatId correcto
+                player.ChatId = chatId;
+                
+                // Migrar datos si es necesario
+                MigratePlayerData(player);
+                
+                // Guardar
+                SavePlayer(player);
+                
+                Console.WriteLine($"[RpgService] 📥 Personaje importado: {player.Name} (Lv.{player.Level})");
+                return player;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[RpgService] ❌ Error importando personaje: {ex.Message}");
+                return null;
+            }
+        }
+        
+        /// <summary>
+        /// Migra datos antiguos a nueva estructura
+        /// CRÍTICO: NO borra progreso, solo agrega campos nuevos
+        /// </summary>
+        public void MigratePlayerData(RpgPlayer player)
+        {
+            var updated = false;
+            
+            // FASE 1: Sistema de mascotas
+            if (player.PetInventory == null)
+            {
+                player.PetInventory = new List<RpgPet>();
+                updated = true;
+            }
+            if (player.ActivePets == null)
+            {
+                player.ActivePets = new List<RpgPet>();
+                updated = true;
+            }
+            
+            // FASE 2: Hidden Classes
+            if (player.UnlockedHiddenClasses == null)
+            {
+                player.UnlockedHiddenClasses = new List<string>();
+                updated = true;
+            }
+            
+            if (player.UnlockedPassives == null)
+            {
+                player.UnlockedPassives = new List<string>();
+                updated = true;
+            }
+            
+            // FASE 3: Skills System
+            if (player.UnlockedSkills == null)
+            {
+                player.UnlockedSkills = new List<string>();
+                updated = true;
+            }
+            
+            if (player.SkillCooldowns == null)
+            {
+                player.SkillCooldowns = new Dictionary<string, int>();
+                updated = true;
+            }
+            
+            // FASE 4: Action Tracking
+            if (player.ActionCounters == null)
+            {
+                player.ActionCounters = new Dictionary<string, int>();
+                updated = true;
+            }
+            
+            // CombatLog no existe, usar ActionCounters si es necesario
+            
+            // FASE 5: Minions & Zones
+            if (player.ActiveMinions == null)
+            {
+                player.ActiveMinions = new List<Minion>();
+                updated = true;
+            }
+            
+            if (player.UnlockedZones == null)
+            {
+                player.UnlockedZones = new List<string> { "puerto_esperanza" };
+                updated = true;
+            }
+            
+            if (string.IsNullOrEmpty(player.CurrentZone))
+            {
+                player.CurrentZone = "puerto_esperanza";
+                updated = true;
+            }
+            
+            // Stats adicionales (si no existen)
+            if (player.Mana == 0 && player.MaxMana == 0 && player.Class == CharacterClass.Mage)
+            {
+                player.MaxMana = 100;
+                player.Mana = 100;
+                updated = true;
+            }
+            
+            if (player.Stamina == 0 && player.MaxStamina == 0)
+            {
+                player.MaxStamina = 100;
+                player.Stamina = 100;
+                updated = true;
+            }
+            
+            // Equipamiento
+            if (player.EquipmentInventory == null)
+            {
+                player.EquipmentInventory = new List<RpgEquipment>();
+                updated = true;
+            }
+            
+            if (updated)
+            {
+                Console.WriteLine($"[RpgService] 🔄 Personaje migrado: {player.Name} (añadidos campos nuevos)");
+                SavePlayer(player);
+            }
+        }
+        
+        /// <summary>
+        /// Valida que un JSON sea un personaje válido
+        /// </summary>
+        public bool ValidatePlayerJson(string json)
+        {
+            try
+            {
+                var player = JsonSerializer.Deserialize<RpgPlayer>(json);
+                
+                if (player == null)
+                    return false;
+                
+                // Campos obligatorios
+                if (string.IsNullOrEmpty(player.Name))
+                    return false;
+                
+                if (player.Level < 1 || player.Level > 1000)
+                    return false;
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        
         // Helper: Roll dice
         public static int RollDice(int sides = 20)
         {

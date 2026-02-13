@@ -351,5 +351,67 @@ Bienvenido, **{playerName}**. Elige tu camino:
             if (diff.TotalHours < 24) return $"hace {(int)diff.TotalHours}h";
             return $"hace {(int)diff.TotalDays} días";
         }
+
+        /// <summary>
+        /// Muestra el menú de opciones del juego (backup, importar, etc)
+        /// </summary>
+        public async Task ShowOptionsMenu(ITelegramBotClient bot, long chatId, RpgPlayer player, CancellationToken ct)
+        {
+            var text = $@"⚙️ **OPCIONES DE PERSONAJE**
+
+👤 **{player.Name}** - {player.Class} Nv.{player.Level}
+💰 Oro: {player.Gold}
+❤️ HP: {player.HP}/{player.MaxHP}
+
+**Gestión de Datos:**
+
+💾 **Exportar Personaje**
+   Descarga tu personaje en formato JSON
+   Úsalo para hacer backup o compartir
+
+📥 **Importar Personaje**
+   Restaura un personaje desde un backup
+   ⚠️ Reemplaza tu personaje actual
+
+🗂️ **Descargar Logs**
+   Descarga todos los logs de prueba
+   Perfecto para auditoría y análisis
+
+**Cuenta:**
+
+🗑️ **Borrar Personaje**
+   ⚠️ Esta acción es PERMANENTE
+
+🏠 **Volver**
+   Regresa al menú principal";
+
+            var keyboard = new InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("💾 Exportar", "rpg_export_character"),
+                    InlineKeyboardButton.WithCallbackData("📥 Importar", "rpg_import_character")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🗂️ Logs", "rpg_download_logs")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🗑️ Borrar", "rpg_confirm_delete")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🏠 Volver", "rpg_main")
+                }
+            });
+
+            await bot.SendMessage(
+                chatId,
+                text,
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                replyMarkup: keyboard,
+                cancellationToken: ct);
+        }
     }
 }
