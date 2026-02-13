@@ -1577,11 +1577,128 @@ Si quieres que olvide el contexto anterior:
             }
             
             // Skills menu
-            if (data == "rpg_skills")
+            if (data == "rpg_skills" || data.StartsWith("rpg_skills:"))
             {
-                await bot.DeleteMessage(chatId, messageId, ct);
-                var skillsCommand = new BotTelegram.RPG.Commands.RpgSkillsCommand();
-                await skillsCommand.Execute(bot, callbackQuery.Message, ct);
+                int page = 1;
+                if (data.Contains(":"))
+                {
+                    int.TryParse(data.Split(':')[1], out page);
+                }
+                
+                var allSkills = BotTelegram.RPG.Services.SkillDatabase.GetAllSkills();
+                var unlockedSkills = allSkills.Where(s => currentPlayer.UnlockedSkills.Contains(s.Id)).ToList();
+                var lockedSkills = allSkills.Where(s => !currentPlayer.UnlockedSkills.Contains(s.Id)).ToList();
+                
+                var text = $"✨ **SKILLS** ({unlockedSkills.Count}/{allSkills.Count} desbloqueadas)\n\n";
+                
+                if (unlockedSkills.Count == 0)
+                {
+                    text += "❌ Aún no has desbloqueado ninguna skill.\n\n";
+                    text += "Completa acciones para desbloquear skills:\n";
+                    text += "• Ataca enemigos\n";
+                    text += "• Usa skills de combate\n";
+                    text += "• Medita para recuperar mana\n";
+                    text += "• Explora dungeons\n";
+                    text += "• ¡Y mucho más!\n";
+                    
+                    await bot.EditMessageText(
+                        chatId,
+                        messageId,
+                        text,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[]
+                            {
+                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                            }
+                        }),
+                        cancellationToken: ct);
+                    return;
+                }
+                
+                // Agrupar skills desbloqueadas por categoría
+                var physicalSkills = unlockedSkills.Where(s => s.Category == BotTelegram.RPG.Models.SkillCategory.Physical).ToList();
+                var magicalSkills = unlockedSkills.Where(s => s.Category == BotTelegram.RPG.Models.SkillCategory.Magical).ToList();  
+                var supportSkills = unlockedSkills.Where(s => s.Category == BotTelegram.RPG.Models.SkillCategory.Support).ToList();
+                var specialSkills = unlockedSkills.Where(s => s.Category == BotTelegram.RPG.Models.SkillCategory.Special).ToList();
+                
+                // Sistema de paginación - 6 skills por página
+                const int perPage = 6;
+                var allGroups = new List<(string title, List<BotTelegram.RPG.Models.RpgSkill> items)>
+                {
+                    ("⚔️ **FÍSICAS:**", physicalSkills),
+                    ("🔮 **MÁGICAS:**", magicalSkills),
+                    ("💚 **SOPORTE:**", supportSkills),
+                    ("🌟 **ESPECIALES:**", specialSkills)
+                };
+                
+                var flatList = allGroups.SelectMany(g => g.items.Select(i => (g.title, item: i))).ToList();
+                var totalPages = (int)Math.Ceiling(flatList.Count / (double)perPage);
+                var pageItems = flatList.Skip((page - 1) * perPage).Take(perPage).ToList();
+                
+                string lastTitle = "";
+                foreach (var (title, skill) in pageItems)
+                {
+                    if (title != lastTitle)
+                    {
+                        text += $"\n{title}\n";
+                        lastTitle = title;
+                    }
+                    
+                    var cooldown = currentPlayer.SkillCooldowns.ContainsKey(skill.Id) && currentPlayer.SkillCooldowns[skill.Id] > 0
+                        ? $" ⏱️ {currentPlayer.SkillCooldowns[skill.Id]}T"
+                        : "";
+                    
+                    text += $"  **{skill.Name}** (Lv.{skill.RequiredLevel}){cooldown}\n";
+                    
+                    // Costos
+                    var costs = new List<string>();
+                    if (skill.ManaCost > 0) costs.Add($"💧 {skill.ManaCost}");
+                    if (skill.StaminaCost > 0) costs.Add($"⚡ {skill.StaminaCost}");
+                    if (costs.Any())
+                        text += $"     {string.Join(" | ", costs)}";
+                    
+                    if (skill.Cooldown > 0)
+                        text += $" | CD: {skill.Cooldown}T";
+                    
+                    text += $"\n     {skill.Description}\n";
+                }
+                
+                text += $"\n📊 **Página {page}/{totalPages}** | Total: {unlockedSkills.Count} skills";
+                
+                // Botones de navegación
+                var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                if (totalPages > 1)
+                {
+                    var navRow = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
+                    if (page > 1)
+                        navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⬅️ Anterior", $"rpg_skills:{page - 1}"));
+                    if (page < totalPages)
+                        navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("➡️ Siguiente", $"rpg_skills:{page + 1}"));
+                    if (navRow.Any())
+                        buttons.Add(navRow.ToArray());
+                }
+                
+                buttons.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📈 Counters", "rpg_counters")
+                });
+                buttons.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔄 Actualizar", "rpg_skills"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
+                    cancellationToken: ct);
                 return;
             }
             
