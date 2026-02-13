@@ -358,7 +358,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Cargas hacia el enemigo y lo golpeas con fuerza devastadora.",
                     Category = SkillCategory.Combat,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "physical_attack", Count = 150, Description = "Ataques físicos" },
+                        new SkillRequirement { ActionType = "heavy_attack", Count = 50, Description = "Ataques pesados" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 35,
                     Cooldown = 4,
@@ -374,7 +378,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Entras en un frenesí de ataques devastadores. +50% daño por 3 turnos.",
                     Category = SkillCategory.Combat,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "physical_attack", Count = 200, Description = "Ataques físicos" },
+                        new SkillRequirement { ActionType = "berserk", Count = 30, Description = "Usos de Berserk" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 50,
                     Cooldown = 8,
@@ -390,7 +398,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Golpe letal que hace +100% daño a enemigos con menos de 30% HP.",
                     Category = SkillCategory.Combat,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "kill_enemy", Count = 50, Description = "Enemigos derrotados" },
+                        new SkillRequirement { ActionType = "physical_attack", Count = 100, Description = "Ataques físicos" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 40,
                     Cooldown = 5,
@@ -404,7 +416,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Golpeas a todos los enemigos 5 veces. Daño AoE masivo.",
                     Category = SkillCategory.Combat,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "physical_attack", Count = 250, Description = "Ataques físicos" },
+                        new SkillRequirement { ActionType = "skill_used", Count = 100, Description = "Habilidades usadas" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 50,
                     Cooldown = 6,
@@ -420,7 +436,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Ataque que recupera 30% del daño como HP.",
                     Category = SkillCategory.Combat,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "physical_attack", Count = 120, Description = "Ataques físicos" },
+                        new SkillRequirement { ActionType = "take_damage", Count = 150, Description = "Daño recibido" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 35,
                     Cooldown = 4,
@@ -436,7 +456,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Invocas múltiples meteoritos que caen sobre el enemigo.",
                     Category = SkillCategory.Magic,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "magic_attack", Count = 200, Description = "Ataques mágicos" },
+                        new SkillRequirement { ActionType = "spell_cast", Count = 80, Description = "Hechizos lanzados" }
+                    },
                     ManaCost = 80,
                     StaminaCost = 0,
                     Cooldown = 8,
@@ -450,7 +474,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Liberas energía arcana pura. Ignora resistencias.",
                     Category = SkillCategory.Magic,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "magic_attack", Count = 150, Description = "Ataques mágicos" },
+                        new SkillRequirement { ActionType = "skill_used", Count = 60, Description = "Habilidades usadas" }
+                    },
                     ManaCost = 50,
                     StaminaCost = 0,
                     Cooldown = 5,
@@ -465,7 +493,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Drenas todo el mana del enemigo y lo conviertes en daño.",
                     Category = SkillCategory.Magic,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "magic_attack", Count = 180, Description = "Ataques mágicos" },
+                        new SkillRequirement { ActionType = "meditate", Count = 40, Description = "Meditaciones" }
+                    },
                     ManaCost = 40,
                     StaminaCost = 0,
                     Cooldown = 6,
@@ -479,7 +511,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Combinación de todos los elementos. Daño masivo.",
                     Category = SkillCategory.Magic,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "magic_attack", Count = 250, Description = "Ataques mágicos" },
+                        new SkillRequirement { ActionType = "spell_cast", Count = 100, Description = "Hechizos lanzados" }
+                    },
                     ManaCost = 70,
                     StaminaCost = 0,
                     Cooldown = 7,
@@ -495,7 +531,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Proyectil caótico con 50% de hacer crítico garantizado.",
                     Category = SkillCategory.Magic,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "magic_attack", Count = 130, Description = "Ataques mágicos" },
+                        new SkillRequirement { ActionType = "critical_hit", Count = 30, Description = "Golpes críticos" }
+                    },
                     ManaCost = 45,
                     StaminaCost = 0,
                     Cooldown = 4,
@@ -511,7 +551,11 @@ namespace BotTelegram.RPG.Services
                     Description = "+100% defensa por 5 turnos. Bloqueas todo daño físico.",
                     Category = SkillCategory.Defense,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "block", Count = 80, Description = "Bloqueos" },
+                        new SkillRequirement { ActionType = "take_damage", Count = 200, Description = "Daño recibido" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 60,
                     Cooldown = 10,
@@ -525,7 +569,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Reduces 50% del daño recibido por 4 turnos.",
                     Category = SkillCategory.Defense,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "block", Count = 50, Description = "Bloqueos" },
+                        new SkillRequirement { ActionType = "defend", Count = 40, Description = "Defensas" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 40,
                     Cooldown = 6,
@@ -539,7 +587,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Si recibes daño letal, sobrevives con 1 HP. (1 vez por combate)",
                     Category = SkillCategory.Defense,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "survive_low_hp", Count = 10, Description = "Sobrevivir con HP bajo" },
+                        new SkillRequirement { ActionType = "take_damage", Count = 300, Description = "Daño recibido" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 80,
                     Cooldown = 99,
@@ -552,7 +604,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Bloqueas el próximo ataque y devuelves 150% del daño.",
                     Category = SkillCategory.Defense,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "block", Count = 60, Description = "Bloqueos" },
+                        new SkillRequirement { ActionType = "counter", Count = 25, Description = "Contraataques" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 35,
                     Cooldown = 5,
@@ -566,7 +622,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Tú y tus mascotas reciben -30% daño por 5 turnos.",
                     Category = SkillCategory.Defense,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "defend", Count = 50, Description = "Defensas" },
+                        new SkillRequirement { ActionType = "pet_action", Count = 30, Description = "Acciones con mascotas" }
+                    },
                     ManaCost = 30,
                     StaminaCost = 30,
                     Cooldown = 8,
@@ -581,7 +641,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Golpe letal con 80% de crítico garantizado.",
                     Category = SkillCategory.Combat,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "critical_hit", Count = 50, Description = "Golpes críticos" },
+                        new SkillRequirement { ActionType = "precise_attack", Count = 80, Description = "Ataques precisos" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 45,
                     Cooldown = 6,
@@ -595,7 +659,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Atacas 3 veces evadiendo todos los contraataques.",
                     Category = SkillCategory.Combat,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "dodge", Count = 60, Description = "Evasiones" },
+                        new SkillRequirement { ActionType = "physical_attack", Count = 120, Description = "Ataques físicos" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 50,
                     Cooldown = 7,
@@ -611,7 +679,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Crítico con 300% de daño extra si el enemigo está debilitado.",
                     Category = SkillCategory.Combat,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "critical_hit", Count = 70, Description = "Golpes críticos" },
+                        new SkillRequirement { ActionType = "precise_attack", Count = 100, Description = "Ataques precisos" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 40,
                     Cooldown = 5,
@@ -625,7 +697,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Atacas y te vuelves invisible. 100% evasión el próximo turno.",
                     Category = SkillCategory.Combat,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "dodge", Count = 40, Description = "Evasiones" },
+                        new SkillRequirement { ActionType = "precise_attack", Count = 60, Description = "Ataques precisos" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 35,
                     Cooldown = 6,
@@ -640,7 +716,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Siempre haces crítico por 5 turnos.",
                     Category = SkillCategory.Combat,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "critical_hit", Count = 100, Description = "Golpes críticos" },
+                        new SkillRequirement { ActionType = "skill_used", Count = 80, Description = "Habilidades usadas" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 70,
                     Cooldown = 12,
@@ -655,7 +735,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Cura 100% HP y remueve todos los debuffs.",
                     Category = SkillCategory.Magic,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "heal", Count = 50, Description = "Curaciones" },
+                        new SkillRequirement { ActionType = "magic_attack", Count = 120, Description = "Ataques mágicos" }
+                    },
                     ManaCost = 80,
                     StaminaCost = 0,
                     Cooldown = 10,
@@ -668,7 +752,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Revive a todas las mascotas caídas con 50% HP.",
                     Category = SkillCategory.Magic,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "pet_death", Count = 15, Description = "Mascotas caídas" },
+                        new SkillRequirement { ActionType = "magic_attack", Count = 150, Description = "Ataques mágicos" }
+                    },
                     ManaCost = 100,
                     StaminaCost = 0,
                     Cooldown = 15,
@@ -681,7 +769,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Daña a enemigos y cura a aliados simultáneamente.",
                     Category = SkillCategory.Magic,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "heal", Count = 30, Description = "Curaciones" },
+                        new SkillRequirement { ActionType = "magic_attack", Count = 80, Description = "Ataques mágicos" }
+                    },
                     ManaCost = 50,
                     StaminaCost = 0,
                     Cooldown = 6,
@@ -696,7 +788,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Sacrificas 30% de tu HP para curar 60% a una mascota.",
                     Category = SkillCategory.Magic,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "heal", Count = 20, Description = "Curaciones" },
+                        new SkillRequirement { ActionType = "pet_action", Count = 40, Description = "Acciones con mascotas" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 0,
                     Cooldown = 5,
@@ -709,7 +805,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Zona sagrada que cura 10% HP por turno durante 5 turnos.",
                     Category = SkillCategory.Magic,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "heal", Count = 40, Description = "Curaciones" },
+                        new SkillRequirement { ActionType = "meditate", Count = 30, Description = "Meditaciones" }
+                    },
                     ManaCost = 60,
                     StaminaCost = 0,
                     Cooldown = 8,
@@ -725,7 +825,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Todas tus mascotas atacan con +100% daño.",
                     Category = SkillCategory.Special,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "pet_action", Count = 80, Description = "Acciones con mascotas" },
+                        new SkillRequirement { ActionType = "tame_creature", Count = 10, Description = "Criaturas domadas" }
+                    },
                     ManaCost = 50,
                     StaminaCost = 20,
                     Cooldown = 7,
@@ -755,7 +859,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Fusionas 2 mascotas temporalmente. Stats combinados.",
                     Category = SkillCategory.Special,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "pet_action", Count = 100, Description = "Acciones con mascotas" },
+                        new SkillRequirement { ActionType = "tame_creature", Count = 15, Description = "Criaturas domadas" }
+                    },
                     ManaCost = 60,
                     StaminaCost = 40,
                     Cooldown = 10,
@@ -768,7 +876,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Sacrificas 50% HP para invocar un demonio poderoso.",
                     Category = SkillCategory.Special,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "summon_skeleton", Count = 30, Description = "Invocaciones de Esqueleto" },
+                        new SkillRequirement { ActionType = "take_damage", Count = 250, Description = "Daño recibido" }
+                    },
                     ManaCost = 0,
                     StaminaCost = 0,
                     Cooldown = 15,
@@ -783,7 +895,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Regeneras 20% HP/Mana/Stamina mientras combates.",
                     Category = SkillCategory.Special,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "meditate", Count = 50, Description = "Meditaciones" },
+                        new SkillRequirement { ActionType = "skill_used", Count = 70, Description = "Habilidades usadas" }
+                    },
                     ManaCost = 30,
                     StaminaCost = 30,
                     Cooldown = 8,
@@ -797,7 +913,11 @@ namespace BotTelegram.RPG.Services
                     Description = "Actúas 2 veces este turno y el siguiente.",
                     Category = SkillCategory.Special,
                     RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "skill_used", Count = 150, Description = "Habilidades usadas" },
+                        new SkillRequirement { ActionType = "magic_attack", Count = 200, Description = "Ataques mágicos" }
+                    },
                     ManaCost = 100,
                     StaminaCost = 50,
                     Cooldown = 20,
