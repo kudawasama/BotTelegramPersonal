@@ -135,47 +135,49 @@ namespace BotTelegram.RPG.Services
         private void CheckPassiveUnlocks(RpgPlayer player)
         {
             // Pasivas básicas desbloqueadas por acciones simples
-            var passiveUnlocks = new Dictionary<string, (string passiveId, int requiredCount)>
+            // Usando List para permitir múltiples pasivas por acción
+            var passiveUnlocks = new List<(string actionId, string passiveId, int requiredCount)>
             {
                 // Beast Whisperer - Desbloquea después de acariciar 50 bestias
-                { "pet_beast", ("beast_whisperer", 50) },
+                ("pet_beast", "beast_whisperer", 50),
                 
                 // Critical Mastery - Desbloquea después de 100 críticos
-                { "critical_hit", ("critical_mastery", 100) },
+                ("critical_hit", "critical_mastery", 100),
                 
                 // Lethal Strikes - Desbloquea después de 500 críticos
-                { "critical_hit", ("lethal_strikes", 500) },
+                ("critical_hit", "lethal_strikes", 500),
                 
                 // Iron Skin - Desbloquea después de recibir 1000 de daño
-                { "damage_taken", ("iron_skin", 1000) },
+                ("damage_taken", "iron_skin", 1000),
                 
                 // Regeneration - Desbloquea después de meditar 50 veces
-                { "meditation", ("regeneration", 50) },
+                ("meditation", "regeneration", 50),
                 
                 // Meditation Master - Desbloquea después de meditar 200 veces
-                { "meditation", ("meditation_master", 200) },
+                ("meditation", "meditation_master", 200),
                 
                 // Counter Master - Desbloquea después de contraatacar 100 veces
-                { "counter_attack", ("counter_master", 100) },
+                ("counter_attack", "counter_master", 100),
                 
                 // Life Steal - Desbloquea después de matar 200 enemigos
-                { "enemy_kill", ("life_steal", 200) },
+                ("enemy_kill", "life_steal", 200),
                 
                 // Treasure Hunter - Desbloquea después de encontrar 50 loots
-                { "loot_found", ("treasure_hunter", 50) },
+                ("loot_found", "treasure_hunter", 50),
                 
                 // Gold Magnate - Desbloquea después de acumular 10000 oro
-                { "gold_earned", ("gold_magnate", 10000) },
+                ("gold_earned", "gold_magnate", 10000),
                 
                 // Fast Learner - Desbloquea después de subir 10 niveles
-                { "level_up", ("fast_learner", 10) },
+                ("level_up", "fast_learner", 10),
                 
                 // Bloodlust - Desbloquea después de ganar 20 combates con <30% HP
-                { "low_hp_victory", ("bloodlust", 20) }
+                ("low_hp_victory", "bloodlust", 20)
             };
             
-            foreach (var (actionId, (passiveId, requiredCount)) in passiveUnlocks)
+            foreach (var (actionId, passiveId, requiredCount) in passiveUnlocks)
             {
+                // Verificar si la pasiva ya está desbloqueada
                 if (!player.UnlockedPassives.Contains(passiveId))
                 {
                     var currentCount = GetActionCount(player, actionId);
