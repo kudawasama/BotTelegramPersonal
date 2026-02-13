@@ -90,7 +90,7 @@ Solo los más valientes pueden enfrentar este destino...
                 _ => "👤"
             };
             
-            var statusBar = $"❤️ {player.HP}/{player.MaxHP} | ⚡ {player.Energy}/{player.MaxEnergy}";
+            var statusBar = $"❤️ {player.HP}/{player.MaxHP} | 🔮 {player.Mana}/{player.MaxMana} | ⚡ {player.Energy}/{player.MaxEnergy}";
             var xpBar = GetXPBar(player);
             
             var text = $@"🎮 **MENÚ RPG**
