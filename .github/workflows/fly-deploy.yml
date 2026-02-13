@@ -11,6 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Verify checkout
+        run: |
+          echo "Current commit: $(git rev-parse HEAD)"
+          echo "Current commit message: $(git log -1 --pretty=%B)"
+          echo "Checking problematic file lines:"
+          grep -n "buttons.Add(navRow.ToArray())" src/BotTelegram/Handlers/CallbackQueryHandler.cs || echo "Pattern not found!"
       
       - uses: superfly/flyctl-actions/setup-flyctl@master
       
