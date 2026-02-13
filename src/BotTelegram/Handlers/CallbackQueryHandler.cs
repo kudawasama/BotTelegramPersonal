@@ -4306,6 +4306,127 @@ Si quieres que olvide el contexto anterior:
                 return;
             }
             
+            // Combat - Use Item
+            if (data == "rpg_combat_item")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                // Verificar si tiene ítems usables
+                var usableItems = currentPlayer.Inventory.Where(i => 
+                    i.Name.Contains("Poción") || i.Name.Contains("Potion") || 
+                    i.Name.Contains("Elixir") || i.Name.Contains("Tónico")).ToList();
+                
+                if (usableItems.Count == 0)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes ítems usables (Pociones, Elixirs)", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+                
+                // Agrupar ítems por nombre para mostrar cantidad
+                var itemGroups = usableItems.GroupBy(i => i.Name)
+                    .Select(g => new { Name = g.Key, Count = g.Count(), Item = g.First() })
+                    .Take(6)
+                    .ToList();
+                
+                // Mostrar lista de ítems
+                var text = "🧪 **USAR ÍTEM EN COMBATE**\n\n";
+                text += $"💚 **Tu HP:** {currentPlayer.HP}/{currentPlayer.MaxHP}\n";
+                text += $"💙 **Tu Mana:** {currentPlayer.Mana}/{currentPlayer.MaxMana}\n\n";
+                text += "Selecciona un ítem para usar:\n\n";
+                
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                foreach (var itemGroup in itemGroups)
+                {
+                    rows.Add(new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData(
+                            $"🧪 {itemGroup.Name} ({itemGroup.Count}x)",
+                            $"rpg_use_item:{itemGroup.Name}"
+                        )
+                    });
+                }
+                
+                rows.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_combat_back")
+                });
+                
+                await bot.EditMessageText(chatId, messageId, text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Combat - AI Consultation
+            if (data == "rpg_combat_ai")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🤖 Consultando IA...", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                
+                // Generar consulta estratégica con IA
+                var aiService = new BotTelegram.Services.AIService();
+                var prompt = $@"Eres un consejero táctico de RPG. El jugador está en combate:
+
+**JUGADOR:**
+- HP: {currentPlayer.HP}/{currentPlayer.MaxHP}
+- Mana: {currentPlayer.Mana}/{currentPlayer.MaxMana}
+- ATK: {currentPlayer.PhysicalAttack}
+- DEF: {currentPlayer.PhysicalDefense}
+
+**ENEMIGO:**
+- Nombre: {enemy.Name}
+- HP: {enemy.HP}/{enemy.MaxHP}
+- ATK: ~{enemy.Attack}
+- Nivel: {enemy.Level}
+
+Responde en español en máximo 2-3 líneas con una estrategia concreta (¿atacar, defender, usar skill, huir?).";
+
+                try
+                {
+                    var response = await aiService.GenerateRpgNarrative(
+                        currentPlayer.Name,
+                        currentPlayer.Class.ToString(),
+                        currentPlayer.Level,
+                        "Consejo táctico en combate",
+                        currentPlayer.CurrentLocation,
+                        enemy.Name,
+                        $"HP Jugador: {currentPlayer.HP}/{currentPlayer.MaxHP}, HP Enemigo: {enemy.HP}/{enemy.MaxHP}"
+                    );
+                    
+                    var text = $"🤖 **CONSEJO TÁCTICO**\n\n{response}\n\n";
+                    text += $"💚 Tu HP: {currentPlayer.HP}/{currentPlayer.MaxHP}\n";
+                    text += $"💙 Tu Mana: {currentPlayer.Mana}/{currentPlayer.MaxMana}\n";
+                    text += $"👹 {enemy.Emoji} {enemy.Name}: {enemy.HP}/{enemy.MaxHP} HP";
+                    
+                    await bot.SendMessage(chatId, text, 
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, 
+                        cancellationToken: ct);
+                    
+                    // No consume turno, solo muestra consejo
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "✅ Consejo recibido", cancellationToken: ct);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error en AI consultation: {ex.Message}");
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Error al consultar IA", showAlert: true, cancellationToken: ct);
+                }
+                
+                return;
+            }
+            
             // Rest
             if (data == "rpg_rest")
             {
@@ -4674,7 +4795,9 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
         {
             return actionId switch
             {
-                // Combate
+                // ═══════════════════════════════════════
+                // COMBATE BÁSICO
+                // ═══════════════════════════════════════
                 "physical_attack" => "Ataques físicos",
                 "magic_attack" => "Ataques mágicos",
                 "critical_hit" => "Golpes críticos",
@@ -4683,65 +4806,157 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 "counter_attack" => "Contraataques",
                 "perfect_parry" => "Parrys perfectos",
                 
-                // Progreso
+                // ═══════════════════════════════════════
+                // COMBATE AVANZADO (FASE 5C)
+                // ═══════════════════════════════════════
+                "approach_enemy" => "Acercarse al enemigo",
+                "retreat" => "Retirarse/huir",
+                "charge_attack" => "Envestidas",
+                "heavy_attack" => "Ataques pesados",
+                "light_attack" => "Ataques rápidos",
+                "precise_attack" => "Ataques precisos",
+                "reckless_attack" => "Ataques temerarios",
+                "defensive_attack" => "Ataques defensivos",
+                "consecutive_attacks" => "Ataques consecutivos",
+                "combo_3x" => "Combos 3x",
+                "combo_5x" => "Combos 5x",
+                "combo_10x" => "Combos 10x",
+                "combo_20x" => "Combos 20x",
+                "overkill_damage" => "Overkills",
+                "no_damage_combat" => "Combates sin daño",
+                "no_critical_combat" => "Combates sin crítico",
+                "speed_advantage" => "Ventajas de velocidad",
+                "double_turn" => "Turnos dobles",
+                
+                // ═══════════════════════════════════════
+                // DEFENSA Y SUPERVIVENCIA
+                // ═══════════════════════════════════════
+                "block_damage" => "Daño bloqueado (total)",
+                "perfect_block" => "Bloqueos perfectos",
+                "parry" => "Contragolpes",
+                "tank_hit" => "Golpes tanqueados",
+                "survive_lethal" => "Supervivencias letales",
+                "survive_critical" => "Supervivencias a críticos",
+                "hp_below_10_survive" => "Supervivencias <10% HP",
+                "hp_below_30_kill" => "Kills con <30% HP",
+                "low_hp_combat" => "Combates HP baja",
+                "no_dodge_combat" => "Combates sin esquivar",
+                "damage_taken" => "Daño recibido (total)",
+                "shield_bash" => "Golpes de escudo",
+                "taunt_enemy" => "Provocaciones",
+                
+                // ═══════════════════════════════════════
+                // MAGIA Y MANA
+                // ═══════════════════════════════════════
+                "fire_spell_cast" => "Hechizos de fuego",
+                "water_spell_cast" => "Hechizos de agua",
+                "earth_spell_cast" => "Hechizos de tierra",
+                "air_spell_cast" => "Hechizos de aire",
+                "ice_spell_cast" => "Hechizos de hielo",
+                "lightning_spell_cast" => "Hechizos de rayo",
+                "dark_magic_cast" => "Magia oscura",
+                "holy_magic_cast" => "Magia sagrada",
+                "void_magic_cast" => "Magia del vacío",
+                "combo_spell" => "Combos elementales",
+                "spell_critical" => "Críticos mágicos",
+                "mana_spent" => "Mana gastado (total)",
+                "mana_regen" => "Mana regenerado (total)",
+                "low_mana_cast" => "Casteos con mana bajo",
+                "mana_drain" => "Drenar mana",
+                "overcharge_spell" => "Spells sobrecargados",
+                
+                // ═══════════════════════════════════════
+                // INVOCACIÓN Y MASCOTAS
+                // ═══════════════════════════════════════
+                "summon_undead" => "Invocar no-muertos",
+                "summon_elemental" => "Invocar elementales",
+                "summon_beast" => "Invocar bestias",
+                "summon_aberration" => "Invocar aberraciones",
+                "sacrifice_minion" => "Sacrificar minion",
+                "pet_bond_max" => "Bonds máximos",
+                "pet_evolution" => "Evoluciones de mascotas",
+                "pet_combo_kill" => "Kills combo con mascota",
+                "tame_boss" => "Domar bosses",
+                
+                // ═══════════════════════════════════════
+                // STEALTH Y ENGAÑO
+                // ═══════════════════════════════════════
+                "stealth_approach" => "Acercamientos sigilosos",
+                "stealth_kill" => "Asesinatos sigilosos",
+                "backstab" => "Ataques por la espalda",
+                "vanish" => "Desvanecimientos",
+                "shadow_travel" => "Viajes por sombras",
+                "assassination" => "Asesinatos",
+                
+                // ═══════════════════════════════════════
+                // CRAFTING Y RECURSOS
+                // ═══════════════════════════════════════
+                "craft_item" => "Ítems crafteados",
+                "upgrade_equipment" => "Equipos mejorados",
+                "enchant_equipment" => "Equipos encantados",
+                "forge_weapon" => "Armas forjadas",
+                "gather_herbs" => "Hierbas recolectadas",
+                "mine_ore" => "Minerales minados",
+                "fish" => "Peces pescados",
+                "cook_food" => "Comidas cocinadas",
+                
+                // ═══════════════════════════════════════
+                // SOCIAL Y EXPLORACIÓN
+                // ═══════════════════════════════════════
+                "trade_npc" => "Comercios con NPCs",
+                "negotiate" => "Negociaciones",
+                "quest_complete" => "Misiones completadas",
+                "discover_zone" => "Zonas descubiertas",
+                "boss_encounter" => "Encuentros con bosses",
+                
+                // ═══════════════════════════════════════
+                // PROGRESO
+                // ═══════════════════════════════════════
                 "level_up" => "Subir de nivel",
                 "enemy_kill" => "Enemigos derrotados",
                 "boss_kill" => "Jefes derrotados",
                 "beast_kills" => "Bestias derrotadas",
                 "undead_kills" => "No-muertos derrotados",
                 
-                // Exploración
+                // ═══════════════════════════════════════
+                // EXPLORACIÓN
+                // ═══════════════════════════════════════
                 "meditation" => "Meditaciones",
                 "rest" => "Descansos",
                 "explore" => "Exploraciones",
                 "treasure_found" => "Tesoros encontrados",
                 "loot_found" => "Loot recolectado",
                 
-                // Interacción con bestias
+                // ═══════════════════════════════════════
+                // INTERACCIÓN CON BESTIAS
+                // ═══════════════════════════════════════
                 "pet_beast" => "Acariciar bestias",
                 "calm_beast" => "Calmar bestias",
                 "tame_beast" => "Domar bestias",
                 
-                // Combos
+                // ═══════════════════════════════════════
+                // COMBOS
+                // ═══════════════════════════════════════
                 "combo_5plus" => "Combos 5+ hits",
                 "combo_10plus" => "Combos 10+ hits",
                 "combo_20plus" => "Combos 20+ hits",
-                "combo_10x" => "Combos 10x",
-                "combo_20x" => "Combos 20x",
                 
-                // Combate avanzado
-                "stealth_kill" => "Asesinatos sigilosos",
-                "backstab" => "Ataques por la espalda",
-                "no_damage_combat" => "Combates sin daño",
-                "low_hp_victory" => "Victorias con HP baja",
-                "low_hp_combat" => "Combates con HP baja",
-                
-                // Magia
-                "fire_spell_cast" => "Hechizos de fuego",
-                "water_spell_cast" => "Hechizos de agua",
-                "earth_spell_cast" => "Hechizos de tierra",
-                "air_spell_cast" => "Hechizos de aire",
-                "combo_spell" => "Combinaciones elementales",
-                "dark_magic_cast" => "Magia oscura",
-                "heal_cast" => "Curaciones",
-                "divine_bless" => "Bendiciones",
-                "revive_ally" => "Resurrecciones",
-                
-                // Nigromancia
-                "summon_undead" => "Invocar no-muertos",
+                // ═══════════════════════════════════════
+                // NIGROMANCIA
+                // ═══════════════════════════════════════
                 "life_drain" => "Drenar vida",
                 "desecrate" => "Profanaciones",
                 "sacrifice" => "Sacrificios",
                 
-                // Sigilo
-                "vanish" => "Desvanecimientos",
-                
-                // Skills
+                // ═══════════════════════════════════════
+                // OTROS
+                // ═══════════════════════════════════════
+                "low_hp_victory" => "Victorias con HP baja",
+                "heal_cast" => "Curaciones",
+                "divine_bless" => "Bendiciones",
+                "revive_ally" => "Resurrecciones",
                 "skill_used" => "Habilidades usadas",
-                
-                // Recursos
                 "gold_earned" => "Oro acumulado",
-                "damage_taken" => "Daño recibido",
                 
                 _ => actionId.Replace("_", " ").Replace("skill ", "")
             };

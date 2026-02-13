@@ -92,6 +92,27 @@ namespace BotTelegram.RPG.Models
             _ => 1
         };
         
+        // ═══════════════════════════════════════
+        // MINION SYSTEM (Sistema de Invocaciones)
+        // ═══════════════════════════════════════
+        public List<Minion> ActiveMinions { get; set; } = new(); // Invocaciones activas en combate
+        
+        [JsonIgnore]
+        public int MaxActiveMinions => ActiveHiddenClass switch
+        {
+            "necromancer_lord" => 3,
+            "lich_king" => 5,
+            "elemental_overlord" => 4,
+            "void_summoner" => 2,
+            _ => 1 // Por defecto todos pueden invocar 1
+        };
+        
+        // ═══════════════════════════════════════
+        // LOCATION SYSTEM (Sistema de Zonas)
+        // ═══════════════════════════════════════
+        public string CurrentZone { get; set; } = "puerto_esperanza"; // ID de la zona actual
+        public List<string> UnlockedZones { get; set; } = new() { "puerto_esperanza" }; // Zonas desbloqueadas
+        
         // Progress
         public string CurrentLocation { get; set; } = "Taberna de Puerto Esperanza";
         public DateTime LastActionTime { get; set; } = DateTime.UtcNow;
