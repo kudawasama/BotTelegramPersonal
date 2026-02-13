@@ -5192,25 +5192,104 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 // Activar modo RPG chat
                 BotTelegram.Services.AIService.SetRpgChatMode(chatId, true);
                 
+                await bot.AnswerCallbackQuery(
+                    callbackQuery.Id,
+                    "✅ Modo RPG activado. Escribe tu mensaje.",
+                    showAlert: false,
+                    cancellationToken: ct);
+                
                 await bot.EditMessageText(
                     chatId,
                     messageId,
                     $"🎮 **MODO CHAT RPG ACTIVADO**\n\n" +
-                    $"✅ La IA ahora conoce a tu personaje:\n\n" +
-                    $"👤 **{player.Name}** - {player.Class} Nv.{player.Level}\n" +
-                    $"📍 {player.CurrentLocation}\n\n" +
-                    $"💬 Simplemente escribe tu mensaje y la IA responderá con narrativa épica contextualizada.\n\n" +
-                    $"*Ejemplo:* \"Describe el ambiente de la taberna\" o \"Dame consejos para mi siguiente batalla\"\n\n" +
-                    $"⚙️ Para salir del modo RPG, usa `/chat` sin argumento",
+                    $"✅ La IA ahora conoce tu contexto RPG:\n\n" +
+                    $"👤 **{player.Name}**\n" +
+                    $"🏹 Clase: {player.Class} Nv.{player.Level}\n" +
+                    $"📍 Ubicación: {player.CurrentLocation}\n" +
+                    $"❤️ Vida: {player.HP}/{player.MaxHP}\n" +
+                    $"🔮 Mana: {player.Mana}/{player.MaxMana}\n\n" +
+                    $"💬 **¡Empieza a conversar!**\n" +
+                    $"Escribe cualquier mensaje y la IA responderá con narrativa contextualizada.\n\n" +
+                    $"💡 **Ejemplos:**\n" +
+                    $"• _\"Describe el ambiente de la taberna\"_\n" +
+                    $"• _\"Dame un consejo para mi próxima batalla\"_\n" +
+                    $"• _\"Cuéntame sobre el Void\"_\n" +
+                    $"• _\"Qué debo hacer ahora\"_\n\n" +
+                    $"🛑 **Para salir:** Usa el botón de abajo o vuelve al menú RPG",
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
                     {
                         new[]
                         {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver al Menú RPG", "rpg_main")
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🚫 Desactivar Modo RPG", "rpg_stop_chat")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Ver Menú RPG", "rpg_main")
                         }
                     }),
                     cancellationToken: ct);
+                
+                TelegramLogger.LogRpgEvent(
+                    chatId,
+                    player.Name,
+                    "rpg_chat_activated",
+                    "User activated RPG AI chat mode");
+                
+                return;
+            }
+            
+            // Desactivar chat con modo RPG
+            if (data == "rpg_stop_chat")
+            {
+                var player = rpgService.GetPlayer(chatId);
+                if (player == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Primero crea un personaje", cancellationToken: ct);
+                    return;
+                }
+                
+                // Desactivar modo RPG chat
+                BotTelegram.Services.AIService.SetRpgChatMode(chatId, false);
+                
+                await bot.AnswerCallbackQuery(
+                    callbackQuery.Id,
+                    "🚫 Modo RPG desactivado",
+                    showAlert: false,
+                    cancellationToken: ct);
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    $"🚪 **MODO CHAT RPG DESACTIVADO**\n\n" +
+                    $"✅ Has salido del modo chat RPG exitosamente.\n\n" +
+                    $"💬 **Conversaciones guardadas:**\n" +
+                    $"Tu historial de chat RPG se mantiene guardado y puedes reanudarlo cuando quieras.\n\n" +
+                    $"🔄 **Para reactivar:**\n" +
+                    $"Vuelve a este menú y presiona 'Activar Modo RPG'.\n\n" +
+                    $"🎮 **¿Qué hacer ahora?**\n" +
+                    $"Puedes continuar tu aventura o explorar el mundo de Valentia.",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💬 Volver a Activar", "rpg_start_chat")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Menú RPG", "rpg_main"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗺️ Explorar", "rpg_explore")
+                        }
+                    }),
+                    cancellationToken: ct);
+                
+                TelegramLogger.LogRpgEvent(
+                    chatId,
+                    player.Name,
+                    "rpg_chat_deactivated",
+                    "User deactivated RPG AI chat mode");
+                
                 return;
             }
             
