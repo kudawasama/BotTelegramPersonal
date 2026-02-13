@@ -1618,20 +1618,21 @@ Si quieres que olvide el contexto anterior:
                 }
                 
                 // Agrupar skills desbloqueadas por categoría
-                var physicalSkills = unlockedSkills.Where(s => s.Category == BotTelegram.RPG.Models.SkillCategory.Physical).ToList();
-                var magicalSkills = unlockedSkills.Where(s => s.Category == BotTelegram.RPG.Models.SkillCategory.Magical).ToList();  
-                var supportSkills = unlockedSkills.Where(s => s.Category == BotTelegram.RPG.Models.SkillCategory.Support).ToList();
+                var combatSkills = unlockedSkills.Where(s => s.Category == BotTelegram.RPG.Models.SkillCategory.Combat).ToList();
+                var magicSkills = unlockedSkills.Where(s => s.Category == BotTelegram.RPG.Models.SkillCategory.Magic).ToList();  
+                var defenseSkills = unlockedSkills.Where(s => s.Category == BotTelegram.RPG.Models.SkillCategory.Defense).ToList();
+                var movementSkills = unlockedSkills.Where(s => s.Category == BotTelegram.RPG.Models.SkillCategory.Movement).ToList();
                 var specialSkills = unlockedSkills.Where(s => s.Category == BotTelegram.RPG.Models.SkillCategory.Special).ToList();
                 
                 // Sistema de paginación - 6 skills por página
                 const int perPage = 6;
-                var allGroups = new List<(string title, List<BotTelegram.RPG.Models.RpgSkill> items)>
-                {
-                    ("⚔️ **FÍSICAS:**", physicalSkills),
-                    ("🔮 **MÁGICAS:**", magicalSkills),
-                    ("💚 **SOPORTE:**", supportSkills),
-                    ("🌟 **ESPECIALES:**", specialSkills)
-                };
+                var allGroups = new List<(string title, List<BotTelegram.RPG.Models.RpgSkill> items)>();
+                
+                if (combatSkills.Any()) allGroups.Add(("⚔️ **COMBATE:**", combatSkills));
+                if (magicSkills.Any()) allGroups.Add(("🔮 **MAGIA:**", magicSkills));
+                if (defenseSkills.Any()) allGroups.Add(("🛡️ **DEFENSA:**", defenseSkills));
+                if (movementSkills.Any()) allGroups.Add(("💨 **MOVIMIENTO:**", movementSkills));
+                if (specialSkills.Any()) allGroups.Add(("🌟 **ESPECIALES:**", specialSkills));
                 
                 var flatList = allGroups.SelectMany(g => g.items.Select(i => (g.title, item: i))).ToList();
                 var totalPages = (int)Math.Ceiling(flatList.Count / (double)perPage);
