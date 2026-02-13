@@ -1832,8 +1832,7 @@ Si quieres que olvide el contexto anterior:
                 int page = 1;
                 if (data.Contains(":"))
                     int.TryParse(data.Split(':')[1], out page);
-                
-                var currentPlayer = rpgService.GetPlayer(chatId);
+                    
                 if (currentPlayer == null)
                 {
                     await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Primero crea un personaje", cancellationToken: ct);
@@ -1923,7 +1922,7 @@ Si quieres que olvide el contexto anterior:
                     }
                     
                     // Formatear nombre de acción
-                    string displayName = GetActionDisplayName(action);
+                    string displayName = GetActionName(action);
                     if (action.StartsWith("skill_"))
                     {
                         var skillId = action.Replace("skill_", "");
@@ -1952,7 +1951,7 @@ Si quieres que olvide el contexto anterior:
                     if (page < totalPages)
                         navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("➡️ Siguiente", $"rpg_counters:{page + 1}"));
                     if (navRow.Any())
-                        buttons.Add(navRow);
+                        buttons.Add(navRow.ToArray());
                 }
                 
                 buttons.Add(new[]
@@ -2242,7 +2241,7 @@ Si quieres que olvide el contexto anterior:
                     if (page < totalPages)
                         navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("➡️ Siguiente", $"rpg_inventory:{page + 1}"));
                     if (navRow.Any())
-                        buttons.Add(navRow);
+                        buttons.Add(navRow.ToArray());
                 }
                 
                 buttons.Add(new[]
