@@ -1717,7 +1717,7 @@ Si quieres que olvide el contexto anterior:
                     if (page < totalPages)
                         navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("➡️ Siguiente", $"rpg_combo_skills_all:{page + 1}"));
                     if (navRow.Any())
-                        buttons.Add(navRow);
+                        buttons.Add(navRow.ToArray());
                 }
                 
                 buttons.Add(new[]
@@ -1808,7 +1808,7 @@ Si quieres que olvide el contexto anterior:
                     if (page < totalPages)
                         navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("➡️ Siguiente", $"rpg_combo_skills_req:{page + 1}"));
                     if (navRow.Any())
-                        buttons.Add(navRow);
+                        buttons.Add(navRow.ToArray());
                 }
                 
                 buttons.Add(new[]
