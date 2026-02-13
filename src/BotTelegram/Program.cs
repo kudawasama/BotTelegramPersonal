@@ -22,6 +22,14 @@ Console.WriteLine("✅ Token cargado correctamente");
 
 var bot = new TelegramBotClient(token);
 
+// Identificador de versión/deploy
+var buildDate = System.IO.File.GetLastWriteTimeUtc(typeof(Program).Assembly.Location);
+Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+Console.WriteLine("🚀 BOT TELEGRAM RPG - INICIANDO");
+Console.WriteLine($"📦 Versión Build: {buildDate:yyyy-MM-dd HH:mm:ss} UTC");
+Console.WriteLine($"🔖 Commit: b908803 - Fix ArgumentException en pasivas");
+Console.WriteLine($"🌐 Entorno: {(Environment.GetEnvironmentVariable("FLY_APP_NAME") ?? "Local")}");
+Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 Console.WriteLine("🤖 Bot iniciado correctamente");
 
 // Inicializar scheduler en background
