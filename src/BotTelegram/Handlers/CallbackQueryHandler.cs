@@ -580,7 +580,7 @@ namespace BotTelegram.Handlers
                 text += $"🔹 `{r.Id}`\n⏰ {r.DueAt:dd/MM HH:mm} - {r.Text}{recurrenceStr}\n\n";
 
                 // Agregar botones para este recordatorio
-                buttons.Add(new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                buttons.Add(new[]
                 {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🗑️ {r.Id}", $"delete:{r.Id}"),
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🔄 Recurrente", $"recur:{r.Id}")
@@ -604,11 +604,11 @@ namespace BotTelegram.Handlers
                     navButtons.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("Siguiente ▶️", $"list_page:{page + 1}"));
                 }
                 
-                buttons.Add(navButtons);
+                buttons.Add(navButtons.ToArray());
             }
 
             // Agregar botón de menú al final
-            buttons.Add(new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+            buttons.Add(new[]
             {
                 Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
             });
