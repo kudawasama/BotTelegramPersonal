@@ -1337,88 +1337,8 @@ Si quieres que olvide el contexto anterior:
             
             Console.WriteLine($"[RPG] Callback: {data}");
             
-            // Helper: Generate combat menu (FASE 2: con botones para domar bestias)
-            var GetCombatKeyboard = (BotTelegram.RPG.Models.RpgPlayer player, BotTelegram.RPG.Models.RpgEnemy enemy) =>
-            {
-                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
-                
-                // Fila 1: Ataques básicos
-                rows.Add(new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Físico", "rpg_combat_physical"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔮 Mágico", "rpg_combat_magic")
-                });
-                
-                // FASE 2: Si es bestia y está debilitada, agregar botones de domar
-                if (enemy.Type == BotTelegram.RPG.Models.EnemyType.Beast)
-                {
-                    double hpPercent = (double)enemy.HP / enemy.MaxHP;
-                    
-                    if (hpPercent <= 0.5)
-                    {
-                        rows.Add(new[]
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Domar", "rpg_combat_tame"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💚 Acariciar", "rpg_combat_pet")
-                        });
-                    }
-                    
-                    // Botón de calmar (disponible siempre si hay mana)
-                    if (player.Mana >= 20)
-                    {
-                        rows.Add(new[]
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎶 Calmar Bestia (20 mana)", "rpg_combat_calm")
-                        });
-                    }
-                }
-                
-                // Fila 2: Ataques especiales
-                rows.Add(new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💨 Envestida", "rpg_combat_charge"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎯 Preciso", "rpg_combat_precise"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💥 Pesado", "rpg_combat_heavy")
-                });
-                
-                // Fila 3: Defensas
-                rows.Add(new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🛡️ Bloquear", "rpg_combat_block"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🌀 Esquivar", "rpg_combat_dodge"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💫 Contraatacar", "rpg_combat_counter")
-                });
-                
-                // Fila 4: Movimiento
-                rows.Add(new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🦘 Saltar", "rpg_combat_jump"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏃 Retroceder", "rpg_combat_retreat"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚡ Avanzar", "rpg_combat_advance")
-                });
-                
-                // Fila 5: Especiales
-                rows.Add(new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧘 Meditar", "rpg_combat_meditate"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("👁️ Observar", "rpg_combat_observe"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⏸️ Esperar", "rpg_combat_wait")
-                });
-                
-                // Fila 6: Skills
-                rows.Add(new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_combat_skills")
-                });
-                
-                // Fila 7: Huir
-                rows.Add(new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏃💨 Huir", "rpg_combat_flee")
-                });
-                
-                return new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows);
-            };
+            // Helper: Generate OFFICIAL combat menu (usa el menú de RpgCommand)
+            var GetCombatKeyboard = () => rpgCommand.GetCombatKeyboard();
 
             var BuildEquipmentMenuText = (BotTelegram.RPG.Models.RpgPlayer player) =>
             {
@@ -2550,7 +2470,7 @@ Si quieres que olvide el contexto anterior:
                     $"💡 _Usa 👁️Observar para ver debilidades_\n\n" +
                     $"¿Qué haces?",
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                    replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                    replyMarkup: GetCombatKeyboard(),
                     cancellationToken: ct);
                 return;
             }
@@ -2587,7 +2507,7 @@ Si quieres que olvide el contexto anterior:
                         $"❤️ {enemy.HP}/{enemy.MaxHP} HP\n\n" +
                         $"¿Qué haces?",
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                        replyMarkup: GetCombatKeyboard(),
                         cancellationToken: ct);
                     return;
                 }
@@ -2607,7 +2527,7 @@ Si quieres que olvide el contexto anterior:
                         $"❤️ {enemy.HP}/{enemy.MaxHP} HP\n\n" +
                         $"¡Prepárate para el combate!",
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                        replyMarkup: GetCombatKeyboard(),
                         cancellationToken: ct);
                     return;
                 }
@@ -2627,7 +2547,7 @@ Si quieres que olvide el contexto anterior:
                         $"❤️ {enemy.HP}/{enemy.MaxHP} HP\n\n" +
                         $"⚠️ ¡Este enemigo es muy peligroso!",
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                        replyMarkup: GetCombatKeyboard(),
                         cancellationToken: ct);
                     return;
                 }
@@ -3080,7 +3000,7 @@ Si quieres que olvide el contexto anterior:
                     messageId,
                     text,
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                    replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                    replyMarkup: GetCombatKeyboard(),
                     cancellationToken: ct);
                 return;
             }
@@ -3375,7 +3295,7 @@ Si quieres que olvide el contexto anterior:
                         messageId,
                         narrative + "\n\n*¿Qué haces?*",
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                        replyMarkup: GetCombatKeyboard(),
                         cancellationToken: ct);
                 }
                 return;
@@ -3615,7 +3535,7 @@ Si quieres que olvide el contexto anterior:
                             messageId,
                             narrative + "\n\n¿Qué haces?",
                             parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                            replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                            replyMarkup: GetCombatKeyboard(),
                             cancellationToken: ct);
                     }
                 }
@@ -3677,7 +3597,7 @@ Si quieres que olvide el contexto anterior:
                             messageId,
                             narrative + "\n\n¿Qué haces?",
                             parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                            replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                            replyMarkup: GetCombatKeyboard(),
                             cancellationToken: ct);
                     }
                 }
@@ -3719,7 +3639,7 @@ Si quieres que olvide el contexto anterior:
                     messageId,
                     narrative + "\n\n¿Qué haces?",
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                    replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                    replyMarkup: GetCombatKeyboard(),
                     cancellationToken: ct);
                 return;
             }
@@ -3767,7 +3687,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -3818,7 +3738,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -3862,7 +3782,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -3906,7 +3826,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -3950,7 +3870,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*¿Qué haces?*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -3990,7 +3910,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -4026,7 +3946,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -4070,7 +3990,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -4110,7 +4030,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -4146,7 +4066,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -4182,7 +4102,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -4222,7 +4142,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -4265,7 +4185,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }
@@ -4301,7 +4221,7 @@ Si quieres que olvide el contexto anterior:
                 else
                 {
                     await bot.EditMessageText(chatId, messageId, narrative + "\n\n*Próximo turno...*",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!), cancellationToken: ct);
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
             }

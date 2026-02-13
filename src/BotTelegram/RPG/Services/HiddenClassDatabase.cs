@@ -139,7 +139,11 @@ namespace BotTelegram.RPG.Services
                 {
                     "raise_undead",               // Invocar esqueleto guerrero
                     "death_coil",                 // Proyectil oscuro (daño + heal)
-                    "dark_pact"                   // Sacrifica HP por mana y daño
+                    "dark_pact",                  // Sacrifica HP por mana y daño
+                    "summon_skeleton",            // FASE 5A: Invocar esqueleto (30 mana)
+                    "summon_zombie",              // FASE 5A: Invocar zombie (45 mana)
+                    "summon_ghost",               // FASE 5A: Invocar fantasma (50 mana)
+                    "sacrifice_minion"            // FASE 5A: Sacrificar esbirro por curación
                 },
                 IntelligenceBonus = 25,
                 ConstitutionBonus = -5,
@@ -481,7 +485,8 @@ namespace BotTelegram.RPG.Services
                 {
                     "elemental_storm",                // AoE masivo los 4 elementos
                     "elemental_avatar",               // Transforma en elemental puro (5 turnos)
-                    "element_swap"                    // Cambia debilidades/resistencias enemigo
+                    "element_swap",                   // Cambia debilidades/resistencias enemigo
+                    "summon_elemental"                // FASE 5A: Invocar elemental según clase (70 mana)
                 },
                 IntelligenceBonus = 50,
                 WisdomBonus = 30,
@@ -549,9 +554,14 @@ namespace BotTelegram.RPG.Services
                 },
                 UnlockedSkills = new List<string>
                 {
-                    "army_of_dead",                   // Invoca 5 esqueletos
+                    "army_of_dead",                   // FASE 5A: Invoca 5 esqueletos (150 mana)
                     "death_and_decay",                // AoE masivo que crea minions de cadáveres
-                    "lich_form"                       // Transforma en lich (inmune a físico, +200% magic)
+                    "lich_form",                      // Transforma en lich (inmune a físico, +200% magic)
+                    "summon_skeleton",                // FASE 5A: Invocar esqueleto
+                    "summon_zombie",                  // FASE 5A: Invocar zombie
+                    "summon_ghost",                   // FASE 5A: Invocar fantasma
+                    "summon_lich",                    // FASE 5A: Invocar lich (100 mana)
+                    "sacrifice_minion"                // FASE 5A: Sacrificar esbirro
                 },
                 IntelligenceBonus = 40,
                 WisdomBonus = 20,
@@ -583,9 +593,10 @@ namespace BotTelegram.RPG.Services
                 },
                 UnlockedSkills = new List<string>
                 {
-                    "summon_horror",                  // Invoca entidad cósmica (hace 300% daño, incontrolable)
+                    "summon_horror",                  // FASE 5A: Invoca Horror del Vacío (80 mana + 40% HP)
                     "void_gate",                      // Portal que invoca aberraciones aleatorias
-                    "eldritch_blast"                  // Rayo void que ignora defensas
+                    "eldritch_blast",                 // Rayo void que ignora defensas
+                    "sacrifice_minion"                // FASE 5A: Sacrificar esbirro por curación
                 },
                 IntelligenceBonus = 50,
                 WisdomBonus = -20,

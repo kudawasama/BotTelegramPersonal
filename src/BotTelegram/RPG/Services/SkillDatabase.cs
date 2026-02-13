@@ -735,11 +735,15 @@ namespace BotTelegram.RPG.Services
                 {
                     Id = "army_of_dead",
                     Name = "Ejército de Muertos",
-                    Description = "Invocas 3 esqueletos que luchan por ti durante 10 turnos.",
+                    Description = "Invocas 5 esqueletos que luchan por ti durante 10 turnos.",
                     Category = SkillCategory.Special,
-                    RequiredLevel = 1,
-                    Requirements = new List<SkillRequirement>(),
-                    ManaCost = 80,
+                    RequiredLevel = 15,
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "summon_skeleton", Count = 20, Description = "Invocaciones de Esqueleto" },
+                        new SkillRequirement { ActionType = "magic_attack", Count = 100, Description = "Ataques mágicos" }
+                    },
+                    ManaCost = 150,
                     StaminaCost = 0,
                     Cooldown = 12,
                     BuffDuration = 10
@@ -798,6 +802,127 @@ namespace BotTelegram.RPG.Services
                     StaminaCost = 50,
                     Cooldown = 20,
                     BuffDuration = 2
+                },
+                
+                // ═══════════════════════════════════════
+                // INVOCATION SKILLS (FASE 5A)
+                // ═══════════════════════════════════════
+                new RpgSkill
+                {
+                    Id = "summon_skeleton",
+                    Name = "Invocar Esqueleto",
+                    Description = "Invocas un esqueleto guerrero (30 HP) que lucha por ti durante 10 turnos.",
+                    Category = SkillCategory.Special,
+                    RequiredLevel = 5,
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "magic_attack", Count = 30, Description = "Ataques mágicos" }
+                    },
+                    ManaCost = 30,
+                    StaminaCost = 0,
+                    Cooldown = 0, // Sin cooldown, limitado por MaxActiveMinions
+                    BuffDuration = 10
+                },
+                new RpgSkill
+                {
+                    Id = "summon_zombie",
+                    Name = "Invocar Zombie",
+                    Description = "Invocas un zombie resistente (60 HP) que aguanta golpes durante 12 turnos.",
+                    Category = SkillCategory.Special,
+                    RequiredLevel = 8,
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "summon_skeleton", Count = 10, Description = "Invocaciones de Esqueleto" },
+                        new SkillRequirement { ActionType = "magic_attack", Count = 50, Description = "Ataques mágicos" }
+                    },
+                    ManaCost = 45,
+                    StaminaCost = 0,
+                    Cooldown = 0,
+                    BuffDuration = 12
+                },
+                new RpgSkill
+                {
+                    Id = "summon_ghost",
+                    Name = "Invocar Fantasma",
+                    Description = "Invocas un fantasma intangible (25 HP, ignora 50% DEF) durante 8 turnos.",
+                    Category = SkillCategory.Special,
+                    RequiredLevel = 10,
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "summon_skeleton", Count = 15, Description = "Invocaciones de Esqueleto" },
+                        new SkillRequirement { ActionType = "skill_used", Count = 30, Description = "Habilidades usadas" }
+                    },
+                    ManaCost = 50,
+                    StaminaCost = 0,
+                    Cooldown = 0,
+                    BuffDuration = 8
+                },
+                new RpgSkill
+                {
+                    Id = "summon_lich",
+                    Name = "Invocar Lich",
+                    Description = "Invocas un poderoso Lich (40 HP, drena vida) durante 15 turnos.",
+                    Category = SkillCategory.Special,
+                    RequiredLevel = 15,
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "summon_ghost", Count = 10, Description = "Invocaciones de Fantasma" },
+                        new SkillRequirement { ActionType = "magic_attack", Count = 150, Description = "Ataques mágicos" }
+                    },
+                    ManaCost = 100,
+                    StaminaCost = 0,
+                    Cooldown = 0,
+                    BuffDuration = 15
+                },
+                new RpgSkill
+                {
+                    Id = "summon_elemental",
+                    Name = "Invocar Elemental",
+                    Description = "Invocas un elemental según tu clase (50 HP, habilidades elementales) durante 10 turnos.",
+                    Category = SkillCategory.Special,
+                    RequiredLevel = 12,
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "magic_attack", Count = 100, Description = "Ataques mágicos" },
+                        new SkillRequirement { ActionType = "skill_used", Count = 50, Description = "Habilidades usadas" }
+                    },
+                    ManaCost = 70,
+                    StaminaCost = 0,
+                    Cooldown = 0,
+                    BuffDuration = 10
+                },
+                new RpgSkill
+                {
+                    Id = "summon_horror",
+                    Name = "Invocar Horror del Vacío",
+                    Description = "Sacrificas 40% de tu HP para invocar un Horror (100 HP) NO CONTROLADO durante 10 turnos.",
+                    Category = SkillCategory.Special,
+                    RequiredLevel = 20,
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "summon_lich", Count = 5, Description = "Invocaciones de Lich" },
+                        new SkillRequirement { ActionType = "take_damage", Count = 200, Description = "Daño recibido" }
+                    },
+                    ManaCost = 80,
+                    StaminaCost = 0,
+                    Cooldown = 20,
+                    BuffDuration = 10
+                },
+                new RpgSkill
+                {
+                    Id = "sacrifice_minion",
+                    Name = "Sacrificar Esbirro",
+                    Description = "Sacrificas un esbirro para restaurar HP igual a la vida restante del esbirro + 50% ATK.",
+                    Category = SkillCategory.Special,
+                    RequiredLevel = 7,
+                    Requirements = new List<SkillRequirement>
+                    {
+                        new SkillRequirement { ActionType = "summon_skeleton", Count = 20, Description = "Invocaciones de Esqueleto" }
+                    },
+                    ManaCost = 0,
+                    StaminaCost = 0,
+                    Cooldown = 3,
+                    HealAmount = 0 // Dinámico según el minion
                 }
             };
         }

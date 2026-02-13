@@ -159,14 +159,14 @@ Solo los más valientes pueden enfrentar este destino...
             });
         }
         
-        private InlineKeyboardMarkup GetCombatKeyboard()
+        public InlineKeyboardMarkup GetCombatKeyboard()
         {
             return new InlineKeyboardMarkup(new[]
             {
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("⚔️ Atacar", "rpg_combat_attack"),
-                    InlineKeyboardButton.WithCallbackData("� Tácticas", "rpg_combat_tactics"),
+                    InlineKeyboardButton.WithCallbackData("📋 Tácticas", "rpg_combat_tactics"),
                     InlineKeyboardButton.WithCallbackData("🛡️ Defender", "rpg_combat_defend")
                 },
                 new[]

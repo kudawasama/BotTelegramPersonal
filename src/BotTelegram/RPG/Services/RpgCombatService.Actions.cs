@@ -544,6 +544,16 @@ namespace BotTelegram.RPG.Services
                 return result;
             }
             
+            // FASE 5A: Verificar si es una skill de invocación
+            if (skillId.StartsWith("summon_"))
+            {
+                return HandleSummoningSkill(player, enemy, skill, result);
+            }
+            if (skillId == "sacrifice_minion")
+            {
+                return HandleSacrificeSkill(player, enemy, skill, result);
+            }
+            
             if (player.Mana < skill.ManaCost || player.Stamina < skill.StaminaCost)
             {
                 result.SkillFailureReason = "Recursos insuficientes";
@@ -648,6 +658,164 @@ namespace BotTelegram.RPG.Services
             AddCombatLog(player, $"✨ {skill.Name}", result.SkillDamage > 0 ? $"💥 {result.SkillDamage} daño" : "✅ Ejecutada");
             
             ProcessEnemyTurn(player, enemy, result);
+            CheckCombatEnd(player, enemy, result);
+            
+            return result;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // FASE 5A: SKILLS DE INVOCACIÓN
+        // ═══════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Maneja las skills de invocación de minions
+        /// </summary>
+        private CombatResult HandleSummoningSkill(RpgPlayer player, RpgEnemy enemy, RpgSkill skill, CombatResult result)
+        {
+            // Verificar recursos
+            if (player.Mana < skill.ManaCost || player.Stamina < skill.StaminaCost)
+            {
+                result.SkillFailureReason = "Recursos insuficientes";
+                AddCombatLog(player, skill.Name, "❌ Recursos insuficientes");
+                ProcessEnemyTurn(player, enemy, result);
+                CheckCombatEnd(player, enemy, result);
+                return result;
+            }
+            
+            // Detectar tipo de minion desde el skillId
+            var minionType = skill.Id switch
+            {
+                "summon_skeleton" => MinionType.Skeleton,
+                "summon_zombie" => MinionType.Zombie,
+                "summon_ghost" => MinionType.Ghost,
+                "summon_lich" => MinionType.Lich,
+                "summon_elemental" => DetermineElementalType(player),
+                "summon_horror" => MinionType.VoidHorror,
+                "army_of_dead" => MinionType.Skeleton, // Invoca múltiples
+                _ => MinionType.Skeleton
+            };
+            
+            // Army of Dead invoca 5 skeletons
+            if (skill.Id == "army_of_dead")
+            {
+                player.Mana -= skill.ManaCost;
+                player.Stamina -= skill.StaminaCost;
+                
+                if (skill.Cooldown > 0)
+                {
+                    player.SkillCooldowns[skill.Id] = skill.Cooldown;
+                }
+                
+                var summoned = 0;
+                for (int i = 0; i < 5; i++)
+                {
+                    if (player.ActiveMinions.Count >= player.MaxActiveMinions)
+                        break;
+                    
+                    var message = SummonMinion(player, MinionType.Skeleton);
+                    if (!message.Contains("❌"))
+                    {
+                        summoned++;
+                    }
+                }
+                
+                result.SkillUsed = true;
+                result.SkillName = skill.Name;
+                TrackSkillUsed(player, skill.Id);
+                AddCombatLog(player, $"✨ {skill.Name}", $"💀 ¡Invocaste {summoned} esqueletos!");
+                
+                ProcessEnemyTurn(player, enemy, result);
+                ExecuteMinionsTurn(player, enemy, result);
+                CheckCombatEnd(player, enemy, result);
+                return result;
+            }
+            
+            // Summon Horror cuesta HP adicional (40%)
+            if (skill.Id == "summon_horror")
+            {
+                var hpCost = (int)(player.MaxHP * 0.4);
+                if (player.HP <= hpCost)
+                {
+                    result.SkillFailureReason = "HP insuficiente (necesitas >40% HP)";
+                    AddCombatLog(player, skill.Name, "❌ HP insuficiente");
+                    ProcessEnemyTurn(player, enemy, result);
+                    CheckCombatEnd(player, enemy, result);
+                    return result;
+                }
+                
+                player.HP -= hpCost;
+                AddCombatLog(player, skill.Name, $"💔 Sacrificaste {hpCost} HP");
+            }
+            
+            // Invocar el minion
+            player.Mana -= skill.ManaCost;
+            player.Stamina -= skill.StaminaCost;
+            
+            if (skill.Cooldown > 0)
+            {
+                player.SkillCooldowns[skill.Id] = skill.Cooldown;
+            }
+            
+            var summonMessage = SummonMinion(player, minionType);
+            
+            result.SkillUsed = true;
+            result.SkillName = skill.Name;
+            TrackSkillUsed(player, skill.Id);
+            AddCombatLog(player, $"✨ {skill.Name}", summonMessage);
+            
+            ProcessEnemyTurn(player, enemy, result);
+            ExecuteMinionsTurn(player, enemy, result);
+            CheckCombatEnd(player, enemy, result);
+            
+            return result;
+        }
+        
+        /// <summary>
+        /// Determina qué tipo de elemental invocar según la clase del jugador
+        /// </summary>
+        private MinionType DetermineElementalType(RpgPlayer player)
+        {
+            // Usar clase activa o clase base (convertir enum a string)
+            var className = player.ActiveHiddenClass ?? player.Class.ToString();
+            
+            return className switch
+            {
+                "Mago" => MinionType.FireElemental,
+                "Guerrero" => MinionType.EarthElemental,
+                "Explorador" => MinionType.AirElemental,
+                "Clérigo" => MinionType.WaterElemental,
+                _ => MinionType.FireElemental // Default
+            };
+        }
+        
+        /// <summary>
+        /// Maneja la skill de sacrificio de minion
+        /// </summary>
+        private CombatResult HandleSacrificeSkill(RpgPlayer player, RpgEnemy enemy, RpgSkill skill, CombatResult result)
+        {
+            if (player.ActiveMinions.Count == 0)
+            {
+                result.SkillFailureReason = "No tienes esbirros activos";
+                AddCombatLog(player, skill.Name, "❌ No hay esbirros");
+                ProcessEnemyTurn(player, enemy, result);
+                CheckCombatEnd(player, enemy, result);
+                return result;
+            }
+            
+            // Sacrificar el primer minion (el más antiguo)
+            var message = SacrificeMinion(player, 0);
+            
+            if (skill.Cooldown > 0)
+            {
+                player.SkillCooldowns[skill.Id] = skill.Cooldown;
+            }
+            
+            result.SkillUsed = true;
+            result.SkillName = skill.Name;
+            TrackSkillUsed(player, skill.Id);
+            
+            ProcessEnemyTurn(player, enemy, result);
+            ExecuteMinionsTurn(player, enemy, result);
             CheckCombatEnd(player, enemy, result);
             
             return result;

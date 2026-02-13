@@ -160,7 +160,17 @@ namespace BotTelegram.RPG.Services
             // Procesar efectos de estado antes del contraataque
             ProcessStatusEffects(player, enemy, result);
             
-            // Si el jugador murió por efectos, no hay contraataque
+            // FASE 5A: Turno de minions (después del jugador y mascotas, antes del enemigo)
+            ExecuteMinionsTurn(player, enemy, result);
+            
+            // Si el enemigo fue derrotado por los minions
+            if (enemy.HP <= 0)
+            {
+                ApplyVictoryRewards(player, enemy, result);
+                return result;
+            }
+            
+            // Si el jugador murió por efectos o minions traicioneros
             if (player.HP <= 0)
             {
                 result.PlayerDefeated = true;
@@ -960,6 +970,196 @@ namespace BotTelegram.RPG.Services
                 StatusEffectType.Empowered => "⚡",
                 _ => "✨"
             };
+        }
+        
+        // ═══════════════════════════════════════
+        // SISTEMA DE MINIONS (FASE 5A)
+        // ═══════════════════════════════════════
+        
+        /// <summary>
+        /// Ejecuta el turno de todos los minions activos
+        /// </summary>
+        public void ExecuteMinionsTurn(RpgPlayer player, RpgEnemy enemy, CombatResult result)
+        {
+            if (player.ActiveMinions.Count == 0)
+                return;
+            
+            var log = new System.Text.StringBuilder();
+            log.AppendLine("\n⚔️ **TURNO DE ESBIRROS**");
+            
+            // Crear lista de minions que sobrevivieron
+            var survivingMinions = new List<Minion>();
+            
+            foreach (var minion in player.ActiveMinions)
+            {
+                // Decrementar turnos
+                minion.TickTurn();
+                
+                // Si expiró, eliminar
+                if (minion.TurnsRemaining <= 0)
+                {
+                    log.AppendLine($"💀 {minion.Emoji} **{minion.Name}** desaparece...");
+                    TrackAction(player, $"minion_expired_{minion.Type.ToString().ToLower()}");
+                    continue;
+                }
+                
+                // Si está controlado, ataca al enemigo
+                if (minion.IsControlled)
+                {
+                    var damage = CalculateMinionDamage(minion, enemy);
+                    enemy.HP -= damage;
+                    
+                    log.AppendLine($"{minion.Emoji} **{minion.Name}** ({minion.HP}/{minion.MaxHP} HP) ataca → **{damage}** daño");
+                    TrackAction(player, $"minion_attack_{minion.Type.ToString().ToLower()}");
+                }
+                else
+                {
+                    // NO controlado: 30% ataca al jugador, 70% ataca al enemigo
+                    var roll = _random.Next(0, 100);
+                    
+                    if (roll < 30)
+                    {
+                        // Ataca al jugador
+                        var damage = CalculateMinionDamage(minion, null);
+                        player.HP -= damage;
+                        log.AppendLine($"😱 {minion.Emoji} **{minion.Name}** TE ATACA → **{damage}** daño");
+                        TrackAction(player, "minion_betrayal");
+                    }
+                    else
+                    {
+                        // Ataca al enemigo
+                        var damage = CalculateMinionDamage(minion, enemy);
+                        enemy.HP -= damage;
+                        log.AppendLine($"{minion.Emoji} **{minion.Name}** ataca al enemigo → **{damage}** daño");
+                        TrackAction(player, $"minion_attack_{minion.Type.ToString().ToLower()}");
+                    }
+                }
+                
+                survivingMinions.Add(minion);
+            }
+            
+            // Actualizar lista de minions
+            player.ActiveMinions = survivingMinions;
+            
+            if (log.Length > 0)
+            {
+                AddCombatLog(player, "Minions", log.ToString());
+            }
+            
+            // Verificar si el jugador murió por sus propios minions
+            if (player.HP <= 0)
+            {
+                result.PlayerDefeated = true;
+                AddCombatLog(player, "Derrota", "💀 Fuiste asesinado por tus propios esbirros...");
+            }
+        }
+        
+        /// <summary>
+        /// Calcula el daño de un minion
+        /// </summary>
+        private int CalculateMinionDamage(Minion minion, RpgEnemy? enemy)
+        {
+            var baseDamage = minion.Attack;
+            
+            // Variación 90-110%
+            var variation = _random.Next(90, 111) / 100.0;
+            baseDamage = (int)(baseDamage * variation);
+            
+            // Aplicar defensa del enemigo (si hay enemigo)
+            if (enemy != null)
+            {
+                var damageReduction = enemy.PhysicalDefense * 0.5;
+                baseDamage = Math.Max(1, (int)(baseDamage - damageReduction));
+            }
+            
+            return baseDamage;
+        }
+        
+        /// <summary>
+        /// Invoca un minion al combate
+        /// </summary>
+        public string SummonMinion(RpgPlayer player, MinionType type)
+        {
+            // Verificar límite de minions
+            if (player.ActiveMinions.Count >= player.MaxActiveMinions)
+            {
+                return $"❌ Ya tienes el máximo de esbirros activos ({player.MaxActiveMinions})";
+            }
+            
+            // Crear minion escalado al nivel del jugador
+            var minion = MinionDatabase.CreateMinion(type, player.Level);
+            
+            if (minion == null)
+            {
+                return "❌ Error al crear el esbirro";
+            }
+            
+            // Agregar a la lista
+            player.ActiveMinions.Add(minion);
+            
+            // Track invocación
+            TrackAction(player, $"summon_{type.ToString().ToLower()}");
+            
+            var controlText = minion.IsControlled ? "✅ CONTROLADO" : "⚠️ NO CONTROLADO";
+            var info = MinionDatabase.GetMinionInfo(type);
+            
+            return $"{minion.Emoji} **{minion.Name}** invocado ({minion.HP} HP, {minion.TurnsRemaining} turnos) {controlText}\n" +
+                   $"📋 {info.Description}\n" +
+                   $"✨ {info.SpecialAbility}";
+        }
+        
+        /// <summary>
+        /// Sacrifica un minion para curar al jugador
+        /// </summary>
+        public string SacrificeMinion(RpgPlayer player, int minionIndex)
+        {
+            if (minionIndex < 0 || minionIndex >= player.ActiveMinions.Count)
+            {
+                return "❌ Esbirro no válido";
+            }
+            
+            var minion = player.ActiveMinions[minionIndex];
+            
+            // Calcular curación: HP restante del minion + 50% del ATK del jugador
+            var healAmount = minion.HP + (int)(player.PhysicalAttack * 0.5);
+            player.HP = Math.Min(player.MaxHP, player.HP + healAmount);
+            
+            // Remover minion
+            player.ActiveMinions.RemoveAt(minionIndex);
+            
+            // Track sacrificio
+            TrackAction(player, $"sacrifice_{minion.Type.ToString().ToLower()}");
+            TrackAction(player, "sacrifice_minion");
+            
+            AddCombatLog(player, "Sacrificio", $"💀 Sacrificaste {minion.Emoji} **{minion.Name}** → +{healAmount} HP");
+            
+            return $"💀 Sacrificaste {minion.Emoji} **{minion.Name}**\n" +
+                   $"💚 Restauraste **{healAmount} HP** (HP restante: {minion.HP} + bono: {(int)(player.PhysicalAttack * 0.5)})";
+        }
+        
+        /// <summary>
+        /// Obtiene el estado de todos los minions activos
+        /// </summary>
+        public string GetMinionsStatus(RpgPlayer player)
+        {
+            if (player.ActiveMinions.Count == 0)
+            {
+                return "Sin esbirros activos";
+            }
+            
+            var status = new System.Text.StringBuilder();
+            status.AppendLine($"⚔️ **ESBIRROS ACTIVOS** ({player.ActiveMinions.Count}/{player.MaxActiveMinions}):\n");
+            
+            for (int i = 0; i < player.ActiveMinions.Count; i++)
+            {
+                var minion = player.ActiveMinions[i];
+                var controlEmoji = minion.IsControlled ? "✅" : "⚠️";
+                status.AppendLine($"{i + 1}. {minion.Emoji} **{minion.Name}** {controlEmoji}");
+                status.AppendLine($"   ❤️ HP: {minion.HP}/{minion.MaxHP} | ⚔️ ATK: {minion.Attack} | 🛡️ DEF: {minion.Defense}");
+                status.AppendLine($"   ⏰ Turnos restantes: {minion.TurnsRemaining}");
+            }
+            
+            return status.ToString();
         }
     }
     
