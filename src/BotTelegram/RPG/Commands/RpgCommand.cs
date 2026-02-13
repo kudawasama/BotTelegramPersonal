@@ -142,6 +142,10 @@ Solo los más valientes pueden enfrentar este destino...
                 },
                 new[]
                 {
+                    InlineKeyboardButton.WithCallbackData("🌟 Skills Combinadas", "rpg_combo_skills")
+                },
+                new[]
+                {
                     InlineKeyboardButton.WithCallbackData("🌟 Progreso", "rpg_progress"),
                     InlineKeyboardButton.WithCallbackData("💎 Pasivas", "rpg_passives")
                 },

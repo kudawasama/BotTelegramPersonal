@@ -1650,6 +1650,179 @@ Si quieres que olvide el contexto anterior:
                 return;
             }
             
+            // Combo Skills menu (FASE 4)
+            if (data == "rpg_combo_skills")
+            {
+                var text = "🌟 **HABILIDADES COMBINADAS**\n\n";
+                text += "Estas skills se desbloquean automáticamente al completar combinaciones de acciones.\n\n";
+                
+                var allRequirements = BotTelegram.RPG.Services.SkillUnlockDatabase.GetAll();
+                var unlocked = currentPlayer.UnlockedSkills;
+                
+                // Skills desbloqueadas
+                var unlockedCombo = allRequirements.Where(r => unlocked.Contains(r.SkillId)).ToList();
+                if (unlockedCombo.Any())
+                {
+                    text += "✅ **DESBLOQUEADAS:**\n";
+                    foreach (var req in unlockedCombo.Take(10))
+                    {
+                        var skill = BotTelegram.RPG.Services.SkillDatabase.GetById(req.SkillId);
+                        if (skill != null)
+                        {
+                            text += $"• {skill.Name}\n";
+                        }
+                    }
+                    text += "\n";
+                }
+                
+                // Skills cerca de desbloquear (>60% progreso)
+                var nearUnlock = new List<(string skillId, double progress)>();
+                foreach (var req in allRequirements)
+                {
+                    if (unlocked.Contains(req.SkillId)) continue;
+                    
+                    var progressDict = BotTelegram.RPG.Services.SkillUnlockDatabase.GetProgressTowards(currentPlayer, req.SkillId);
+                    if (!progressDict.Any()) continue;
+                    
+                    var totalProgress = progressDict.Average(p => (double)p.Value.current / p.Value.required);
+                    if (totalProgress >= 0.6)
+                    {
+                        nearUnlock.Add((req.SkillId, totalProgress));
+                    }
+                }
+                
+                if (nearUnlock.Any())
+                {
+                    text += "🔜 **CERCA DE DESBLOQUEAR:**\n";
+                    foreach (var (skillId, progress) in nearUnlock.OrderByDescending(x => x.progress).Take(5))
+                    {
+                        var skill = BotTelegram.RPG.Services.SkillDatabase.GetById(skillId);
+                        if (skill != null)
+                        {
+                            var percent = (int)(progress * 100);
+                            var bar = GetProgressBar(progress, 10);
+                            text += $"• {skill.Name} {bar} {percent}%\n";
+                        }
+                    }
+                    text += "\n";
+                }
+                
+                // Stats generales
+                text += $"📊 **ESTADÍSTICAS:**\n";
+                text += $"• Total desbloqueadas: {unlockedCombo.Count}/{allRequirements.Count}\n";
+                text += $"• Progreso global: {(unlockedCombo.Count * 100 / allRequirements.Count)}%\n\n";
+                text += "💡 Usa `/rpg_counters` para ver tu progreso en acciones.";
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Ver Todas", "rpg_combo_skills_all"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Requisitos", "rpg_combo_skills_req")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver al Menú", "rpg_main")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Ver todas las combo skills
+            if (data == "rpg_combo_skills_all")
+            {
+                var text = "📜 **TODAS LAS HABILIDADES COMBINADAS**\n\n";
+                var allRequirements = BotTelegram.RPG.Services.SkillUnlockDatabase.GetAll();
+                var unlocked = currentPlayer.UnlockedSkills;
+                
+                foreach (var req in allRequirements.Take(20))
+                {
+                    var skill = BotTelegram.RPG.Services.SkillDatabase.GetById(req.SkillId);
+                    if (skill == null) continue;
+                    
+                    var status = unlocked.Contains(req.SkillId) ? "✅" : "🔒";
+                    text += $"{status} **{skill.Name}**\n";
+                    text += $"   {skill.Description}\n\n";
+                }
+                
+                if (allRequirements.Count > 20)
+                {
+                    text += $"... y {allRequirements.Count - 20} más\n\n";
+                }
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_combo_skills")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Ver requisitos de combo skills
+            if (data == "rpg_combo_skills_req")
+            {
+                var text = "📊 **REQUISITOS DE HABILIDADES**\n\n";
+                text += "Muestra tu progreso hacia skills bloqueadas:\n\n";
+                
+                var allRequirements = BotTelegram.RPG.Services.SkillUnlockDatabase.GetAll();
+                var unlocked = currentPlayer.UnlockedSkills;
+                
+                var lockedSkills = allRequirements.Where(r => !unlocked.Contains(r.SkillId)).Take(8);
+                
+                foreach (var req in lockedSkills)
+                {
+                    var skill = BotTelegram.RPG.Services.SkillDatabase.GetById(req.SkillId);
+                    if (skill == null) continue;
+                    
+                    text += $"🔒 **{skill.Name}**\n";
+                    
+                    var progressDict = BotTelegram.RPG.Services.SkillUnlockDatabase.GetProgressTowards(currentPlayer, req.SkillId);
+                    foreach (var (actionId, (current, required)) in progressDict)
+                    {
+                        var actionName = GetActionName(actionId);
+                        var progress = (double)current / required;
+                        var bar = GetProgressBar(progress, 8);
+                        text += $"  • {actionName}: {bar} {current}/{required}\n";
+                    }
+                    text += "\n";
+                }
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_combo_skills")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+            
             // Counters menu
             if (data == "rpg_counters")
             {
@@ -4365,6 +4538,13 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
             if (species.StartsWith("eagle_")) return "🦅";
             if (species.StartsWith("snake_")) return "🐍";
             return "🐾";
+        }
+        
+        private static string GetProgressBar(double progress, int length)
+        {
+            var filled = (int)(progress * length);
+            var empty = length - filled;
+            return new string('█', filled) + new string('░', empty);
         }
     }
 }

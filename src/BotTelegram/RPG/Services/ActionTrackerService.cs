@@ -59,6 +59,9 @@ namespace BotTelegram.RPG.Services
             
             // Verificar pasivas individuales (TODO: agregar sistema de requisitos por pasiva)
             CheckPassiveUnlocks(player);
+            
+            // Verificar skills combinadas
+            CheckComboSkillUnlocks(player);
         }
         
         /// <summary>
@@ -349,6 +352,29 @@ namespace BotTelegram.RPG.Services
             {
                 var staminaRatio = player.Stamina / (double)oldMaxStamina;
                 player.Stamina = (int)(player.MaxStamina * staminaRatio);
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // DESBLOQUEO DE SKILLS COMBINADAS
+        // ═══════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Verifica y desbloquea skills combinadas si se cumplen requisitos
+        /// </summary>
+        private void CheckComboSkillUnlocks(RpgPlayer player)
+        {
+            var unlockableSkills = SkillUnlockDatabase.GetUnlockableSkills(player);
+            
+            foreach (var skillId in unlockableSkills)
+            {
+                // Agregar a skills desbloqueadas
+                player.UnlockedSkills.Add(skillId);
+                
+                Console.WriteLine($"[ActionTracker] 🌟 {player.Name} desbloqueó skill combinada: {skillId}!");
+                
+                // Guardar progreso
+                _rpgService.SavePlayer(player);
             }
         }
     }
