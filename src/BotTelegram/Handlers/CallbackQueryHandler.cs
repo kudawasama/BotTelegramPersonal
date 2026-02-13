@@ -5552,7 +5552,6 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 // PROGRESO
                 // ═══════════════════════════════════════
                 "level_up" => "Subir de nivel",
-                "enemy_kill" => "Enemigos derrotados",
                 "boss_kill" => "Jefes derrotados",
                 "beast_kills" => "Bestias derrotadas",
                 "undead_kills" => "No-muertos derrotados",
@@ -5592,7 +5591,6 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 // ═══════════════════════════════════════
                 "low_hp_victory" => "Victorias con HP baja",
                 "heal" => "Curaciones",
-                "heal_cast" => "Curaciones",
                 "divine_bless" => "Bendiciones",
                 "revive_ally" => "Resurrecciones",
                 "skill_used" => "Habilidades usadas",
