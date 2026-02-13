@@ -1,9 +1,9 @@
 name: Deploy to Fly.io
 
 on:
-  # push:
-  #   branches: [ master ]
-  workflow_dispatch:  # Solo deploy manual hasta configurar FLY_API_TOKEN
+  push:
+    branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   deploy:
