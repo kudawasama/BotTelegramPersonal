@@ -2986,18 +2986,7 @@ Si quieres que olvide el contexto anterior:
                         messageId,
                         narrative + "\n\n*¿Qué haces?*",
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-                        {
-                            new[]
-                            {
-                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Atacar", "rpg_combat_attack"),
-                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🛡️ Defender", "rpg_combat_defend")
-                            },
-                            new[]
-                            {
-                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏃 Huir", "rpg_combat_flee")
-                            }
-                        }),
+                        replyMarkup: GetCombatKeyboard(),
                         cancellationToken: ct);
                 }
                 return;
@@ -3349,18 +3338,7 @@ Si quieres que olvide el contexto anterior:
                         messageId,
                         narrative + "\n\n*Próximo turno...*",
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-                        {
-                            new[]
-                            {
-                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Atacar", "rpg_combat_attack"),
-                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🛡️ Defender", "rpg_combat_defend")
-                            },
-                            new[]
-                            {
-                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏃 Huir", "rpg_combat_flee")
-                            }
-                        }),
+                        replyMarkup: GetCombatKeyboard(),
                         cancellationToken: ct);
                 }
                 return;

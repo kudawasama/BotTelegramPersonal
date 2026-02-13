@@ -175,8 +175,8 @@ Solo los más valientes pueden enfrentar este destino...
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("⚔️ Atacar", "rpg_combat_attack"),
-                    InlineKeyboardButton.WithCallbackData("📋 Tácticas", "rpg_combat_tactics"),
-                    InlineKeyboardButton.WithCallbackData("🛡️ Defender", "rpg_combat_defend")
+                    InlineKeyboardButton.WithCallbackData("�️ Defender", "rpg_combat_defend"),
+                    InlineKeyboardButton.WithCallbackData("🔮 Magia", "rpg_combat_magic")
                 },
                 new[]
                 {
