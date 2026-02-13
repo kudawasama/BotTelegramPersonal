@@ -2158,38 +2158,110 @@ Si quieres que olvide el contexto anterior:
             }
             
             // Inventory (legacy)
-            if (data == "rpg_inventory")
+            if (data == "rpg_inventory" || data.StartsWith("rpg_inventory:"))
             {
+                int page = 1;
+                if (data.Contains(":"))
+                    int.TryParse(data.Split(':')[1], out page);
+                
                 var inventoryText = "🎒 **INVENTARIO**\n\n";
                 
                 if (currentPlayer.Inventory.Count == 0)
                 {
                     inventoryText += "❌ Tu inventario está vacío\n\n";
-                }
-                else
-                {
-                    foreach (var item in currentPlayer.Inventory)
-                    {
-                        inventoryText += $"{item.Emoji} **{item.Name}**\n";
-                        inventoryText += $"   {item.Description}\n";
-                        inventoryText += $"   💰 Valor: {item.Value} oro\n\n";
-                    }
+                    inventoryText += "💎 _Explora dungeons para encontrar objetos valiosos_\n";
+                    inventoryText += $"\n📊 Espacios: {currentPlayer.Inventory.Count}/20";
+                    
+                    await bot.EditMessageText(
+                        chatId,
+                        messageId,
+                        inventoryText,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[]
+                            {
+                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏪 Ir a la Tienda", "rpg_shop"),
+                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗺️ Explorar", "rpg_explore")
+                            },
+                            new[]
+                            {
+                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                            }
+                        }),
+                        cancellationToken: ct);
+                    return;
                 }
                 
-                inventoryText += $"📊 Espacios: {currentPlayer.Inventory.Count}/20";
+                // Agrupar ítems por tipo
+                var consumables = currentPlayer.Inventory.Where(i => i.Name.Contains("Poción") || i.Name.Contains("Elixir") || i.Name.Contains("Tónico")).ToList();
+                var materials = currentPlayer.Inventory.Where(i => i.Name.Contains("Gema") || i.Name.Contains("Fragmento") || i.Name.Contains("Esencia")).ToList();
+                var treasures = currentPlayer.Inventory.Where(i => !consumables.Contains(i) && !materials.Contains(i)).ToList();
+                
+                var allItems = new List<(string category, RpgItem item)>();
+                foreach (var item in consumables) allItems.Add(("🧉 Consumibles", item));
+                foreach (var item in materials) allItems.Add(("🔩 Materiales", item));
+                foreach (var item in treasures) allItems.Add(("💎 Tesoros", item));
+                
+                // Paginación
+                const int perPage = 6;
+                var totalPages = (int)Math.Ceiling(allItems.Count / (double)perPage);
+                page = Math.Max(1, Math.Min(page, totalPages));
+                
+                var pageItems = allItems
+                    .Skip((page - 1) * perPage)
+                    .Take(perPage)
+                    .ToList();
+                
+                string lastCategory = "";
+                foreach (var (category, item) in pageItems)
+                {
+                    if (category != lastCategory)
+                    {
+                        if (lastCategory != "") inventoryText += "\n";
+                        inventoryText += $"**{category}**\n";
+                        lastCategory = category;
+                    }
+                    inventoryText += $"{item.Emoji} {item.Name}\n";
+                    inventoryText += $"   _{item.Description}_\n";
+                    inventoryText += $"   💰 Valor: {item.Value} oro\n";
+                }
+                
+                inventoryText += $"\n━━━━━━━━━━━━━━━━━━━━━━\n";
+                inventoryText += $"📊 Espacios: **{currentPlayer.Inventory.Count}/20** | Página **{page}/{totalPages}**";
+                
+                // Construir teclado
+                var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
+                
+                // Navegación
+                if (totalPages > 1)
+                {
+                    var navRow = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
+                    if (page > 1)
+                        navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⬅️ Anterior", $"rpg_inventory:{page - 1}"));
+                    if (page < totalPages)
+                        navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("➡️ Siguiente", $"rpg_inventory:{page + 1}"));
+                    if (navRow.Any())
+                        buttons.Add(navRow);
+                }
+                
+                buttons.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏪 Tienda", "rpg_shop"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🚫 Equipar", "rpg_equipment")
+                });
+                buttons.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔄 Actualizar", "rpg_inventory"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                });
                 
                 await bot.EditMessageText(
                     chatId,
                     messageId,
                     inventoryText,
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-                    {
-                        new[]
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
-                        }
-                    }),
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
                     cancellationToken: ct);
                 return;
             }
@@ -2606,6 +2678,8 @@ Si quieres que olvide el contexto anterior:
             {
                 var tracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
                 
+                var manaBeforeVar = currentPlayer.Mana;
+                
                 // Recuperar mana (50% del máximo)
                 var manaRecovered = (int)(currentPlayer.MaxMana * 0.5);
                 currentPlayer.Mana = Math.Min(currentPlayer.Mana + manaRecovered, currentPlayer.MaxMana);
@@ -2615,28 +2689,38 @@ Si quieres que olvide el contexto anterior:
                 
                 rpgService.SavePlayer(currentPlayer);
                 
+                // Calcular progreso del mana
+                var manaProgress = (double)currentPlayer.Mana / currentPlayer.MaxMana;
+                var manaBar = GetProgressBar(manaProgress, 15);
+                
                 var text = "🧘 **MEDITACIÓN**\n\n";
-                text += "Te sientas en posición de loto y despejas tu mente...\n\n";
-                text += $"💠 Recuperaste {manaRecovered} mana\n";
-                text += $"💠 Mana actual: {currentPlayer.Mana}/{currentPlayer.MaxMana}\n\n";
+                text += "_Te sientas en posición de loto, cierras los ojos y sientes la energía mágica fluir a través de tu cuerpo..._\n\n";
+                
+                text += "💠 **MANA RECUPERADO**\n";
+                text += $"{manaBar}\n";
+                text += $"🔸 Antes: **{manaBeforeVar}** / Ahora: **{currentPlayer.Mana}** / Máx: **{currentPlayer.MaxMana}**\n";
+                text += $"✨ +**{manaRecovered}** mana recuperado\n\n";
                 
                 // Mostrar progreso hacia clases
                 var meditationCount = tracker.GetActionCount(currentPlayer, "meditation");
-                text += $"📊 Has meditado {meditationCount} veces\n\n";
+                text += $"📊 **Sesiones totales:** {meditationCount}\n\n";
                 
                 // Mostrar qué clases requieren meditación
                 var classesNeedingMeditation = BotTelegram.RPG.Services.HiddenClassDatabase.GetAll()
                     .Where(c => !currentPlayer.UnlockedHiddenClasses.Contains(c.Id) && 
                                 c.RequiredActions.ContainsKey("meditation"))
-                    .Take(2);
+                    .Take(3);
                 
                 if (classesNeedingMeditation.Any())
                 {
-                    text += "🌟 **Progreso hacia clases:**\n";
+                    text += "🌟 **PROGRESO HACIA CLASES OCULTAS:**\n";
                     foreach (var hClass in classesNeedingMeditation)
                     {
                         var required = hClass.RequiredActions["meditation"];
-                        text += $"{hClass.Emoji} {hClass.Name}: {meditationCount}/{required}\n";
+                        var classProgress = Math.Min((double)meditationCount / required, 1.0);
+                        var classBar = GetProgressBar(classProgress, 10);
+                        text += $"{hClass.Emoji} {hClass.Name}\n";
+                        text += $"   {classBar} {meditationCount}/{required}\n";
                     }
                 }
                 
@@ -2650,6 +2734,10 @@ Si quieres que olvide el contexto anterior:
                         new[]
                         {
                             Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧘 Meditar de nuevo", "rpg_action_meditate"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Progreso", "rpg_progress")
+                        },
+                        new[]
+                        {
                             Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
                         }
                     }),
@@ -4604,18 +4692,74 @@ Responde en español en máximo 2-3 líneas con una estrategia concreta (¿ataca
                     return;
                 }
                 
+                var tracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
+                
+                // Consumir energía y ganar XP
+                var xpBefore = currentPlayer.XP;
                 rpgService.ConsumeEnergy(currentPlayer, 20);
                 rpgService.AddXP(currentPlayer, 15);
+                
+                // Trackear acción de entrenamiento
+                tracker.TrackAction(currentPlayer, "training");
+                
                 rpgService.SavePlayer(currentPlayer);
                 
-                await bot.AnswerCallbackQuery(
-                    callbackQuery.Id,
-                    "🛡️ Entrenaste. +15 XP",
-                    showAlert: true,
+                // Calcular progreso XP
+                var xpNeeded = currentPlayer.Level * 100;
+                var xpProgress = (double)currentPlayer.XP / xpNeeded;
+                var xpBar = GetProgressBar(xpProgress, 15);
+                
+                var text = "⚡ **ENTRENAMIENTO**\n\n";
+                text += "_Practicas con los muñecos de entrenamiento, perfeccionando tus técnicas de combate..._\n\n";
+                
+                text += "🎯 **EXPERIENCIA GANADA**\n";
+                text += $"{xpBar}\n";
+                text += $"💠 XP: {currentPlayer.XP}/{xpNeeded} (Nivel {currentPlayer.Level})\n";
+                text += $"✨ +**15 XP** ganado\n\n";
+                
+                text += "⚡ **COSTO:**\n";
+                text += $"🔋 -20 Energía (Restante: {currentPlayer.Energy}/{currentPlayer.MaxEnergy})\n\n";
+                
+                // Mostrar progreso hacia la próxima habilidad
+                var trainingCount = tracker.GetActionCount(currentPlayer, "training");
+                text += $"📊 **Sesiones de entrenamiento:** {trainingCount}\n";
+                
+                // Verificar clases que requieren entrenamiento
+                var classesNeedingTraining = BotTelegram.RPG.Services.HiddenClassDatabase.GetAll()
+                    .Where(c => !currentPlayer.UnlockedHiddenClasses.Contains(c.Id) && 
+                                c.RequiredActions.ContainsKey("training"))
+                    .Take(2);
+                
+                if (classesNeedingTraining.Any())
+                {
+                    text += "\n🌟 **Progreso hacia clases:**\n";
+                    foreach (var hClass in classesNeedingTraining)
+                    {
+                        var required = hClass.RequiredActions["training"];
+                        var classProgress = Math.Min((double)trainingCount / required, 1.0);
+                        var classBar = GetProgressBar(classProgress, 10);
+                        text += $"{hClass.Emoji} {hClass.Name}: {classBar} {trainingCount}/{required}\n";
+                    }
+                }
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚡ Entrenar de nuevo", "rpg_train"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                        }
+                    }),
                     cancellationToken: ct);
-                    
-                await bot.DeleteMessage(chatId, messageId, ct);
-                await rpgCommand.ShowMainMenu(bot, chatId, currentPlayer, ct);
                 return;
             }
             
