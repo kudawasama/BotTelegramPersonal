@@ -2473,6 +2473,48 @@ Si quieres que olvide el contexto anterior:
             }
             
             // Explore
+            // Explore Menu
+            if (data == "rpg_explore_menu")
+            {
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    "🗺️ **EXPLORACIÓN**\n\n" +
+                    "¿Qué quieres hacer?\n\n" +
+                    "⚔️ **Buscar Combate:** Encuentra enemigos (15 energía)\n" +
+                    "🗺️ **Aventura:** Evento aleatorio (20 energía)\n" +
+                    "🏞️ **Recursos:** Buscar materiales (10 energía)\n" +
+                    "💎 **Tesoro:** Buscar cofres (25 energía)\n" +
+                    "🐾 **Mascotas:** Buscar bestias (30 energía)\n" +
+                    "🎲 **Evento:** Sorpresa aleatoria (15 energía)",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Combate", "rpg_explore"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗺️ Aventura", "rpg_adventure")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏞️ Recursos", "rpg_gather"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💎 Tesoro", "rpg_treasure")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Mascotas", "rpg_search_beast"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎲 Evento", "rpg_random_event")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Explore - original combat search
             if (data == "rpg_explore")
             {
                 if (!rpgService.CanPerformAction(currentPlayer, 15))
@@ -2509,6 +2551,428 @@ Si quieres que olvide el contexto anterior:
                     $"¿Qué haces?",
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Adventure - Random event
+            if (data == "rpg_adventure")
+            {
+                if (!rpgService.CanPerformAction(currentPlayer, 20))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes suficiente energía (necesitas 20)", cancellationToken: ct);
+                    return;
+                }
+                
+                rpgService.ConsumeEnergy(currentPlayer, 20);
+                
+                var rand = new Random();
+                var roll = rand.Next(100);
+                
+                string message = "🗺️ **AVENTURA**\n\n";
+                
+                if (roll < 40) // 40% - Enemigo fácil
+                {
+                    var enemy = rpgService.GenerateEnemy(currentPlayer.Level, EnemyDifficulty.Easy);
+                    currentPlayer.IsInCombat = true;
+                    currentPlayer.CurrentEnemy = enemy;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    await bot.DeleteMessage(chatId, messageId, ct);
+                    await bot.SendMessage(
+                        chatId,
+                        $"⚔️ **¡ENCUENTRO!**\n\n" +
+                        $"Durante tu aventura, te topas con:\n\n" +
+                        $"{enemy.Emoji} **{enemy.Name}** (Nv.{enemy.Level})\n" +
+                        $"❤️ {enemy.HP}/{enemy.MaxHP} HP\n\n" +
+                        $"¿Qué haces?",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                        cancellationToken: ct);
+                    return;
+                }
+                else if (roll < 65) // 25% - Enemigo medio
+                {
+                    var enemy = rpgService.GenerateEnemy(currentPlayer.Level, EnemyDifficulty.Medium);
+                    currentPlayer.IsInCombat = true;
+                    currentPlayer.CurrentEnemy = enemy;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    await bot.DeleteMessage(chatId, messageId, ct);
+                    await bot.SendMessage(
+                        chatId,
+                        $"⚔️ **¡PELIGRO!**\n\n" +
+                        $"¡Un enemigo peligroso aparece!\n\n" +
+                        $"{enemy.Emoji} **{enemy.Name}** (Nv.{enemy.Level})\n" +
+                        $"❤️ {enemy.HP}/{enemy.MaxHP} HP\n\n" +
+                        $"¡Prepárate para el combate!",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                        cancellationToken: ct);
+                    return;
+                }
+                else if (roll < 80) // 15% - Enemigo difícil
+                {
+                    var enemy = rpgService.GenerateEnemy(currentPlayer.Level, EnemyDifficulty.Hard);
+                    currentPlayer.IsInCombat = true;
+                    currentPlayer.CurrentEnemy = enemy;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    await bot.DeleteMessage(chatId, messageId, ct);
+                    await bot.SendMessage(
+                        chatId,
+                        $"💀 **¡ENEMIGO PODEROSO!**\n\n" +
+                        $"¡Una criatura formidable bloquea tu camino!\n\n" +
+                        $"{enemy.Emoji} **{enemy.Name}** (Nv.{enemy.Level})\n" +
+                        $"❤️ {enemy.HP}/{enemy.MaxHP} HP\n\n" +
+                        $"⚠️ ¡Este enemigo es muy peligroso!",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                        cancellationToken: ct);
+                    return;
+                }
+                else if (roll < 90) // 10% - Cofre de tesoro
+                {
+                    var goldFound = rand.Next(50, 201);
+                    currentPlayer.Gold += goldFound;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    message += $"💎 **¡Cofre encontrado!**\n\n" +
+                              $"Encuentras un cofre oculto entre los arbustos.\n" +
+                              $"Dentro hay **{goldFound} oro**!\n\n" +
+                              $"💰 Oro total: {currentPlayer.Gold}";
+                }
+                else if (roll < 95) // 5% - Comerciante viajero
+                {
+                    message += $"🎒 **¡Comerciante viajero!**\n\n" +
+                              $"Un comerciante amigable te saluda.\n\n" +
+                              $"_\"¡Saludos, aventurero! Tengo productos especiales...\"_\n\n" +
+                              $"💡 Visita la tienda para ver sus ofertas.";
+                }
+                else // 5% - Evento especial
+                {
+                    var bonusXP = currentPlayer.Level * 10;
+                    currentPlayer.XP += bonusXP;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    message += $"✨ **¡Evento especial!**\n\n" +
+                              $"Ayudas a un anciano en problemas.\n" +
+                              $"Como recompensa, te enseña un antiguo secreto.\n\n" +
+                              $"📚 +{bonusXP} XP de experiencia!";
+                }
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Gather resources
+            if (data == "rpg_gather")
+            {
+                if (!rpgService.CanPerformAction(currentPlayer, 10))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes suficiente energía (necesitas 10)", cancellationToken: ct);
+                    return;
+                }
+                
+                rpgService.ConsumeEnergy(currentPlayer, 10);
+                var actionTracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
+                
+                var rand = new Random();
+                var roll = rand.Next(100);
+                
+                string message = "🏞️ **BUSCAR RECURSOS**\n\n";
+                
+                if (roll < 30) // 30% - Hierbas
+                {
+                    var herbsFound = rand.Next(1, 4);
+                    message += $"🌿 **¡Hierbas encontradas!**\n\n" +
+                              $"Recolectas {herbsFound} hierbas medicinales.\n\n" +
+                              $"💡 Pueden ser útiles para pociones.";
+                    actionTracker.TrackAction(currentPlayer, "gather_herbs");
+                }
+                else if (roll < 50) // 20% - Minerales
+                {
+                    var oreFound = rand.Next(1, 3);
+                    message += $"⛏️ **¡Mineral encontrado!**\n\n" +
+                              $"Minas {oreFound} fragmentos de mineral.\n\n" +
+                              $"💡 Útil para forjar equipo.";
+                    actionTracker.TrackAction(currentPlayer, "mine_ore");
+                }
+                else if (roll < 75) // 25% - Materiales variados
+                {
+                    var goldFound = rand.Next(10, 31);
+                    currentPlayer.Gold += goldFound;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    message += $"🪵 **¡Materiales encontrados!**\n\n" +
+                              $"Recoges algunos materiales básicos.\n" +
+                              $"Los vendes por **{goldFound} oro**.\n\n" +
+                              $"💰 Oro total: {currentPlayer.Gold}";
+                }
+                else // 25% - Nada
+                {
+                    message += $"❌ **No encontraste nada**\n\n" +
+                              $"Buscas durante un rato pero no encuentras recursos útiles.\n\n" +
+                              $"Tal vez tengas mejor suerte la próxima vez.";
+                }
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Treasure hunt
+            if (data == "rpg_treasure")
+            {
+                if (!rpgService.CanPerformAction(currentPlayer, 25))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes suficiente energía (necesitas 25)", cancellationToken: ct);
+                    return;
+                }
+                
+                rpgService.ConsumeEnergy(currentPlayer, 25);
+                var actionTracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
+                
+                var rand = new Random();
+                var roll = rand.Next(100);
+                
+                string message = "💎 **BÚSQUEDA DE TESORO**\n\n";
+                
+                if (roll < 50) // 50% - Nada
+                {
+                    message += $"❌ **Sin suerte**\n\n" +
+                              $"Buscas cuidadosamente pero no encuentras ningún tesoro.\n\n" +
+                              $"🗺️ Sigue explorando...";
+                }
+                else if (roll < 80) // 30% - Oro pequeño
+                {
+                    var goldFound = rand.Next(20, 51);
+                    currentPlayer.Gold += goldFound;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    message += $"💰 **¡Bolsa de oro!**\n\n" +
+                              $"Encuentras una pequeña bolsa con **{goldFound} oro**.\n\n" +
+                              $"💰 Oro total: {currentPlayer.Gold}";
+                    actionTracker.TrackAction(currentPlayer, "treasure_hunt");
+                }
+                else if (roll < 95) // 15% - Oro medio
+                {
+                    var goldFound = rand.Next(50, 101);
+                    currentPlayer.Gold += goldFound;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    message += $"💰 **¡Cofre de oro!**\n\n" +
+                              $"¡Encuentras un cofre lleno de monedas!\n" +
+                              $"**+{goldFound} oro**\n\n" +
+                              $"💰 Oro total: {currentPlayer.Gold}";
+                    actionTracker.TrackAction(currentPlayer, "treasure_hunt");
+                }
+                else if (roll < 99) // 4% - Ítem raro
+                {
+                    message += $"✨ **¡Ítem raro!**\n\n" +
+                              $"¡Encuentras un objeto poco común!\n\n" +
+                              $"💡 Se ha agregado a tu inventario.";
+                    actionTracker.TrackAction(currentPlayer, "treasure_hunt");
+                }
+                else // 1% - Ítem legendario
+                {
+                    message += $"🌟 **¡ÍTEM LEGENDARIO!**\n\n" +
+                              $"¡¡¡INCREÍBLE!!! ¡Has encontrado un tesoro legendario!\n\n" +
+                              $"✨ _Las leyendas son reales..._";
+                    actionTracker.TrackAction(currentPlayer, "treasure_hunt");
+                }
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Search for beasts/pets
+            if (data == "rpg_search_beast")
+            {
+                if (!rpgService.CanPerformAction(currentPlayer, 30))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes suficiente energía (necesitas 30)", cancellationToken: ct);
+                    return;
+                }
+                
+                rpgService.ConsumeEnergy(currentPlayer, 30);
+                var actionTracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
+                
+                var rand = new Random();
+                var roll = rand.Next(100);
+                
+                string message = "🐾 **BÚSQUEDA DE MASCOTAS**\n\n";
+                
+                if (roll < 60) // 60% - Nada
+                {
+                    message += $"❌ **No encontraste bestias**\n\n" +
+                              $"Buscas durante un rato pero no encuentras ninguna criatura domable.\n\n" +
+                              $"🐾 Intenta de nuevo más tarde.";
+                    actionTracker.TrackAction(currentPlayer, "search_beast");
+                }
+                else if (roll < 85) // 25% - Bestia común
+                {
+                    var beasts = new[] { "🐺 Lobo", "🐱 Gato Salvaje", "🐍 Serpiente" };
+                    var beast = beasts[rand.Next(beasts.Length)];
+                    
+                    message += $"🐾 **¡Bestia encontrada!**\n\n" +
+                              $"Encuentras un **{beast}** salvaje.\n\n" +
+                              $"💡 Usa '⚔️ Explorar' para encontrarlo en combate y domarlo.";
+                    actionTracker.TrackAction(currentPlayer, "search_beast");
+                }
+                else if (roll < 95) // 10% - Bestia rara
+                {
+                    var beasts = new[] { "🐻 Oso", "🦅 Águila", "🐗 Jabalí" };
+                    var beast = beasts[rand.Next(beasts.Length)];
+                    
+                    message += $"✨ **¡Bestia rara!**\n\n" +
+                              $"¡Encuentras un **{beast}** poco común!\n\n" +
+                              $"💡 Estas criaturas son más poderosas.";
+                    actionTracker.TrackAction(currentPlayer, "search_beast");
+                }
+                else if (roll < 99) // 4% - Bestia épica
+                {
+                    message += $"🌟 **¡Bestia épica!**\n\n" +
+                              $"¡¡Has avistado un **🐉 Dragón Joven**!!\n\n" +
+                              $"💡 ¡Domarlo será un gran desafío!";
+                    actionTracker.TrackAction(currentPlayer, "search_beast");
+                }
+                else // 1% - Bestia legendaria
+                {
+                    message += $"💫 **¡BESTIA LEGENDARIA!**\n\n" +
+                              $"¡¡¡INCREÍBLE!!! Has encontrado una criatura de leyenda...\n\n" +
+                              $"🌌 _La criatura desaparece en las sombras..._\n\n" +
+                              $"¿Qué era eso?";
+                    actionTracker.TrackAction(currentPlayer, "search_beast");
+                }
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Random event
+            if (data == "rpg_random_event")
+            {
+                if (!rpgService.CanPerformAction(currentPlayer, 15))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes suficiente energía (necesitas 15)", cancellationToken: ct);
+                    return;
+                }
+                
+                rpgService.ConsumeEnergy(currentPlayer, 15);
+                var actionTracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
+                
+                var rand = new Random();
+                var roll = rand.Next(100);
+                
+                string message = "🎲 **EVENTO ALEATORIO**\n\n";
+                
+                if (roll < 30) // 30% - Comerciante
+                {
+                    message += $"🎒 **Comerciante viajero**\n\n" +
+                              $"_\"¡Hola, aventurero! ¿Te interesa ver mis productos?\"_\n\n" +
+                              $"Un comerciante te ofrece sus mercancías.";
+                }
+                else if (roll < 55) // 25% - NPC con quest
+                {
+                    var questReward = rand.Next(30, 71);
+                    currentPlayer.Gold += questReward;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    message += $"🗣️ **Misión rápida**\n\n" +
+                              $"Un aldeano te pide ayuda con una tarea simple.\n" +
+                              $"Lo ayudas y te recompensa con **{questReward} oro**.\n\n" +
+                              $"💰 Oro total: {currentPlayer.Gold}";
+                    actionTracker.TrackAction(currentPlayer, "random_event");
+                }
+                else if (roll < 75) // 20% - Puzzle
+                {
+                    var bonusXP = currentPlayer.Level * 15;
+                    currentPlayer.XP += bonusXP;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    message += $"🧩 **Puzzle antiguo**\n\n" +
+                              $"Encuentras un acertijo tallado en piedra.\n" +
+                              $"Lo resuelves correctamente y una luz te envuelve.\n\n" +
+                              $"📚 +{bonusXP} XP de experiencia!";
+                    actionTracker.TrackAction(currentPlayer, "random_event");
+                }
+                else if (roll < 90) // 15% - Bendición
+                {
+                    message += $"✨ **Bendición divina**\n\n" +
+                              $"Una luz celestial te rodea.\n" +
+                              $"Te sientes más fuerte temporalmente.\n\n" +
+                              $"💪 +5% stats por 10 combates (próximamente)";
+                    actionTracker.TrackAction(currentPlayer, "random_event");
+                }
+                else // 10% - Misterio
+                {
+                    message += $"🌀 **Encuentro misterioso**\n\n" +
+                              $"Una figura encapuchada te observa desde lejos.\n" +
+                              $"Antes de que puedas acercarte, desaparece...\n\n" +
+                              $"_¿Quién era?_";
+                    actionTracker.TrackAction(currentPlayer, "random_event");
+                }
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                        }
+                    }),
                     cancellationToken: ct);
                 return;
             }
@@ -2617,6 +3081,177 @@ Si quieres que olvide el contexto anterior:
                     text,
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: GetCombatKeyboard(currentPlayer, currentPlayer.CurrentEnemy!),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Combat - Tactics menu
+            if (data == "rpg_combat_tactics")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    "📋 **TÁCTICAS DE COMBATE**\n\n" +
+                    "Elige tu estrategia:\n\n" +
+                    "**ATAQUES ESPECIALES:**\n" +
+                    "💥 Carga - Ataque poderoso (35 stamina)\n" +
+                    "⚡ Rápido - Ataque veloz (20 stamina)\n" +
+                    "🎯 Preciso - Mayor precisión (25 stamina)\n" +
+                    "🔨 Pesado - Máximo daño (40 stamina)\n\n" +
+                    "**ACCIONES DEFENSIVAS:**\n" +
+                    "🛡️ Bloquear - Reduce daño 50%\n" +
+                    "💨 Esquivar - Evita próximo ataque\n" +
+                    "🔄 Contragolpe - Devuelve daño\n\n" +
+                    "**TÁCTICAS AVANZADAS:**\n" +
+                    "👁️ Observar - Analiza al enemigo\n" +
+                    "🧘 Meditar - Recupera mana (30)\n" +
+                    "⏸️ Esperar - Pasa el turno",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💥 Carga", "rpg_combat_charge"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚡ Rápido", "rpg_combat_physical"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎯 Preciso", "rpg_combat_precise")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔨 Pesado", "rpg_combat_heavy"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🌀 Mágico", "rpg_combat_magic")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🛡️ Bloquear", "rpg_combat_block"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💨 Esquivar", "rpg_combat_dodge"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔄 Contra", "rpg_combat_counter")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("👁️ Observar", "rpg_combat_observe"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧘 Meditar", "rpg_combat_meditate"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⏸️ Esperar", "rpg_combat_wait")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_combat_menu")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Combat - Pets menu
+            if (data == "rpg_combat_pets")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                // Check if player has pets (future implementation)
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    "🐾 **MASCOTAS EN COMBATE**\n\n" +
+                    "💡 Sistema de mascotas activas en combate.\n\n" +
+                    "**Acciones disponibles:**\n" +
+                    "🐾 Domar - Intenta domar bestia enemiga\n" +
+                    "🐾 Acariciar - Aumenta bond con bestia\n" +
+                    "🎶 Calmar - Calma bestia agresiva\n\n" +
+                    "_Las mascotas activas atacarán automáticamente._",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Domar", "rpg_combat_tame"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Acariciar", "rpg_combat_pet")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎶 Calmar", "rpg_combat_calm")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_combat_menu")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Pets menu (exploration)
+            if (data == "rpg_pets_menu")
+            {
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    "🐾 **MASCOTAS**\n\n" +
+                    "💡 Gestiona tus mascotas domadas.\n\n" +
+                    "**Sistema de Mascotas:**\n" +
+                    "• Doma bestias en combate\n" +
+                    "• Aumenta vínculo (bond) acariciándolas\n" +
+                    "• Evoluciónalas con niveles y bond\n" +
+                    "• Úsalas en combate para ayudarte\n\n" +
+                    "🏞️ Busca bestias explorando el mundo.",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Ver Mascotas", "rpg_pets_list"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🍖 Alimentar", "rpg_pets_feed")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔄 Cambiar Activas", "rpg_pets_swap")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                        }
+                    }),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Options menu
+            if (data == "rpg_options")
+            {
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    "⚙️ **OPCIONES**\n\n" +
+                    "Configuración de tu personaje:\n\n" +
+                    "**Info del sistema:**\n" +
+                    $"👤 Jugador: {currentPlayer.Name}\n" +
+                    $"⚔️ Clase: {currentPlayer.Class}\n" +
+                    $"📊 Nivel: {currentPlayer.Level}\n" +
+                    $"💰 Oro: {currentPlayer.Gold}\n" +
+                    $"❤️ HP: {currentPlayer.HP}/{currentPlayer.MaxHP}\n" +
+                    $"⚡ Energía: {currentPlayer.Energy}/{currentPlayer.MaxEnergy}\n\n" +
+                    "💡 Más opciones próximamente...",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎒 Inventario", "rpg_inventory")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                        }
+                    }),
                     cancellationToken: ct);
                 return;
             }

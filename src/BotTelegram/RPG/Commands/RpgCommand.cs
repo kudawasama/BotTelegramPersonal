@@ -116,48 +116,45 @@ Solo los más valientes pueden enfrentar este destino...
         {
             return new InlineKeyboardMarkup(new[]
             {
+                // ACCIONES PRINCIPALES
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("⚔️ Explorar", "rpg_explore"),
-                    InlineKeyboardButton.WithCallbackData("🛡️ Entrenar", "rpg_train")
+                    InlineKeyboardButton.WithCallbackData("⚔️ Explorar", "rpg_explore_menu"),
+                    InlineKeyboardButton.WithCallbackData("🗺️ Aventura", "rpg_adventure"),
+                    InlineKeyboardButton.WithCallbackData("🐾 Mascotas", "rpg_pets_menu")
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("😴 Descansar", "rpg_rest"),
-                    InlineKeyboardButton.WithCallbackData("💼 Trabajar", "rpg_work")
+                    InlineKeyboardButton.WithCallbackData("💼 Trabajar", "rpg_work"),
+                    InlineKeyboardButton.WithCallbackData("🧘 Meditar", "rpg_action_meditate")
                 },
+                // INFORMACIÓN Y PROGRESO
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("📊 Stats", "rpg_stats"),
-                    InlineKeyboardButton.WithCallbackData("🎒 Equipment", "rpg_equipment")
-                },
-                new[]
-                {
+                    InlineKeyboardButton.WithCallbackData("🎒 Inventario", "rpg_inventory"),
                     InlineKeyboardButton.WithCallbackData("🏪 Tienda", "rpg_shop")
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_skills"),
+                    InlineKeyboardButton.WithCallbackData("🌟 Progreso", "rpg_progress"),
+                    InlineKeyboardButton.WithCallbackData("💎 Pasivas", "rpg_passives"),
                     InlineKeyboardButton.WithCallbackData("📈 Counters", "rpg_counters")
                 },
+                // HABILIDADES Y COMBATE
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("🌟 Skills Combinadas", "rpg_combo_skills")
+                    InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_skills"),
+                    InlineKeyboardButton.WithCallbackData("🎯 Combos", "rpg_combo_skills"),
+                    InlineKeyboardButton.WithCallbackData("🛡️ Entrenar", "rpg_train")
                 },
+                // UTILIDADES
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("🌟 Progreso", "rpg_progress"),
-                    InlineKeyboardButton.WithCallbackData("💎 Pasivas", "rpg_passives")
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("🧘 Acciones", "rpg_actions"),
-                    InlineKeyboardButton.WithCallbackData("💬 Chat IA", "rpg_ai_chat")
-                },
-                new[]
-                {
+                    InlineKeyboardButton.WithCallbackData("💬 Chat IA", "rpg_ai_chat"),
                     InlineKeyboardButton.WithCallbackData("⚙️ Opciones", "rpg_options"),
-                    InlineKeyboardButton.WithCallbackData("🏠 Menú Bot", "start")
+                    InlineKeyboardButton.WithCallbackData("🏠 Salir", "start")
                 }
             });
         }
@@ -169,20 +166,20 @@ Solo los más valientes pueden enfrentar este destino...
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("⚔️ Atacar", "rpg_combat_attack"),
+                    InlineKeyboardButton.WithCallbackData("� Tácticas", "rpg_combat_tactics"),
                     InlineKeyboardButton.WithCallbackData("🛡️ Defender", "rpg_combat_defend")
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("🧪 Usar Ítem", "rpg_combat_item"),
+                    InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_combat_skills"),
+                    InlineKeyboardButton.WithCallbackData("🐾 Mascotas", "rpg_combat_pets"),
+                    InlineKeyboardButton.WithCallbackData("🧪 Ítems", "rpg_combat_item")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("👁️ Observar", "rpg_combat_observe"),
+                    InlineKeyboardButton.WithCallbackData("💬 Consulta", "rpg_combat_ai"),
                     InlineKeyboardButton.WithCallbackData("🏃 Huir", "rpg_combat_flee")
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_combat_skills")
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("💬 Preguntar a IA", "rpg_combat_ai")
                 }
             });
         }
