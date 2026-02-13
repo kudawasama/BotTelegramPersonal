@@ -1964,29 +1964,39 @@ Si quieres que olvide el contexto anterior:
                 var combatActions = new[] { "physical_attack", "magic_attack", "charge_attack", "precise_attack", "heavy_attack", "light_attack", "reckless_attack", "defensive_attack" };
                 var defensiveActions = new[] { "block", "dodge", "counter", "perfect_dodge", "defend" };
                 var movementActions = new[] { "jump", "retreat", "advance", "approach_enemy" };
-                var specialActions = new[] { "meditate", "observe", "wait", "use_item" };
-                var eventCounters = new[] { "critical_hit", "damage_dealt", "damage_taken", "combat_survived", "low_hp_combat", "enemy_defeated", "combo_5plus", "combo_10plus", "battles_won", "battles_fled" };
+                var specialActions = new[] { "meditate", "observe", "wait", "use_item", "berserk" };
+                var eventCounters = new[] { "critical_hit", "damage_dealt", "damage_taken", "combat_survived", "low_hp_combat", "enemy_defeated", "combo_5plus", "combo_10plus", "battles_won", "battles_fled", "kill_enemy", "take_damage", "survive_low_hp", "spell_cast", "heal", "pet_death", "pet_action", "tame_creature", "summon_skeleton", "summon_zombie", "summon_ghost", "summon_lich", "summon_elemental", "skill_used" };
                 
-                // Recolectar contadores existentes
+                // Recolectar TODOS los contadores (mostrar 0 si no existe)
                 foreach (var action in combatActions)
-                    if (currentPlayer.ActionCounters.ContainsKey(action))
-                        allCounters.Add(("⚔️ Ataque", action, currentPlayer.ActionCounters[action]));
+                {
+                    int count = currentPlayer.ActionCounters.ContainsKey(action) ? currentPlayer.ActionCounters[action] : 0;
+                    allCounters.Add(("⚔️ Ataque", action, count));
+                }
                 
                 foreach (var action in defensiveActions)
-                    if (currentPlayer.ActionCounters.ContainsKey(action))
-                        allCounters.Add(("🛡️ Defensa", action, currentPlayer.ActionCounters[action]));
+                {
+                    int count = currentPlayer.ActionCounters.ContainsKey(action) ? currentPlayer.ActionCounters[action] : 0;
+                    allCounters.Add(("🛡️ Defensa", action, count));
+                }
                 
                 foreach (var action in movementActions)
-                    if (currentPlayer.ActionCounters.ContainsKey(action))
-                        allCounters.Add(("💨 Movimiento", action, currentPlayer.ActionCounters[action]));
+                {
+                    int count = currentPlayer.ActionCounters.ContainsKey(action) ? currentPlayer.ActionCounters[action] : 0;
+                    allCounters.Add(("💨 Movimiento", action, count));
+                }
                 
                 foreach (var action in specialActions)
-                    if (currentPlayer.ActionCounters.ContainsKey(action))
-                        allCounters.Add(("✨ Especial", action, currentPlayer.ActionCounters[action]));
+                {
+                    int count = currentPlayer.ActionCounters.ContainsKey(action) ? currentPlayer.ActionCounters[action] : 0;
+                    allCounters.Add(("✨ Especial", action, count));
+                }
                 
                 foreach (var counter in eventCounters)
-                    if (currentPlayer.ActionCounters.ContainsKey(counter))
-                        allCounters.Add(("📈 Eventos", counter, currentPlayer.ActionCounters[counter]));
+                {
+                    int count = currentPlayer.ActionCounters.ContainsKey(counter) ? currentPlayer.ActionCounters[counter] : 0;
+                    allCounters.Add(("📈 Eventos", counter, count));
+                }
                 
                 // Skills usadas (top skills only)
                 var skillCounters = currentPlayer.ActionCounters
@@ -1996,23 +2006,6 @@ Si quieres que olvide el contexto anterior:
                 
                 foreach (var skill in skillCounters)
                     allCounters.Add(("🎯 Skills", skill.Key, skill.Value));
-                
-                if (allCounters.Count == 0)
-                {
-                    await bot.EditMessageText(
-                        chatId,
-                        messageId,
-                        "📊 **CONTADORES DE ACCIÓN**\n\n" +
-                        "No hay estadísticas registradas aún.\n" +
-                        "¡Comienza a pelear para desbloquear skills!",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-                        {
-                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú RPG", "rpg_main") }
-                        }),
-                        cancellationToken: ct);
-                    return;
-                }
                 
                 // Paginación
                 const int perPage = 12;
@@ -5432,9 +5425,17 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 "magic_attack" => "Ataques mágicos",
                 "critical_hit" => "Golpes críticos",
                 "dodge_success" => "Esquivas exitosas",
+                "dodge" => "Evasiones",
+                "block" => "Bloqueos",
                 "defend" => "Defensas",
+                "counter" => "Contraataques",
                 "counter_attack" => "Contraataques",
                 "perfect_parry" => "Parrys perfectos",
+                "berserk" => "Usos de Berserk",
+                "kill_enemy" => "Enemigos eliminados",
+                "enemy_kill" => "Enemigos eliminados",
+                "take_damage" => "Daño recibido",
+                "survive_low_hp" => "Supervivencias HP crítico",
                 
                 // ═══════════════════════════════════════
                 // COMBATE AVANZADO (FASE 5C)
@@ -5478,6 +5479,7 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 // ═══════════════════════════════════════
                 // MAGIA Y MANA
                 // ═══════════════════════════════════════
+                "spell_cast" => "Hechizos lanzados",
                 "fire_spell_cast" => "Hechizos de fuego",
                 "water_spell_cast" => "Hechizos de agua",
                 "earth_spell_cast" => "Hechizos de tierra",
@@ -5500,13 +5502,20 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 // ═══════════════════════════════════════
                 "summon_undead" => "Invocar no-muertos",
                 "summon_elemental" => "Invocar elementales",
+                "summon_skeleton" => "Invocar esqueletos",
+                "summon_zombie" => "Invocar zombies",
+                "summon_ghost" => "Invocar fantasmas",
+                "summon_lich" => "Invocar lichs",
                 "summon_beast" => "Invocar bestias",
                 "summon_aberration" => "Invocar aberraciones",
                 "sacrifice_minion" => "Sacrificar minion",
                 "pet_bond_max" => "Bonds máximos",
                 "pet_evolution" => "Evoluciones de mascotas",
                 "pet_combo_kill" => "Kills combo con mascota",
+                "pet_death" => "Mascotas caídas",
+                "pet_action" => "Acciones con mascotas",
                 "tame_boss" => "Domar bosses",
+                "tame_creature" => "Criaturas domadas",
                 
                 // ═══════════════════════════════════════
                 // STEALTH Y ENGAÑO
@@ -5582,6 +5591,7 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 // OTROS
                 // ═══════════════════════════════════════
                 "low_hp_victory" => "Victorias con HP baja",
+                "heal" => "Curaciones",
                 "heal_cast" => "Curaciones",
                 "divine_bless" => "Bendiciones",
                 "revive_ally" => "Resurrecciones",
