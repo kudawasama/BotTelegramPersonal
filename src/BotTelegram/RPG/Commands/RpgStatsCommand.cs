@@ -220,7 +220,7 @@ namespace BotTelegram.RPG.Commands
         
         private string GetActionDisplayName(string actionKey)
         {
-            return actionKey switch
+            var displayName = actionKey switch
             {
                 "physical_attack" => "⚔️ Ataques físicos",
                 "magic_attack" => "🔮 Ataques mágicos",
@@ -240,6 +240,9 @@ namespace BotTelegram.RPG.Commands
                 "tame" => "🐾 Domados",
                 _ => actionKey
             };
+            
+            // Escapar caracteres especiales en nombres personalizados
+            return EscapeMarkdown(displayName);
         }
     }
 }
