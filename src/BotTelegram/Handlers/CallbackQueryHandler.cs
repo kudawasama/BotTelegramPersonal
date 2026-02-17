@@ -2942,17 +2942,37 @@ Si quieres que olvide el contexto anterior:
                     "explore_encounter",
                     $"Encountered {enemy.Name} (Nv.{enemy.Level}, {difficulty}). Energy left: {currentPlayer.Energy}");
                 
-                await bot.DeleteMessage(chatId, messageId, ct);
-                await bot.SendMessage(
-                    chatId,
-                    $"⚔️ **¡COMBATE!**\n\n" +
+                // Construir mensaje de combate con información de mascotas activas
+                var combatText = $"⚔️ **¡COMBATE!**\n\n" +
                     $"Mientras exploras, te encuentras con:\n\n" +
                     $"{enemy.Emoji} **{enemy.Name}** (Nv.{enemy.Level}) - {enemy.Type}\n" +
                     $"❤️ {enemy.HP}/{enemy.MaxHP} HP\n" +
                     $"⚔️ Ataque: {enemy.Attack} | 🔮 Magia: {enemy.MagicPower}\n" +
-                    $"🛡️ Def.Física: {enemy.PhysicalDefense} | 🌀 Def.Mágica: {enemy.MagicResistance}\n\n" +
-                    $"💡 _Usa 👁️Observar para ver debilidades_\n\n" +
-                    $"¿Qué haces?",
+                    $"🛡️ Def.Física: {enemy.PhysicalDefense} | 🌀 Def.Mágica: {enemy.MagicResistance}\n\n";
+                
+                // Mostrar mascotas activas si las hay
+                if (currentPlayer.ActivePets != null && currentPlayer.ActivePets.Any(p => p.HP > 0))
+                {
+                    combatText += "━━━━━━━━━━━━━━━\n";
+                    combatText += "🐾 **TUS COMPAÑERAS:**\n\n";
+                    foreach (var pet in currentPlayer.ActivePets.Where(p => p.HP > 0))
+                    {
+                        var petEmoji = GetPetEmoji(pet.Species);
+                        var hpPercent = (double)pet.HP / pet.MaxHP * 100;
+                        var hpBar = hpPercent > 70 ? "💚" : hpPercent > 30 ? "💛" : "❤️";
+                        combatText += $"{petEmoji} **{pet.Name}** (Lv.{pet.Level})\n";
+                        combatText += $"   {hpBar} HP: {pet.HP}/{pet.MaxHP} | ⚔️ ATK: {pet.EffectiveAttack} | 🛡️ DEF: {pet.EffectiveDefense}\n";
+                        combatText += $"   {pet.LoyaltyEmoji} {pet.Loyalty} (+{(int)(pet.LoyaltyStatBonus * 100)}% bonus)\n\n";
+                    }
+                    combatText += "━━━━━━━━━━━━━━━\n\n";
+                }
+                
+                combatText += "💡 _Usa 👁️Observar para ver debilidades_\n\n¿Qué haces?";
+                
+                await bot.DeleteMessage(chatId, messageId, ct);
+                await bot.SendMessage(
+                    chatId,
+                    combatText,
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: GetCombatKeyboard(),
                     cancellationToken: ct);

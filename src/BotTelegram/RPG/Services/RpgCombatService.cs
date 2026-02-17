@@ -822,6 +822,38 @@ namespace BotTelegram.RPG.Services
                 narrative += "\n";
             }
             
+            // ═══ TURNOS DE MASCOTAS ═══
+            if (result.PetTurns != null && result.PetTurns.Any())
+            {
+                narrative += "━━━━━━━━━━━━━━━\n";
+                narrative += "🐾 **MASCOTAS COMPAÑERAS**\n\n";
+                
+                foreach (var petTurn in result.PetTurns)
+                {
+                    if (petTurn.Hit)
+                    {
+                        var attackEmoji = petTurn.AttackType == AttackType.Magical ? "🔮" : "⚔️";
+                        var critText = petTurn.Critical ? " ⚡ CRÍTICO" : "";
+                        narrative += $"{petTurn.Emoji} **{petTurn.PetName}**: {attackEmoji} {petTurn.Damage} daño{critText}\n";
+                        
+                        if (petTurn.InflictedEffect != null)
+                        {
+                            narrative += $"   🩸 *Infligió {GetEffectName(petTurn.InflictedEffect.Value)}*\n";
+                        }
+                    }
+                    else
+                    {
+                        narrative += $"{petTurn.Emoji} **{petTurn.PetName}**: 💨 Falla\n";
+                    }
+                }
+                
+                if (result.TotalPetDamage > 0)
+                {
+                    narrative += $"\n💥 **Total mascotas**: {result.TotalPetDamage} daño\n";
+                }
+                narrative += "\n";
+            }
+            
             // Status damage
             if (result.StatusDamage > 0)
             {

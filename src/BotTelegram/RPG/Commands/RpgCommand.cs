@@ -104,6 +104,19 @@ Solo los más valientes pueden enfrentar este destino...
 
 ";
             
+            // Mostrar mascotas activas si las hay
+            if (player.ActivePets != null && player.ActivePets.Any(p => p.HP > 0))
+            {
+                text += "🐾 **Compañeras activas:**\n";
+                foreach (var pet in player.ActivePets.Where(p => p.HP > 0).Take(3))
+                {
+                    var hpPercent = (double)pet.HP / pet.MaxHP * 100;
+                    var hpEmoji = hpPercent > 70 ? "💚" : hpPercent > 30 ? "💛" : "❤️";
+                    text += $"  • {pet.Name} (Lv.{pet.Level}) {hpEmoji} {hpPercent:F0}% | {pet.LoyaltyEmoji}\n";
+                }
+                text += "\n";
+            }
+            
             if (player.IsInCombat && player.CurrentEnemy != null)
             {
                 text += $"⚔️ **¡COMBATE!**\n{player.CurrentEnemy.Emoji} {player.CurrentEnemy.Name} (Lv.{player.CurrentEnemy.Level})\n❤️ {player.CurrentEnemy.HP}/{player.CurrentEnemy.MaxHP} HP\n\n";
