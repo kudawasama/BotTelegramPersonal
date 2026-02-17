@@ -223,7 +223,15 @@ namespace BotTelegram.RPG.Services
                 result.Dodged = true;
                 TrackAction(player, "dodge"); // Track para skill unlocks
                 TrackPerfectDodge(player); // Track esquives perfectos
-                AddCombatLog(player, "🌀 Esquivar", "✅ Exitoso");
+                
+                // Mensaje mejorado:
+                var bonusEvasion = player.Evasion * 0.5; // El bonus agregado (1.5x - 1.0x = 0.5x)
+                AddCombatLog(player, "🌀 Esquivar", 
+                    $"✅ Exitoso\n" +
+                    $"📊 Base: {player.Evasion:F1} + Bonus: {bonusEvasion:F1} = {dodgeChance:F1}%\n" +
+                    $"🎲 Roll: {dodgeRoll:F1}% ≤ {dodgeChance:F1}%\n" +
+                    $"💨 +20% Evasión en próximo turno\n" +
+                    $"⚡ +10 Iniciativa ganada");
                 
                 // Enemigo ataca y falla
                 result.EnemyHit = false;
@@ -232,7 +240,10 @@ namespace BotTelegram.RPG.Services
             else
             {
                 result.Dodged = false;
-                AddCombatLog(player, "🌀 Esquivar", "❌ Fallo");
+                AddCombatLog(player, "🌀 Esquivar", 
+                    $"❌ Fallo\n" +
+                    $"📊 Probabilidad: {dodgeChance:F1}%\n" +
+                    $"🎲 Roll: {dodgeRoll:F1}% > {dodgeChance:F1}%");
                 
                 // Recibe ataque normal
                 PerformEnemyAttack(player, enemy, result, 0);
@@ -421,7 +432,7 @@ namespace BotTelegram.RPG.Services
             player.Mana = Math.Min(player.MaxMana, player.Mana + manaRestore);
             TrackAction(player, "mana_regen", manaRestore); // Track mana regenerado
             
-            AddCombatLog(player, "🧘 Meditar", $"💙 +{manaRestore} Mana");
+            AddCombatLog(player, "🧘 Meditar", $"💙 +{manaRestore} Mana\n⚠️ Vulnerable (-15% defensa)\n💥 Enemigo ataca con ventaja");
             
             // Vulnerable a ataque enemigo (sin defensas)
             var tempDefense = player.PhysicalDefense;
@@ -715,22 +726,44 @@ namespace BotTelegram.RPG.Services
                     player.SkillCooldowns[skill.Id] = skill.Cooldown;
                 }
                 
+                // Calcular probabilidad base una vez
+                var (probability, probDetails) = CalculateSummonProbability(player, MinionType.Skeleton, enemy);
+                
                 var summoned = 0;
+                var failed = 0;
+                var summonDetails = $"🎖️ **Ejército de los Muertos**\n{probDetails}\n\n";
+                
                 for (int i = 0; i < 5; i++)
                 {
                     if (player.ActiveMinions.Count >= player.MaxActiveMinions)
-                        break;
-                    
-                    var message = SummonMinion(player, MinionType.Skeleton);
-                    if (!message.Contains("❌"))
                     {
-                        summoned++;
+                        summonDetails += $"⚠️ Límite de esbirros alcanzado ({player.MaxActiveMinions})\n";
+                        break;
+                    }
+                    
+                    var roll = Random.Shared.NextDouble() * 100.0;
+                    
+                    if (roll <= probability)
+                    {
+                        var message = SummonMinion(player, MinionType.Skeleton);
+                        if (!message.Contains("❌"))
+                        {
+                            summoned++;
+                            summonDetails += $"✅ Esqueleto #{summoned}: Roll {roll:F1}% ≤ {probability:F1}%\n";
+                        }
+                    }
+                    else
+                    {
+                        failed++;
+                        summonDetails += $"❌ Invocación #{i+1} falló: Roll {roll:F1}% > {probability:F1}%\n";
                     }
                 }
                 
+                summonDetails += $"\n📊 **Resultado:** {summoned} exitosos, {failed} fallidos";
+                
                 result.SkillUsed = true;
                 result.SkillName = skill.Name;
-                result.SkillDetails = $"💀 Invocaste **{summoned}** esqueletos del Ejército de los Muertos"; // Army of Dead details
+                result.SkillDetails = summonDetails;
                 TrackSkillUsed(player, skill.Id);
                 AddCombatLog(player, $"✨ {skill.Name}", $"💀 ¡Invocaste {summoned} esqueletos!");
                 
@@ -770,7 +803,41 @@ namespace BotTelegram.RPG.Services
                 player.SkillCooldowns[skill.Id] = skill.Cooldown;
             }
             
+            // Calcular probabilidad de invocación
+            var (probability, probDetails) = CalculateSummonProbability(player, minionType, enemy);
+            var roll = Random.Shared.NextDouble() * 100.0;
+            
+            // Si falla la invocación
+            if (roll > probability)
+            {
+                var failMessage = $"❌ **Invocación Fallida**\n" +
+                                 $"{probDetails}\n" +
+                                 $"🎲 Roll: {roll:F1}% (necesitabas ≤{probability:F1}%)\n" +
+                                 $"💫 La energía se disipa sin éxito\n" +
+                                 $"⚠️ Recursos consumidos: -{skill.ManaCost} Mana, -{skill.StaminaCost} Stamina";
+                
+                result.SkillUsed = true;
+                result.SkillName = skill.Name;
+                result.SkillDetails = failMessage;
+                result.SkillFailureReason = "Invocación fallida (roll)";
+                
+                AddCombatLog(player, $"✨ {skill.Name}", failMessage);
+                
+                // El jugador pierde el turno, pero el enemigo NO ataca (fallo de invocación)
+                ExecuteMinionsTurn(player, enemy, result);
+                CheckCombatEnd(player, enemy, result);
+                
+                return result;
+            }
+            
+            // Invocación exitosa
             var summonMessage = SummonMinion(player, minionType);
+            
+            // Agregar información de probabilidad al mensaje de éxito
+            summonMessage = $"✅ **Invocación Exitosa**\n" +
+                           $"{probDetails}\n" +
+                           $"🎲 Roll: {roll:F1}% ≤ {probability:F1}%\n" +
+                           $"\n{summonMessage}";
             
             result.SkillUsed = true;
             result.SkillName = skill.Name;
@@ -801,6 +868,67 @@ namespace BotTelegram.RPG.Services
                 "Clérigo" => MinionType.WaterElemental,
                 _ => MinionType.FireElemental // Default
             };
+        }
+        
+        /// <summary>
+        /// Calcula la probabilidad de invocar exitosamente un minion
+        /// </summary>
+        private (double probability, string details) CalculateSummonProbability(RpgPlayer player, MinionType type, RpgEnemy enemy)
+        {
+            // Tasas base por tipo de minion
+            double baseProbability = type switch
+            {
+                MinionType.Skeleton => 85.0,
+                MinionType.Zombie => 75.0,
+                MinionType.Ghost => 65.0,
+                MinionType.Lich => 50.0,
+                MinionType.AbyssalHorror => 40.0,
+                MinionType.FireElemental => 70.0,
+                MinionType.WaterElemental => 70.0,
+                MinionType.EarthElemental => 70.0,
+                MinionType.AirElemental => 70.0,
+                _ => 60.0
+            };
+            
+            var details = $"📊 Base: {baseProbability:F1}%";
+            
+            // Modificador de inteligencia (+1% cada 10 INT)
+            double intBonus = player.Intelligence / 10.0;
+            if (intBonus > 0)
+            {
+                details += $" | INT: +{intBonus:F1}%";
+                baseProbability += intBonus;
+            }
+            
+            // Modificador de sabiduría (+1.5% cada 10 WIS)
+            double wisBonus = player.Wisdom / 10.0 * 1.5;
+            if (wisBonus > 0)
+            {
+                details += $" | WIS: +{wisBonus:F1}%";
+                baseProbability += wisBonus;
+            }
+            
+            // Bonus de clase oculta Necromancer
+            if (player.ActiveHiddenClass == "Nigromante" || player.ActiveHiddenClass == "Señor Nigromante")
+            {
+                double necroBonus = player.ActiveHiddenClass == "Señor Nigromante" ? 15.0 : 10.0;
+                details += $" | {player.ActiveHiddenClass}: +{necroBonus:F1}%";
+                baseProbability += necroBonus;
+            }
+            
+            // Penalización por diferencia de nivel (si el enemigo es mucho más fuerte)
+            var levelDiff = enemy.Level - player.Level;
+            if (levelDiff > 0)
+            {
+                double levelPenalty = levelDiff * 2.0;
+                details += $" | Nivel: -{levelPenalty:F1}%";
+                baseProbability -= levelPenalty;
+            }
+            
+            // Límites: mínimo 10%, máximo 95%
+            baseProbability = Math.Max(10.0, Math.Min(95.0, baseProbability));
+            
+            return (baseProbability, details);
         }
         
         /// <summary>

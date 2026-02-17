@@ -434,13 +434,12 @@ namespace BotTelegram.RPG.Services
                 result.ComboBroken = true;
             }
             
-            AddCombatLog(player, "Defender", "🛡️ Postura defensiva");
-            
             // Verificar si está aturdido
             if (player.StatusEffects.Any(e => e.Type == StatusEffectType.Stunned))
             {
                 result.PlayerStunned = true;
                 AddCombatLog(player, "Estado", "⚠️ ATURDIDO - No puedes defenderte bien");
+                AddCombatLog(player, "Defender", "🛡️ Postura defensiva (DEBILITADA)");
                 ProcessStatusEffects(player, enemy, result);
                 
                 // Ataque enemigo con penalización menor
@@ -456,10 +455,28 @@ namespace BotTelegram.RPG.Services
             
             // Bonus de escudo
             var shieldEffect = player.StatusEffects.FirstOrDefault(e => e.Type == StatusEffectType.Shielded);
+            var shieldBonus = 0;
             if (shieldEffect != null)
             {
-                defenseBoost += shieldEffect.Intensity;
+                shieldBonus = shieldEffect.Intensity;
+                defenseBoost += shieldBonus;
             }
+            
+            // Mensaje mejorado de defensa
+            var defenseMessage = $"🛡️ Postura defensiva\n" +
+                                $"📊 Defensa base: {player.PhysicalDefense}\n" +
+                                $"   + Bonus DEX: {player.Dexterity / 2}\n";
+            
+            if (shieldBonus > 0)
+            {
+                defenseMessage += $"   + Bonus escudo: {shieldBonus}\n";
+            }
+            
+            defenseMessage += $"   = Defensa total: {player.PhysicalDefense + defenseBoost}\n";
+            defenseMessage += $"⚡ Costo: 0 Stamina\n";
+            defenseMessage += $"🔄 Reducción: ~{(defenseBoost * 0.5):F1} daño menos";
+            
+            AddCombatLog(player, "Defender", defenseMessage);
             
             // Procesar efectos de estado
             ProcessStatusEffects(player, enemy, result);
@@ -1029,6 +1046,10 @@ namespace BotTelegram.RPG.Services
             // Crear lista de minions que sobrevivieron
             var survivingMinions = new List<Minion>();
             
+            var totalDamageToEnemy = 0;
+            var totalDamageToPlayer = 0;
+            var betrayals = 0;
+            
             foreach (var minion in player.ActiveMinions)
             {
                 // Decrementar turnos
@@ -1037,44 +1058,96 @@ namespace BotTelegram.RPG.Services
                 // Si expiró, eliminar
                 if (minion.TurnsRemaining <= 0)
                 {
-                    log.AppendLine($"💀 {minion.Emoji} **{minion.Name}** desaparece...");
+                    log.AppendLine($"💀 {minion.Emoji} **{minion.Name}** desaparece (duración terminada)...");
                     TrackAction(player, $"minion_expired_{minion.Type.ToString().ToLower()}");
                     continue;
                 }
                 
+                // Calcular probabilidad de golpe (85% base - defensa enemiga)
+                var hitChance = 85.0 - (enemy.PhysicalDefense * 0.3);
+                hitChance = Math.Max(30.0, Math.Min(95.0, hitChance));
+                var hitRoll = Random.Shared.NextDouble() * 100.0;
+                
                 // Si está controlado, ataca al enemigo
                 if (minion.IsControlled)
                 {
-                    var damage = CalculateMinionDamage(minion, enemy);
-                    enemy.HP -= damage;
-                    
-                    log.AppendLine($"{minion.Emoji} **{minion.Name}** ({minion.HP}/{minion.MaxHP} HP) ataca → **{damage}** daño");
-                    TrackAction(player, $"minion_attack_{minion.Type.ToString().ToLower()}");
+                    if (hitRoll <= hitChance)
+                    {
+                        var damage = CalculateMinionDamage(minion, enemy);
+                        enemy.HP -= damage;
+                        totalDamageToEnemy += damage;
+                        
+                        log.AppendLine($"{minion.Emoji} **{minion.Name}** ({minion.HP}/{minion.MaxHP} HP, {minion.TurnsRemaining}t)");
+                        log.AppendLine($"  🎯 Hit: {hitRoll:F1}% ≤ {hitChance:F1}% → **{damage}** daño");
+                        TrackAction(player, $"minion_attack_{minion.Type.ToString().ToLower()}");
+                    }
+                    else
+                    {
+                        log.AppendLine($"{minion.Emoji} **{minion.Name}** ({minion.HP}/{minion.MaxHP} HP, {minion.TurnsRemaining}t)");
+                        log.AppendLine($"  ❌ Fallo: {hitRoll:F1}% > {hitChance:F1}%");
+                    }
                 }
                 else
                 {
                     // NO controlado: 30% ataca al jugador, 70% ataca al enemigo
-                    var roll = _random.Next(0, 100);
+                    var loyaltyRoll = _random.Next(0, 100);
+                    var loyaltyThreshold = 30;
                     
-                    if (roll < 30)
+                    if (loyaltyRoll < loyaltyThreshold)
                     {
-                        // Ataca al jugador
-                        var damage = CalculateMinionDamage(minion, null);
-                        player.HP -= damage;
-                        log.AppendLine($"😱 {minion.Emoji} **{minion.Name}** TE ATACA → **{damage}** daño");
-                        TrackAction(player, "minion_betrayal");
+                        // Traición: ataca al jugador
+                        betrayals++;
+                        
+                        if (hitRoll <= hitChance)
+                        {
+                            var damage = CalculateMinionDamage(minion, null);
+                            player.HP -= damage;
+                            totalDamageToPlayer += damage;
+                            
+                            log.AppendLine($"😱 {minion.Emoji} **{minion.Name}** ({minion.HP}/{minion.MaxHP} HP, {minion.TurnsRemaining}t) ⚠️ NO CONTROLADO");
+                            log.AppendLine($"  🎲 Fidelidad: {loyaltyRoll}% < {loyaltyThreshold}% → ¡TE ATACA!");
+                            log.AppendLine($"  🎯 Hit: {hitRoll:F1}% ≤ {hitChance:F1}% → **{damage}** daño");
+                            TrackAction(player, "minion_betrayal");
+                        }
+                        else
+                        {
+                            log.AppendLine($"😱 {minion.Emoji} **{minion.Name}** ({minion.HP}/{minion.MaxHP} HP, {minion.TurnsRemaining}t) ⚠️ NO CONTROLADO");
+                            log.AppendLine($"  🎲 Fidelidad: {loyaltyRoll}% < {loyaltyThreshold}% → ¡TE ATACA!");
+                            log.AppendLine($"  ❌ Fallo: {hitRoll:F1}% > {hitChance:F1}%");
+                        }
                     }
                     else
                     {
-                        // Ataca al enemigo
-                        var damage = CalculateMinionDamage(minion, enemy);
-                        enemy.HP -= damage;
-                        log.AppendLine($"{minion.Emoji} **{minion.Name}** ataca al enemigo → **{damage}** daño");
-                        TrackAction(player, $"minion_attack_{minion.Type.ToString().ToLower()}");
+                        // Ataca al enemigo (aunque no esté controlado)
+                        if (hitRoll <= hitChance)
+                        {
+                            var damage = CalculateMinionDamage(minion, enemy);
+                            enemy.HP -= damage;
+                            totalDamageToEnemy += damage;
+                            
+                            log.AppendLine($"{minion.Emoji} **{minion.Name}** ({minion.HP}/{minion.MaxHP} HP, {minion.TurnsRemaining}t) ⚠️ NO CONTROLADO");
+                            log.AppendLine($"  🎲 Fidelidad: {loyaltyRoll}% ≥ {loyaltyThreshold}% → Ataca enemigo");
+                            log.AppendLine($"  🎯 Hit: {hitRoll:F1}% ≤ {hitChance:F1}% → **{damage}** daño");
+                            TrackAction(player, $"minion_attack_{minion.Type.ToString().ToLower()}");
+                        }
+                        else
+                        {
+                            log.AppendLine($"{minion.Emoji} **{minion.Name}** ({minion.HP}/{minion.MaxHP} HP, {minion.TurnsRemaining}t) ⚠️ NO CONTROLADO");
+                            log.AppendLine($"  🎲 Fidelidad: {loyaltyRoll}% ≥ {loyaltyThreshold}% → Ataca enemigo");
+                            log.AppendLine($"  ❌ Fallo: {hitRoll:F1}% > {hitChance:F1}%");
+                        }
                     }
                 }
                 
                 survivingMinions.Add(minion);
+            }
+            
+            // Resumen de daño
+            log.AppendLine($"\n📊 **Resumen:**");
+            log.AppendLine($"  ⚔️ Daño al enemigo: **{totalDamageToEnemy}**");
+            if (totalDamageToPlayer > 0)
+            {
+                log.AppendLine($"  💔 Daño recibido de esbirros: **{totalDamageToPlayer}** ({betrayals} traiciones)");
             }
             
             // Actualizar lista de minions
