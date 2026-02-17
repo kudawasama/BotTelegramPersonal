@@ -2104,6 +2104,9 @@ Si quieres que olvide el contexto anterior:
 
             if (data.StartsWith("rpg_equipment_list_"))
             {
+                // Responder al callback INMEDIATAMENTE
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🎒 Cargando inventario...", cancellationToken: ct);
+                
                 var typeKey = data.Replace("rpg_equipment_list_", "");
                 var type = typeKey switch
                 {
@@ -2169,11 +2172,12 @@ Si quieres que olvide el contexto anterior:
             
             if (data.StartsWith("rpg_equip_"))
             {
+                // Responder al callback INMEDIATAMENTE
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⚙️ Equipando...", cancellationToken: ct);
+                
                 var equipmentId = data.Replace("rpg_equip_", "");
                 var result = rpgService.EquipItem(currentPlayer, equipmentId);
                 rpgService.SavePlayer(currentPlayer);
-                
-                await bot.AnswerCallbackQuery(callbackQuery.Id, result.Message, showAlert: false, cancellationToken: ct);
                 var equipmentText = BuildEquipmentMenuText(currentPlayer);
                 var keyboard = BuildEquipmentMenuKeyboard(currentPlayer);
                 
@@ -2250,11 +2254,12 @@ Si quieres que olvide el contexto anterior:
                     return;
                 }
                 
+                // Responder al callback INMEDIATAMENTE (caso éxito)
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "💰 Comprando...", cancellationToken: ct);
+                
                 currentPlayer.Gold -= item.Price;
                 currentPlayer.EquipmentInventory.Add(item.Clone());
                 rpgService.SavePlayer(currentPlayer);
-                
-                await bot.AnswerCallbackQuery(callbackQuery.Id, $"✅ Compraste {item.Name}", cancellationToken: ct);
                 var (shopText, shopKeyboard) = BuildShopMenu(currentPlayer);
                 
                 await bot.EditMessageText(
@@ -2786,6 +2791,9 @@ Si quieres que olvide el contexto anterior:
             // Acción: Meditar
             if (data == "rpg_action_meditate")
             {
+                // Responder al callback INMEDIATAMENTE
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🧘 Meditando...", cancellationToken: ct);
+                
                 var tracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
                 
                 var manaBeforeVar = currentPlayer.Mana;
@@ -2906,6 +2914,9 @@ Si quieres que olvide el contexto anterior:
                     return;
                 }
                 
+                // Responder al callback INMEDIATAMENTE
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🗺️ Explorando...", cancellationToken: ct);
+                
                 rpgService.ConsumeEnergy(currentPlayer, 15);
                 
                 // Generate random enemy
@@ -2952,6 +2963,9 @@ Si quieres que olvide el contexto anterior:
                     await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes suficiente energía (necesitas 20)", cancellationToken: ct);
                     return;
                 }
+                
+                // Responder al callback INMEDIATAMENTE
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🗺️ Aventurando...", cancellationToken: ct);
                 
                 rpgService.ConsumeEnergy(currentPlayer, 20);
                 
@@ -3074,6 +3088,9 @@ Si quieres que olvide el contexto anterior:
                     await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes suficiente energía (necesitas 10)", cancellationToken: ct);
                     return;
                 }
+                
+                // Responder al callback INMEDIATAMENTE
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🏞️ Buscando recursos...", cancellationToken: ct);
                 
                 rpgService.ConsumeEnergy(currentPlayer, 10);
                 var actionTracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
@@ -3703,6 +3720,9 @@ Si quieres que olvide el contexto anterior:
                     await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
                     return;
                 }
+                
+                // Responder al callback INMEDIATAMENTE
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "✨ Usando skill...", cancellationToken: ct);
                 
                 var skillId = data.Replace("rpg_combat_skill_", "");
                 var enemy = currentPlayer.CurrentEnemy;
@@ -4797,15 +4817,12 @@ Responde en español en máximo 2-3 líneas con una estrategia concreta (¿ataca
             // Rest
             if (data == "rpg_rest")
             {
+                // Responder al callback INMEDIATAMENTE
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "😴 Descansando...", cancellationToken: ct);
+                
                 rpgService.RestoreEnergy(currentPlayer, currentPlayer.MaxEnergy);
                 rpgService.RestoreHP(currentPlayer, currentPlayer.MaxHP / 4);
                 rpgService.SavePlayer(currentPlayer);
-                
-                await bot.AnswerCallbackQuery(
-                    callbackQuery.Id,
-                    $"😴 Descansaste. +{currentPlayer.MaxEnergy} Energía, +{currentPlayer.MaxHP / 4} HP",
-                    showAlert: true,
-                    cancellationToken: ct);
                     
                 await bot.DeleteMessage(chatId, messageId, ct);
                 await rpgCommand.ShowMainMenu(bot, chatId, currentPlayer, ct);
@@ -4820,6 +4837,9 @@ Responde en español en máximo 2-3 líneas con una estrategia concreta (¿ataca
                     await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes suficiente energía (necesitas 20)", cancellationToken: ct);
                     return;
                 }
+                
+                // Responder al callback INMEDIATAMENTE
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⚡ Entrenando...", cancellationToken: ct);
                 
                 var tracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
                 
@@ -4901,6 +4921,9 @@ Responde en español en máximo 2-3 líneas con una estrategia concreta (¿ataca
                     return;
                 }
                 
+                // Responder al callback INMEDIATAMENTE
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "💼 Trabajando...", cancellationToken: ct);
+                
                 rpgService.ConsumeEnergy(currentPlayer, 10);
                 currentPlayer.Gold += 30;
                 rpgService.SavePlayer(currentPlayer);
@@ -4910,12 +4933,6 @@ Responde en español en máximo 2-3 líneas con una estrategia concreta (¿ataca
                     currentPlayer.Name,
                     "work_action",
                     $"Worked for +30 gold. Energy: {currentPlayer.Energy}");
-                
-                await bot.AnswerCallbackQuery(
-                    callbackQuery.Id,
-                    "💼 Trabajaste en la taberna. +30 oro",
-                    showAlert: true,
-                    cancellationToken: ct);
                     
                 await bot.DeleteMessage(chatId, messageId, ct);
                 await rpgCommand.ShowMainMenu(bot, chatId, currentPlayer, ct);
