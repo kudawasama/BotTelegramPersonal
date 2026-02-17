@@ -419,6 +419,7 @@ namespace BotTelegram.RPG.Services
             
             int manaRestore = (int)(player.MaxMana * 0.25);
             player.Mana = Math.Min(player.MaxMana, player.Mana + manaRestore);
+            TrackAction(player, "mana_regen", manaRestore); // Track mana regenerado
             
             AddCombatLog(player, "🧘 Meditar", $"💙 +{manaRestore} Mana");
             
@@ -565,6 +566,10 @@ namespace BotTelegram.RPG.Services
             
             player.Mana -= skill.ManaCost;
             player.Stamina -= skill.StaminaCost;
+            if (skill.ManaCost > 0)
+            {
+                TrackAction(player, "mana_spent", skill.ManaCost);
+            }
             if (skill.Cooldown > 0)
             {
                 player.SkillCooldowns[skillId] = skill.Cooldown;
@@ -700,6 +705,10 @@ namespace BotTelegram.RPG.Services
             {
                 player.Mana -= skill.ManaCost;
                 player.Stamina -= skill.StaminaCost;
+                if (skill.ManaCost > 0)
+                {
+                    TrackAction(player, "mana_spent", skill.ManaCost);
+                }
                 
                 if (skill.Cooldown > 0)
                 {
@@ -750,6 +759,10 @@ namespace BotTelegram.RPG.Services
             // Invocar el minion
             player.Mana -= skill.ManaCost;
             player.Stamina -= skill.StaminaCost;
+            if (skill.ManaCost > 0)
+            {
+                TrackAction(player, "mana_spent", skill.ManaCost);
+            }
             
             if (skill.Cooldown > 0)
             {
@@ -1030,6 +1043,14 @@ namespace BotTelegram.RPG.Services
         {
             TrackAction(player, "skill_used");
             TrackAction(player, $"skill_{skillId}");
+            
+            // Tracking especial para invocaciones de no-muertos (req. Necromancer Lord)
+            if (skillId == "summon_skeleton" || skillId == "summon_zombie" || 
+                skillId == "summon_ghost" || skillId == "summon_lich" || 
+                skillId == "army_of_dead" || skillId == "raise_undead")
+            {
+                TrackAction(player, "summon_undead");
+            }
         }
     }
 }

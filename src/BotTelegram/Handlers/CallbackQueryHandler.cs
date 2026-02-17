@@ -4281,8 +4281,19 @@ Responde en español en máximo 2-3 líneas con una estrategia concreta (¿ataca
                 // Responder al callback INMEDIATAMENTE
                 await bot.AnswerCallbackQuery(callbackQuery.Id, "😴 Descansando...", cancellationToken: ct);
                 
+                var tracker = new BotTelegram.RPG.Services.ActionTrackerService(rpgService);
+                
+                // Restaurar recursos
                 rpgService.RestoreEnergy(currentPlayer, currentPlayer.MaxEnergy);
-                rpgService.RestoreHP(currentPlayer, currentPlayer.MaxHP / 4);
+                var hpRestored = currentPlayer.MaxHP / 4;
+                rpgService.RestoreHP(currentPlayer, hpRestored);
+                
+                // Regenerar mana (50% del maná máximo)
+                var manaRestored = (int)(currentPlayer.MaxMana * 0.5);
+                currentPlayer.Mana = Math.Min(currentPlayer.MaxMana, currentPlayer.Mana + manaRestored);
+                tracker.TrackAction(currentPlayer, "mana_regen", manaRestored);
+                tracker.TrackAction(currentPlayer, "rest");
+                
                 rpgService.SavePlayer(currentPlayer);
                     
                 await bot.DeleteMessage(chatId, messageId, ct);
