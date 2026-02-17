@@ -49,7 +49,7 @@ namespace BotTelegram.RPG.Commands
             // Stats principales con active values
             var stats = $@"📊 **ESTADÍSTICAS DETALLADAS**
 
-{classEmoji} **{player.Name}** - {player.Class} Nivel {player.Level}
+{classEmoji} **{EscapeMarkdown(player.Name)}** - {player.Class} Nivel {player.Level}
 ━━━━━━━━━━━━━━━━━━━━━━
 
 💪 **Stats Primarias** (Base → Activo)
@@ -66,7 +66,7 @@ namespace BotTelegram.RPG.Commands
   • Defensa Física: **{player.PhysicalDefense}**
   • Defensa Mágica: **{player.MagicResistance}**
   • Precisión: **{player.Accuracy}**
-  • Evasión: **{player.Evasion}**
+  • Evasión: **{player.Evasion:F1}**
   • Crit Chance: **{player.CriticalChance:F1}%**
 
 ❤️ **Recursos**
@@ -90,7 +90,7 @@ namespace BotTelegram.RPG.Commands
             if (player.EquippedWeaponNew != null)
             {
                 var wpn = player.EquippedWeaponNew;
-                equipment += $"  {wpn.TypeEmoji} **{wpn.Name}** {wpn.RarityEmoji}\n";
+                equipment += $"  {wpn.TypeEmoji} **{EscapeMarkdown(wpn.Name)}** {wpn.RarityEmoji}\n";
                 equipment += $"     Lv.{wpn.RequiredLevel} | ";
                 if (wpn.BonusAttack > 0) equipment += $"+{wpn.BonusAttack} Atk ";
                 if (wpn.BonusMagicPower > 0) equipment += $"+{wpn.BonusMagicPower} MP ";
@@ -98,7 +98,7 @@ namespace BotTelegram.RPG.Commands
             }
             else if (player.EquippedWeapon != null)
             {
-                equipment += $"  🗡️ **{player.EquippedWeapon.Name}** (Legacy)\n";
+                equipment += $"  🗡️ **{EscapeMarkdown(player.EquippedWeapon.Name)}** (Legacy)\n";
             }
             else
             {
@@ -108,7 +108,7 @@ namespace BotTelegram.RPG.Commands
             if (player.EquippedArmorNew != null)
             {
                 var arm = player.EquippedArmorNew;
-                equipment += $"  {arm.TypeEmoji} **{arm.Name}** {arm.RarityEmoji}\n";
+                equipment += $"  {arm.TypeEmoji} **{EscapeMarkdown(arm.Name)}** {arm.RarityEmoji}\n";
                 equipment += $"     Lv.{arm.RequiredLevel} | ";
                 if (arm.BonusDefense > 0) equipment += $"+{arm.BonusDefense} Def ";
                 if (arm.BonusMagicResistance > 0) equipment += $"+{arm.BonusMagicResistance} MR ";
@@ -116,7 +116,7 @@ namespace BotTelegram.RPG.Commands
             }
             else if (player.EquippedArmor != null)
             {
-                equipment += $"  🛡️ **{player.EquippedArmor.Name}** (Legacy)\n";
+                equipment += $"  🛡️ **{EscapeMarkdown(player.EquippedArmor.Name)}** (Legacy)\n";
             }
             else
             {
@@ -126,7 +126,7 @@ namespace BotTelegram.RPG.Commands
             if (player.EquippedAccessoryNew != null)
             {
                 var acc = player.EquippedAccessoryNew;
-                equipment += $"  {acc.TypeEmoji} **{acc.Name}** {acc.RarityEmoji}\n";
+                equipment += $"  {acc.TypeEmoji} **{EscapeMarkdown(acc.Name)}** {acc.RarityEmoji}\n";
                 equipment += $"     Lv.{acc.RequiredLevel} | ";
                 var bonuses = new List<string>();
                 if (acc.BonusStrength > 0) bonuses.Add($"+{acc.BonusStrength} STR");
@@ -137,7 +137,7 @@ namespace BotTelegram.RPG.Commands
             }
             else if (player.EquippedAccessory != null)
             {
-                equipment += $"  💍 **{player.EquippedAccessory.Name}** (Legacy)\n";
+                equipment += $"  💍 **{EscapeMarkdown(player.EquippedAccessory.Name)}** (Legacy)\n";
             }
             else
             {
@@ -187,6 +187,35 @@ namespace BotTelegram.RPG.Commands
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
                 cancellationToken: ct);
+        }
+        
+        /// <summary>
+        /// Escapa caracteres especiales de Markdown para evitar errores de parsing
+        /// </summary>
+        private string EscapeMarkdown(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+            
+            return text
+                .Replace("_", "\\_")
+                .Replace("*", "\\*")
+                .Replace("[", "\\[")
+                .Replace("]", "\\]")
+                .Replace("(", "\\(")
+                .Replace(")", "\\)")
+                .Replace("~", "\\~")
+                .Replace("`", "\\`")
+                .Replace(">", "\\>")
+                .Replace("#", "\\#")
+                .Replace("+", "\\+")
+                .Replace("-", "\\-")
+                .Replace("=", "\\=")
+                .Replace("|", "\\|")
+                .Replace("{", "\\{")
+                .Replace("}", "\\}")
+                .Replace(".", "\\.")
+                .Replace("!", "\\!");
         }
         
         private string GetActionDisplayName(string actionKey)
