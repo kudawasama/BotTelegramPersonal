@@ -137,6 +137,9 @@ namespace BotTelegram.RPG.Models
         public int TotalKills { get; set; } = 0;
         public int TotalDeaths { get; set; } = 0;
         public int TotalGoldEarned { get; set; } = 0;
+        public int BossKills { get; set; } = 0;
+        public long TotalDamageDealt { get; set; } = 0;
+        public string? Username { get; set; } // Telegram username para leaderboard
         
         // ═══════════════════════════════════════
         // STATS DERIVADOS (Calculados)

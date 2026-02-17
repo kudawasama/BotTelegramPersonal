@@ -95,6 +95,15 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/leaderboard") || 
+                message.Text.StartsWith("/rankings") || 
+                message.Text.StartsWith("/top"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando LeaderboardCommand (Rankings Globales)");
+                await new LeaderboardCommand().Execute(bot, message, ct);
+                return;
+            }
+
             Console.WriteLine("   [CommandRouter] → Ejecutando UnknownCommand");
             await new UnknownCommand().Execute(bot, message, ct);
         }

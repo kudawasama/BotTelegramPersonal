@@ -136,6 +136,11 @@ namespace BotTelegram.Handlers
                 {
                     await HandlePetsCallback(bot, callbackQuery, data, ct);
                 }
+                // Leaderboard Callbacks
+                else if (data.StartsWith("leaderboard_"))
+                {
+                    await HandleLeaderboardCallback(bot, callbackQuery, data, ct);
+                }
                 // RPG Callbacks
                 else if (data == "rpg_main" || data.StartsWith("rpg_"))
                 {
@@ -6282,6 +6287,318 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
             var filled = (int)(progress * length);
             var empty = length - filled;
             return new string('█', filled) + new string('░', empty);
+        }
+
+        // ==========================================
+        // LEADERBOARD HANDLERS
+        // ==========================================
+        
+        private static async Task HandleLeaderboardCallback(
+            ITelegramBotClient bot,
+            CallbackQuery callbackQuery,
+            string data,
+            CancellationToken ct)
+        {
+            var chatId = callbackQuery.Message!.Chat.Id;
+            var messageId = callbackQuery.Message.MessageId;
+            var userId = callbackQuery.From.Id;
+
+            // Get required services
+            var rpgService = new BotTelegram.RPG.Services.RpgService();
+            var leaderboardService = new BotTelegram.RPG.Services.LeaderboardService(rpgService);
+            var leaderboardCommand = new BotTelegram.RPG.Commands.LeaderboardCommand();
+
+            // leaderboard_main - Show main dashboard
+            if (data == "leaderboard_main")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "📊 Cargando rankings...", cancellationToken: ct);
+                
+                await leaderboardCommand.ShowMainLeaderboard(bot, chatId, ct);
+                await bot.DeleteMessage(chatId, messageId, ct);
+                return;
+            }
+
+            // leaderboard_level - Top by Level
+            if (data == "leaderboard_level")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⭐ Cargando ranking por nivel...", cancellationToken: ct);
+                
+                var entries = leaderboardService.GetTopByLevel(10);
+                var text = BotTelegram.RPG.Commands.LeaderboardCommand.FormatLeaderboard(entries, "TOP 10 - NIVEL MÁS ALTO", "Nivel");
+                
+                var (rank, total) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.Level);
+                text += $"\n━━━━━━━━━━━━━━━\n📊 **Tu posición:** #{rank} de {total}";
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "leaderboard_main")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // leaderboard_gold - Top by Gold
+            if (data == "leaderboard_gold")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "💰 Cargando ranking por oro...", cancellationToken: ct);
+                
+                var entries = leaderboardService.GetTopByGold(10);
+                var text = BotTelegram.RPG.Commands.LeaderboardCommand.FormatLeaderboard(entries, "TOP 10 - MÁS ORO", "Oro");
+                
+                var (rank, total) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.Gold);
+                text += $"\n━━━━━━━━━━━━━━━\n📊 **Tu posición:** #{rank} de {total}";
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "leaderboard_main")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // leaderboard_kills - Top by Total Kills
+            if (data == "leaderboard_kills")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⚔️ Cargando ranking por kills...", cancellationToken: ct);
+                
+                var entries = leaderboardService.GetTopByKills(10);
+                var text = BotTelegram.RPG.Commands.LeaderboardCommand.FormatLeaderboard(entries, "TOP 10 - MÁS KILLS", "Kills");
+                
+                var (rank, total) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.Kills);
+                text += $"\n━━━━━━━━━━━━━━━\n📊 **Tu posición:** #{rank} de {total}";
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "leaderboard_main")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // leaderboard_boss_kills - Top by Boss Kills
+            if (data == "leaderboard_boss_kills")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "👹 Cargando ranking por jefes...", cancellationToken: ct);
+                
+                var entries = leaderboardService.GetTopByBossKills(10);
+                var text = BotTelegram.RPG.Commands.LeaderboardCommand.FormatLeaderboard(entries, "TOP 10 - MÁS JEFES DERROTADOS", "Jefes");
+                
+                var (rank, total) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.BossKills);
+                text += $"\n━━━━━━━━━━━━━━━\n📊 **Tu posición:** #{rank} de {total}";
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "leaderboard_main")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // leaderboard_damage - Top by Total Damage
+            if (data == "leaderboard_damage")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "💥 Cargando ranking por daño...", cancellationToken: ct);
+                
+                var entries = leaderboardService.GetTopByDamage(10);
+                var text = BotTelegram.RPG.Commands.LeaderboardCommand.FormatLeaderboard(entries, "TOP 10 - MÁS DAÑO TOTAL", "Daño");
+                
+                var (rank, total) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.TotalDamage);
+                text += $"\n━━━━━━━━━━━━━━━\n📊 **Tu posición:** #{rank} de {total}";
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "leaderboard_main")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // leaderboard_pets - Top by Pet Count
+            if (data == "leaderboard_pets")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🐾 Cargando ranking por mascotas...", cancellationToken: ct);
+                
+                var entries = leaderboardService.GetTopByPets(10);
+                var text = BotTelegram.RPG.Commands.LeaderboardCommand.FormatLeaderboard(entries, "TOP 10 - MÁS MASCOTAS", "Mascotas");
+                
+                var (rank, total) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.PetCount);
+                text += $"\n━━━━━━━━━━━━━━━\n📊 **Tu posición:** #{rank} de {total}";
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "leaderboard_main")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // leaderboard_skills - Top by Skills Unlocked
+            if (data == "leaderboard_skills")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "✨ Cargando ranking por habilidades...", cancellationToken: ct);
+                
+                var entries = leaderboardService.GetTopBySkills(10);
+                var text = BotTelegram.RPG.Commands.LeaderboardCommand.FormatLeaderboard(entries, "TOP 10 - MÁS HABILIDADES", "Habilidades");
+                
+                var (rank, total) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.SkillsUnlocked);
+                text += $"\n━━━━━━━━━━━━━━━\n📊 **Tu posición:** #{rank} de {total}";
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "leaderboard_main")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // leaderboard_my_profile - Show personal profile with all rankings
+            if (data == "leaderboard_my_profile")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "👤 Cargando tu perfil...", cancellationToken: ct);
+                
+                var player = rpgService.GetPlayer(userId);
+                if (player == null)
+                {
+                    await bot.EditMessageText(
+                        chatId,
+                        messageId,
+                        "❌ No tienes un personaje RPG creado.\nUsa `/rpg` para empezar tu aventura.",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        cancellationToken: ct);
+                    return;
+                }
+
+                var classEmoji = player.Class switch
+                {
+                    CharacterClass.Warrior => "⚔️",
+                    CharacterClass.Mage => "🔮",
+                    CharacterClass.Ranger => "🏹",
+                    CharacterClass.Assassin => "🗡️",
+                    _ => "🎭"
+                };
+
+                var username = string.IsNullOrEmpty(player.Username) ? player.Name : $"@{player.Username}";
+
+                string text = $"👤 **PERFIL DE {username.ToUpper()}**\n";
+                text += $"{classEmoji} {player.Class} - Nivel {player.Level}\n";
+                text += $"━━━━━━━━━━━━━━━\n\n";
+                text += $"📊 **TUS POSICIONES EN LOS RANKINGS:**\n\n";
+
+                // Get rankings for all categories
+                var (rankLevel, totalLevel) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.Level);
+                var (rankGold, totalGold) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.Gold);
+                var (rankKills, totalKills) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.Kills);
+                var (rankBossKills, totalBossKills) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.BossKills);
+                var (rankDamage, totalDamage) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.TotalDamage);
+                var (rankPets, totalPets) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.PetCount);
+                var (rankSkills, totalSkills) = leaderboardService.GetPlayerRank(userId, BotTelegram.RPG.Models.LeaderboardType.SkillsUnlocked);
+
+                text += $"⭐ **Nivel:** #{rankLevel} de {totalLevel}\n";
+                text += $"💰 **Oro:** #{rankGold} de {totalGold}\n";
+                text += $"⚔️ **Kills:** #{rankKills} de {totalKills}\n";
+                text += $"👹 **Jefes:** #{rankBossKills} de {totalBossKills}\n";
+                text += $"💥 **Daño:** #{rankDamage} de {totalDamage}\n";
+                text += $"🐾 **Mascotas:** #{rankPets} de {totalPets}\n";
+                text += $"✨ **Habilidades:** #{rankSkills} de {totalSkills}\n";
+
+                text += $"\n━━━━━━━━━━━━━━━\n";
+                text += $"💎 **Estadísticas Actuales:**\n";
+                text += $"❤️ HP: {player.HP}/{player.MaxHP}\n";
+                text += $"⚡ Mana: {player.Mana}/{player.MaxMana}\n";
+                text += $"💰 Oro: {player.Gold}\n";
+                text += $"⚔️ Kills: {player.TotalKills}\n";
+                text += $"👹 Jefes: {player.BossKills}\n";
+                text += $"💥 Daño Total: {player.TotalDamageDealt}\n";
+                text += $"🐾 Mascotas: {player.PetInventory.Count}\n";
+                text += $"✨ Habilidades: {player.UnlockedSkills.Count}\n";
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "leaderboard_main")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
         }
     }
 }

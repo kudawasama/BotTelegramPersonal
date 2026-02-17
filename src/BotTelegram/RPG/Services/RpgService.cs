@@ -147,6 +147,32 @@ namespace BotTelegram.RPG.Services
             }
         }
         
+        public List<RpgPlayer> GetAllPlayers()
+        {
+            lock (_fileLock)
+            {
+                try
+                {
+                    if (!File.Exists(_filePath))
+                    {
+                        Console.WriteLine("[RpgService] Archivo no existe aún, retornando lista vacía");
+                        return new List<RpgPlayer>();
+                    }
+
+                    var json = File.ReadAllText(_filePath);
+                    var players = JsonSerializer.Deserialize<List<RpgPlayer>>(json) ?? new List<RpgPlayer>();
+                    
+                    Console.WriteLine($"[RpgService] Cargados {players.Count} jugadores desde archivo");
+                    return players;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[RpgService] ❌ Error al cargar todos los jugadores: {ex.Message}");
+                    return new List<RpgPlayer>();
+                }
+            }
+        }
+        
         public RpgPlayer CreateNewPlayer(long chatId, string name, CharacterClass characterClass)
         {
             var player = new RpgPlayer

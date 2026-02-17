@@ -160,22 +160,26 @@ Solo los más valientes pueden enfrentar este destino...
                 },
                 new[]
                 {
+                    InlineKeyboardButton.WithCallbackData("� Rankings", "leaderboard_main"),
                     InlineKeyboardButton.WithCallbackData("🌟 Progreso", "rpg_progress"),
-                    InlineKeyboardButton.WithCallbackData("💎 Pasivas", "rpg_passives"),
-                    InlineKeyboardButton.WithCallbackData("📈 Counters", "rpg_counters")
+                    InlineKeyboardButton.WithCallbackData("💎 Pasivas", "rpg_passives")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("📈 Counters", "rpg_counters"),
+                    InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_skills"),
+                    InlineKeyboardButton.WithCallbackData("🎯 Combos", "rpg_combo_skills")
                 },
                 // HABILIDADES Y COMBATE
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_skills"),
-                    InlineKeyboardButton.WithCallbackData("🎯 Combos", "rpg_combo_skills"),
-                    InlineKeyboardButton.WithCallbackData("🛡️ Entrenar", "rpg_train")
+                    InlineKeyboardButton.WithCallbackData("🛡️ Entrenar", "rpg_train"),
+                    InlineKeyboardButton.WithCallbackData("💬 Chat IA", "rpg_ai_chat"),
+                    InlineKeyboardButton.WithCallbackData("⚙️ Opciones", "rpg_options")
                 },
                 // UTILIDADES
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("💬 Chat IA", "rpg_ai_chat"),
-                    InlineKeyboardButton.WithCallbackData("⚙️ Opciones", "rpg_options"),
                     InlineKeyboardButton.WithCallbackData("🏠 Salir", "start")
                 }
             });
