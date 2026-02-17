@@ -3575,31 +3575,50 @@ Si quieres que olvide el contexto anterior:
             // Pets menu (exploration)
             if (data == "rpg_pets_menu")
             {
+                // Mostrar menú con información del jugador
+                var totalPets = currentPlayer?.PetInventory?.Count ?? 0;
+                var activePets = currentPlayer?.ActivePets?.Count ?? 0;
+                var maxActive = currentPlayer?.MaxActivePets ?? 2;
+                
+                var text = "🐾 **MASCOTAS**\n\n";
+                text += $"📊 **Domadas:** {totalPets}\n";
+                text += $"⚔️ **Activas:** {activePets}/{maxActive}\n\n";
+                text += "**Sistema de Mascotas:**\n";
+                text += "• Doma bestias en combate\n";
+                text += "• Aumenta vínculo (bond) acariciándolas\n";
+                text += "• Evoluciónalas con niveles y bond\n";
+                text += "• Úsalas en combate para ayudarte\n\n";
+                
+                if (totalPets == 0)
+                {
+                    text += "💡 **¿Cómo domar?**\n";
+                    text += "1. Explora y encuentra bestias\n";
+                    text += "2. Reduce su HP <50%\n";
+                    text += "3. Usa el botón 🐾 Domar\n\n";
+                }
+                
+                text += "🏞️ Busca bestias explorando el mundo.";
+                
                 await bot.EditMessageText(
                     chatId,
                     messageId,
-                    "🐾 **MASCOTAS**\n\n" +
-                    "💡 Gestiona tus mascotas domadas.\n\n" +
-                    "**Sistema de Mascotas:**\n" +
-                    "• Doma bestias en combate\n" +
-                    "• Aumenta vínculo (bond) acariciándolas\n" +
-                    "• Evoluciónalas con niveles y bond\n" +
-                    "• Úsalas en combate para ayudarte\n\n" +
-                    "🏞️ Busca bestias explorando el mundo.",
+                    text,
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
                     {
                         new[]
                         {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Ver Mascotas", "rpg_pets_list"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🍖 Alimentar", "rpg_pets_feed")
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Ver Mascotas", "pets_list_all"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Gestionar Activas", "pets_manage_active")
                         },
                         new[]
                         {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔄 Cambiar Activas", "rpg_pets_swap")
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🍖 Alimentar", "pets_feed_menu"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⭐ Evolucionar", "pets_evolve_menu")
                         },
                         new[]
                         {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📖 Guía", "pets_guide"),
                             Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
                         }
                     }),
