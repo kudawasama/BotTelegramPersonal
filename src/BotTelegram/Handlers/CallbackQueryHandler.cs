@@ -5753,8 +5753,53 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 
                 await bot.AnswerCallbackQuery(callbackQuery.Id, message, cancellationToken: ct);
                 
-                // Recargar menú de gestión
-                await HandlePetsCallback(bot, callbackQuery, "pets_manage_active", ct);
+                // Reconstruir menú de gestión con datos actualizados
+                var text = "⚔️ **GESTIONAR MASCOTAS ACTIVAS**\n\n";
+                text += $"Límite: {player.ActivePets?.Count ?? 0}/{player.MaxActivePets}\n\n";
+                
+                if (player.PetInventory == null || player.PetInventory.Count == 0)
+                {
+                    text += "❌ No tienes mascotas para activar.";
+                }
+                else
+                {
+                    text += "Selecciona una mascota para activar/desactivar:\n\n";
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var emoji = GetPetEmoji(pet.Species);
+                        var isActive = player.ActivePets?.Contains(pet) ?? false;
+                        var status = isActive ? "✅ ACTIVA" : "💤 Inactiva";
+                        text += $"{emoji} {pet.Name} (Lv.{pet.Level}) - {status}\n";
+                    }
+                }
+                
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                if (player.PetInventory != null)
+                {
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var isActive = player.ActivePets?.Contains(pet) ?? false;
+                        var buttonText = isActive ? $"❌ Desactivar {pet.Name}" : $"✅ Activar {pet.Name}";
+                        rows.Add(new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData(buttonText, $"pets_toggle_{pet.Id}")
+                        });
+                    }
+                }
+                
+                rows.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "pets_main")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows),
+                    cancellationToken: ct);
                 return;
             }
             
@@ -5829,8 +5874,55 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 
                 await bot.AnswerCallbackQuery(callbackQuery.Id, message, showAlert: true, cancellationToken: ct);
                 
-                // Recargar menú de alimentación
-                await HandlePetsCallback(bot, callbackQuery, "pets_feed_menu", ct);
+                // Reconstruir menú de alimentación con datos actualizados
+                var text = "🍖 **ALIMENTAR MASCOTAS**\n\n";
+                text += $"💰 Oro disponible: **{player.Gold}**\n";
+                text += "Costo: **5 oro** por mascota\n\n";
+                text += "💚 Beneficios:\n";
+                text += "• +20 puntos de Bond\n";
+                text += "• +30% HP restaurado\n";
+                text += "• Mejora la lealtad\n\n";
+                
+                if (player.PetInventory == null || player.PetInventory.Count == 0)
+                {
+                    text += "❌ No tienes mascotas para alimentar.";
+                }
+                else
+                {
+                    text += "Selecciona una mascota:\n\n";
+                    foreach (var petItem in player.PetInventory.Take(8))
+                    {
+                        var emoji = GetPetEmoji(petItem.Species);
+                        var hpPercent = (double)petItem.HP / petItem.MaxHP * 100;
+                        text += $"{emoji} {petItem.Name} - Bond: {petItem.Bond}/1000 (HP: {hpPercent:F0}%)\n";
+                    }
+                }
+                
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                if (player.PetInventory != null && player.Gold >= 5)
+                {
+                    foreach (var petItem in player.PetInventory.Take(8))
+                    {
+                        rows.Add(new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🍖 Alimentar {petItem.Name}", $"pets_feed_{petItem.Id}")
+                        });
+                    }
+                }
+                
+                rows.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "pets_main")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows),
+                    cancellationToken: ct);
                 return;
             }
             
@@ -5964,8 +6056,105 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                     await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No se pudo evolucionar la mascota", cancellationToken: ct);
                 }
                 
-                // Recargar menú de evolución
-                await HandlePetsCallback(bot, callbackQuery, "pets_evolve_menu", ct);
+                // Reconstruir menú de evolución con datos actualizados
+                var text = "⭐ **EVOLUCIONAR MASCOTAS**\n\n";
+                text += "Las mascotas pueden evolucionar 3 veces:\n";
+                text += "🌱 Básica → 🌿 Avanzada → 🌳 Definitiva\n\n";
+                
+                var canEvolveCount = 0;
+                if (player.PetInventory != null)
+                {
+                    foreach (var petCheck in player.PetInventory)
+                    {
+                        var speciesData = BotTelegram.RPG.Services.PetDatabase.GetSpeciesData(petCheck.Species);
+                        if (speciesData?.EvolutionRequirements != null)
+                        {
+                            var reqs = speciesData.EvolutionRequirements;
+                            if (petCheck.CheckEvolution(reqs.Bond, reqs.Kills, reqs.BossKills))
+                            {
+                                canEvolveCount++;
+                            }
+                        }
+                    }
+                }
+                
+                if (canEvolveCount > 0)
+                {
+                    text += $"✨ Tienes **{canEvolveCount}** mascota(s) lista(s) para evolucionar!\n\n";
+                }
+                else
+                {
+                    text += "❌ Ninguna mascota lista para evolucionar aún.\n\n";
+                }
+                
+                if (player.PetInventory != null && player.PetInventory.Count > 0)
+                {
+                    text += "**TUS MASCOTAS:**\n\n";
+                    foreach (var petItem in player.PetInventory.Take(8))
+                    {
+                        var emoji = GetPetEmoji(petItem.Species);
+                        var speciesData = BotTelegram.RPG.Services.PetDatabase.GetSpeciesData(petItem.Species);
+                        
+                        text += $"{emoji} **{petItem.Name}** - Etapa {petItem.EvolutionStage}/3\n";
+                        
+                        if (speciesData?.EvolutionRequirements != null && petItem.EvolutionStage < 3)
+                        {
+                            var reqs = speciesData.EvolutionRequirements;
+                            var canEvolve = petItem.CheckEvolution(reqs.Bond, reqs.Kills, reqs.BossKills);
+                            
+                            if (canEvolve)
+                            {
+                                text += $"   ✅ LISTA PARA EVOLUCIONAR!\n";
+                            }
+                            else
+                            {
+                                text += $"   Necesita: Lv.{petItem.GetRequiredLevelForEvolution()} ";
+                                text += $"| Bond: {petItem.Bond}/{reqs.Bond} ";
+                                text += $"| Kills: {petItem.TotalKills}/{reqs.Kills}\n";
+                            }
+                        }
+                        else if (petItem.EvolutionStage >= 3)
+                        {
+                            text += $"   🌟 FORMA FINAL\n";
+                        }
+                        
+                        text += "\n";
+                    }
+                }
+                
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                if (player.PetInventory != null)
+                {
+                    foreach (var petItem in player.PetInventory.Take(8))
+                    {
+                        var speciesData = BotTelegram.RPG.Services.PetDatabase.GetSpeciesData(petItem.Species);
+                        if (speciesData?.EvolutionRequirements != null && petItem.EvolutionStage < 3)
+                        {
+                            var reqs = speciesData.EvolutionRequirements;
+                            if (petItem.CheckEvolution(reqs.Bond, reqs.Kills, reqs.BossKills))
+                            {
+                                rows.Add(new[]
+                                {
+                                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"⭐ Evolucionar {petItem.Name}", $"pets_evolve_{petItem.Id}")
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                rows.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "pets_main")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows),
+                    cancellationToken: ct);
                 return;
             }
             
