@@ -60,6 +60,13 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/rpgstats") || message.Text.StartsWith("/stats"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando RpgStatsCommand (Estadísticas Detalladas)");
+                await new RpgStatsCommand().Execute(bot, message, ct);
+                return;
+            }
+
             if (message.Text.StartsWith("/leaderboard") || 
                 message.Text.StartsWith("/rankings") || 
                 message.Text.StartsWith("/top"))

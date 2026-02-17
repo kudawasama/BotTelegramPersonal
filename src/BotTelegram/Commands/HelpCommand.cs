@@ -48,6 +48,7 @@ namespace BotTelegram.Commands
 
 *🎮 JUEGO RPG:*
 `/rpg` - Inicia tu aventura
+`/rpgstats` o `/stats` - Ver estadísticas completas
 • Explora mazmorras
 • Combate enemigos
 • Sube de nivel

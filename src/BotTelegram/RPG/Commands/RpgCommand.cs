@@ -290,69 +290,6 @@ Bienvenido, **{playerName}**. Elige tu camino:
                 cancellationToken: ct);
         }
         
-        public async Task ShowStats(ITelegramBotClient bot, long chatId, RpgPlayer player, CancellationToken ct)
-        {
-            var classEmoji = player.Class switch
-            {
-                CharacterClass.Warrior => "⚔️",
-                CharacterClass.Mage => "🔮",
-                CharacterClass.Rogue => "🗡️",
-                CharacterClass.Cleric => "✨",
-                _ => "👤"
-            };
-            
-            var weaponInfo = player.EquippedWeapon != null 
-                ? $"{player.EquippedWeapon.Emoji} {player.EquippedWeapon.Name} (+{player.EquippedWeapon.AttackBonus})"
-                : "❌ Sin arma";
-                
-            var armorInfo = player.EquippedArmor != null
-                ? $"{player.EquippedArmor.Emoji} {player.EquippedArmor.Name} (+{player.EquippedArmor.DefenseBonus})"
-                : "❌ Sin armadura";
-            
-            var text = $@"📊 **ESTADÍSTICAS**
-
-{classEmoji} **{player.Name}**
-🎖️ Nivel: {player.Level}
-⭐ XP: {player.XP}/{player.XPNeeded}
-
-**Atributos:**
-💪 Fuerza: {player.Strength}
-🧠 Inteligencia: {player.Intelligence}
-🎯 Destreza: {player.Dexterity}
-
-**Combate:**
-⚔️ Ataque Total: {player.TotalAttack}
-🛡️ Defensa Total: {player.TotalDefense}
-❤️ Vida: {player.HP}/{player.MaxHP}
-⚡ Energía: {player.Energy}/{player.MaxEnergy}
-
-**Equipamiento:**
-🗡️ Arma: {weaponInfo}
-🛡️ Armadura: {armorInfo}
-
-**Recursos:**
-💰 Oro: {player.Gold}
-🎒 Inventario: {player.Inventory.Count}/20 items
-
-📍 Ubicación: {player.CurrentLocation}
-🕐 Última acción: {GetTimeAgo(player.LastActionTime)}";
-            
-            var keyboard = new InlineKeyboardMarkup(new[]
-            {
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
-                }
-            });
-            
-            await bot.SendMessage(
-                chatId,
-                text,
-                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                replyMarkup: keyboard,
-                cancellationToken: ct);
-        }
-        
         private string GetXPBar(RpgPlayer player)
         {
             // Asegurar que XP no sea negativo para la barra
