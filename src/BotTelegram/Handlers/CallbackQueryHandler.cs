@@ -35,8 +35,12 @@ namespace BotTelegram.Handlers
 
             try
             {
-                // Responder al callback para quitar el loading
-                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                // Responder al callback genérico SOLO si NO es RPG/Pets
+                // Los handlers RPG/Pets tienen sus propios mensajes específicos
+                if (!data.StartsWith("rpg_") && !data.StartsWith("pets_"))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                }
 
                 // Procesar diferentes tipos de callbacks
                 if (data == "start")
