@@ -750,6 +750,13 @@ namespace BotTelegram.RPG.Services
             else if (result.SkillUsed)
             {
                 narrative += $"✨ **{result.SkillName}**\n";
+                
+                // Mostrar detalles adicionales de la skill (ej: invocaciones)
+                if (!string.IsNullOrEmpty(result.SkillDetails))
+                {
+                    narrative += $"{result.SkillDetails}\n";
+                }
+                
                 if (result.SkillDamage > 0)
                 {
                     var hits = result.SkillHits > 1 ? $" ({result.SkillHits} golpes)" : "";
@@ -1206,6 +1213,7 @@ namespace BotTelegram.RPG.Services
         public bool SkillUsed { get; set; }
         public string? SkillName { get; set; }
         public string? SkillFailureReason { get; set; }
+        public string? SkillDetails { get; set; } // Detalles adicionales (invocaciones, efectos especiales)
         public int SkillDamage { get; set; }
         public int SkillHits { get; set; }
         public int SkillHealed { get; set; }

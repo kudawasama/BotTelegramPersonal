@@ -730,6 +730,7 @@ namespace BotTelegram.RPG.Services
                 
                 result.SkillUsed = true;
                 result.SkillName = skill.Name;
+                result.SkillDetails = $"💀 Invocaste **{summoned}** esqueletos del Ejército de los Muertos"; // Army of Dead details
                 TrackSkillUsed(player, skill.Id);
                 AddCombatLog(player, $"✨ {skill.Name}", $"💀 ¡Invocaste {summoned} esqueletos!");
                 
@@ -773,6 +774,7 @@ namespace BotTelegram.RPG.Services
             
             result.SkillUsed = true;
             result.SkillName = skill.Name;
+            result.SkillDetails = summonMessage; // Mostrar detalles de la invocación
             TrackSkillUsed(player, skill.Id);
             AddCombatLog(player, $"✨ {skill.Name}", summonMessage);
             
