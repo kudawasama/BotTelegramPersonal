@@ -32,12 +32,6 @@ Console.WriteLine($"🌐 Entorno: {(Environment.GetEnvironmentVariable("FLY_APP_
 Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 Console.WriteLine("🤖 Bot iniciado correctamente");
 
-// Inicializar scheduler en background
-Console.WriteLine("📅 Inicializando ReminderScheduler...");
-var scheduler = new ReminderScheduler(bot);
-scheduler.Start();
-Console.WriteLine("✅ ReminderScheduler iniciado");
-
 // Inicializar API web
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();

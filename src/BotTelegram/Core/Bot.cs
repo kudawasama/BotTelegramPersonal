@@ -32,9 +32,6 @@ namespace BotTelegram.Core
                 receiverOptions
             );
 
-            var scheduler = new ReminderScheduler(_client);
-            scheduler.Start();
-
 
             Console.WriteLine("Presiona ENTER para detener el bot");
             Console.ReadLine();

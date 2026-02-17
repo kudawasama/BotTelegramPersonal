@@ -22,20 +22,18 @@ namespace BotTelegram.Commands
                 details: "Menu de ayuda solicitado"
             );
             
-            // Crear botones con todas las acciones
+            // Crear botones con acciones principales
             var keyboard = new InlineKeyboardMarkup(new[]
             {
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("⏰ Crear", "show_remember_help"),
-                    InlineKeyboardButton.WithCallbackData("📋 Lista", "list"),
-                    InlineKeyboardButton.WithCallbackData("🕐 Rápidos", "quick_times")
+                    InlineKeyboardButton.WithCallbackData("🎮 Juego RPG", "rpg_main"),
+                    InlineKeyboardButton.WithCallbackData("💬 Chat IA", "rpg_ai_chat")
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("✏️ Editar", "help_edit"),
-                    InlineKeyboardButton.WithCallbackData("🗑️ Eliminar", "help_delete"),
-                    InlineKeyboardButton.WithCallbackData("🔄 Recurrente", "help_recur")
+                    InlineKeyboardButton.WithCallbackData("🏆 Rankings", "leaderboard_main"),
+                    InlineKeyboardButton.WithCallbackData("🐾 Mascotas", "pets_main")
                 },
                 new[]
                 {
@@ -46,30 +44,36 @@ namespace BotTelegram.Commands
             await client.SendMessage(
                 chatId: message.Chat.Id,
                 text:
-@"📚 *AYUDA - Bot de Recordatorios*
+@"📚 *AYUDA - Bot RPG con IA*
 
-*✅ CREAR RECORDATORIOS:*
-`/remember <texto> en <tiempo>`
+*🎮 JUEGO RPG:*
+`/rpg` - Inicia tu aventura
+• Explora mazmorras
+• Combate enemigos
+• Sube de nivel
+• Desbloquea habilidades
+• Doma mascotas
+• Mejora tu equipo
 
-*📝 Ejemplos:*
-• `/remember Tomar agua en 10 min`
-• `/remember Reunión mañana a las 14:30`
-• `/remember Viaje en 3 días`
-• `/remember Llamar mamá hoy a las 19:00`
+*💬 CHAT CON IA:*
+`/chat <mensaje>` - Conversa con la IA
+• Pregunta lo que quieras
+• Obtén ayuda en el juego
+• Descubre secretos
 
-*🕐 Tiempos soportados:*
-• `en 10 segundos` / `en 5 min`
-• `en 2 horas` / `en 3 días`
-• `hoy a las 18:00`
-• `mañana a las 09:00`
+*🏆 SISTEMA SOCIAL:*
+`/leaderboard` o `/rankings` - Rankings globales
+• Top jugadores por nivel
+• Rankings de oro, kills, jefes
+• Perfil personal con estadísticas
 
-*📋 GESTIONAR:*
-• `/list` - Ver todos los recordatorios
-• `/delete <id>` - Eliminar uno
-• `/edit <id> <texto>` - Modificar
-• `/recur <id> <tipo>` - Hacer recurrente
+*🐾 MASCOTAS:*
+`/pets` - Gestiona tus mascotas
+• Ve tus compañeros
+• Entrena y mejora
+• Lleva a combate
 
-*🎯 Click en los botones abajo para acciones rápidas*",
+*🎯 Click en los botones abajo para acceder rápidamente*",
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
                 cancellationToken: ct

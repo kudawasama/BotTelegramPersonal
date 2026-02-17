@@ -8,8 +8,6 @@ namespace BotTelegram.Handlers
 {
     public static class CallbackQueryHandler
     {
-        private static readonly ReminderService _reminderService = new();
-
         public static async Task Handle(
             ITelegramBotClient bot,
             CallbackQuery callbackQuery,
@@ -47,10 +45,6 @@ namespace BotTelegram.Handlers
                 {
                     await HandleStartCallback(bot, chatId, messageId, ct);
                 }
-                else if (data == "menu_reminders")
-                {
-                    await HandleRemindersMenuCallback(bot, chatId, messageId, ct);
-                }
                 else if (data == "menu_ai")
                 {
                     await HandleAIMenuCallback(bot, chatId, messageId, ct);
@@ -59,61 +53,9 @@ namespace BotTelegram.Handlers
                 {
                     await HandleInfoMenuCallback(bot, chatId, messageId, ct);
                 }
-                else if (data == "show_remember_help")
-                {
-                    await HandleShowRememberHelpCallback(bot, chatId, messageId, ct);
-                }
-                else if (data == "quick_times")
-                {
-                    await HandleQuickTimesCallback(bot, chatId, messageId, ct);
-                }
                 else if (data == "help")
                 {
                     await HandleHelpCallback(bot, chatId, messageId, ct);
-                }
-                else if (data == "list")
-                {
-                    await HandleListCallback(bot, chatId, messageId, ct, page: 1);
-                }
-                else if (data.StartsWith("list_page:"))
-                {
-                    var pageStr = data.Replace("list_page:", "");
-                    if (int.TryParse(pageStr, out var page))
-                    {
-                        await HandleListCallback(bot, chatId, messageId, ct, page);
-                    }
-                }
-                else if (data == "list_refresh")
-                {
-                    await HandleListCallback(bot, chatId, messageId, ct, page: 1);
-                }
-                else if (data.StartsWith("help_"))
-                {
-                    await HandleSpecificHelpCallback(bot, chatId, messageId, data, ct);
-                }
-                else if (data.StartsWith("delete:"))
-                {
-                    await HandleDeleteCallback(bot, chatId, messageId, data, ct);
-                }
-                else if (data.StartsWith("confirm_delete:"))
-                {
-                    await HandleConfirmDeleteCallback(bot, callbackQuery, data, ct);
-                }
-                else if (data.StartsWith("cancel_delete:"))
-                {
-                    await HandleCancelDeleteCallback(bot, chatId, messageId, data, ct);
-                }
-                else if (data.StartsWith("recur:"))
-                {
-                    await HandleRecurCallback(bot, chatId, messageId, data, ct);
-                }
-                else if (data.StartsWith("set_recur:"))
-                {
-                    await HandleSetRecurCallback(bot, callbackQuery, data, ct);
-                }
-                else if (data.StartsWith("quick_remind:"))
-                {
-                    await HandleQuickRemindCallback(bot, chatId, messageId, data, ct);
                 }
                 else if (data.StartsWith("faq_"))
                 {
@@ -177,20 +119,18 @@ namespace BotTelegram.Handlers
             int messageId,
             CancellationToken ct)
         {
-            // Crear botones con todas las acciones
+            // Crear botones con acciones principales
             var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
             {
                 new[]
                 {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⏰ Crear", "show_remember_help"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Lista", "list"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🕐 Rápidos", "quick_times")
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Juego RPG", "rpg_main"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💬 Chat IA", "rpg_ai_chat")
                 },
                 new[]
                 {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("✏️ Editar", "help_edit"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗑️ Eliminar", "help_delete"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔄 Recurrente", "help_recur")
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏆 Rankings", "leaderboard_main"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Mascotas", "pets_main")
                 },
                 new[]
                 {
@@ -198,30 +138,36 @@ namespace BotTelegram.Handlers
                 }
             });
 
-            var helpText = @"📚 *AYUDA - Bot de Recordatorios*
+            var helpText = @"📚 *AYUDA - Bot RPG con IA*
 
-*✅ CREAR RECORDATORIOS:*
-`/remember <texto> en <tiempo>`
+*🎮 JUEGO RPG:*
+`/rpg` - Inicia tu aventura
+• Explora mazmorras
+• Combate enemigos
+• Sube de nivel
+• Desbloquea habilidades
+• Doma mascotas
+• Mejora tu equipo
 
-*📝 Ejemplos:*
-• `/remember Tomar agua en 10 min`
-• `/remember Reunión mañana a las 14:30`
-• `/remember Viaje en 3 días`
-• `/remember Llamar mamá hoy a las 19:00`
+*💬 CHAT CON IA:*
+`/chat <mensaje>` - Conversa con la IA
+• Pregunta lo que quieras
+• Obtén ayuda en el juego
+• Descubre secretos
 
-*🕐 Tiempos soportados:*
-• `en 10 segundos` / `en 5 min`
-• `en 2 horas` / `en 3 días`
-• `hoy a las 18:00`
-• `mañana a las 09:00`
+*🏆 SISTEMA SOCIAL:*
+`/leaderboard` o `/rankings` - Rankings globales
+• Top jugadores por nivel
+• Rankings de oro, kills, jefes
+• Perfil personal con estadísticas
 
-*📋 GESTIONAR:*
-• `/list` - Ver todos los recordatorios
-• `/delete <id>` - Eliminar uno
-• `/edit <id> <texto>` - Modificar
-• `/recur <id> <tipo>` - Hacer recurrente
+*🐾 MASCOTAS:*
+`/pets` - Gestiona tus mascotas
+• Ve tus compañeros
+• Entrena y mejora
+• Lleva a combate
 
-*🎯 Click en los botones abajo para acciones rápidas*";
+*🎯 Click en los botones abajo para acceder rápidamente*";
 
             await bot.EditMessageText(
                 chatId, 
@@ -242,11 +188,7 @@ namespace BotTelegram.Handlers
             {
                 new[]
                 {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📅 RECORDATORIOS", "menu_reminders")
-                },
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🤖 INTELIGENCIA ARTIFICIAL", "menu_ai")
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 JUEGO RPG", "menu_ai")
                 },
                 new[]
                 {
@@ -257,51 +199,13 @@ namespace BotTelegram.Handlers
             await bot.EditMessageText(
                 chatId,
                 messageId,
-                "👋 *¡Bienvenido al Bot Multifuncional!*\n\n" +
-                "✨ Tu asistente personal todo-en-uno:\n" +
-                "• Recordatorios inteligentes\n" +
+                "👋 *¡Bienvenido al Bot RPG con IA!*\n\n" +
+                "✨ Tu aventura épica comienza aquí:\n" +
+                "• Juego RPG inmersivo con combate por turnos\n" +
                 "• Chat con IA avanzada\n" +
-                "• Juego RPG inmersivo\n\n" +
+                "• Sistema de mascotas y habilidades\n" +
+                "• Rankings globales y competencia\n\n" +
                 "🎯 *Selecciona una categoría:*",
-                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                replyMarkup: keyboard,
-                cancellationToken: ct);
-        }
-
-        private static async Task HandleRemindersMenuCallback(
-            ITelegramBotClient bot,
-            long chatId,
-            int messageId,
-            CancellationToken ct)
-        {
-            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-            {
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⏰ Crear Recordatorio", "show_remember_help"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Ver Lista", "list")
-                },
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🕐 Atajos Rápidos", "quick_times"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("✏️ Gestionar", "help")
-                },
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
-                }
-            });
-
-            await bot.EditMessageText(
-                chatId,
-                messageId,
-                "📅 *MENÚ DE RECORDATORIOS*\n\n" +
-                "Gestiona tus recordatorios de forma eficiente:\n\n" +
-                "⏰ *Crear* - Nuevo recordatorio\n" +
-                "📋 *Ver Lista* - Todos tus recordatorios\n" +
-                "🕐 *Atajos Rápidos* - Tiempos predefinidos\n" +
-                "✏️ *Gestionar* - Editar/Eliminar/Recurrencia\n\n" +
-                "💡 *Tip:* Usa `/remember <texto> en <tiempo>` desde cualquier momento",
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
                 cancellationToken: ct);
@@ -325,6 +229,11 @@ namespace BotTelegram.Handlers
                 },
                 new[]
                 {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏆 Rankings", "leaderboard_main"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Mascotas", "pets_main")
+                },
+                new[]
+                {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
                 }
             });
@@ -332,7 +241,7 @@ namespace BotTelegram.Handlers
             await bot.EditMessageText(
                 chatId,
                 messageId,
-                "🤖 *INTELIGENCIA ARTIFICIAL*\n\n" +
+                "🤖 *JUEGO RPG CON IA*\n\n" +
                 "Potenciado por Groq (Llama 3.1 8B):\n\n" +
                 "💬 *Chat con IA*\n" +
                 "   Conversaciones naturales e inteligentes\n" +
@@ -340,6 +249,9 @@ namespace BotTelegram.Handlers
                 "🎮 *Juego RPG - Leyenda del Void*\n" +
                 "   Aventura épica generada con IA\n" +
                 "   14 clases, combate por turnos, narrativas dinámicas\n\n" +
+                "🏆 *Sistema Social*\n" +
+                "   Rankings globales y competencia\n" +
+                "   Sistema de mascotas y habilidades\n\n" +
                 "⚡ *Características:*\n" +
                 "• Respuestas contextuales\n" +
                 "• Memoria de conversación\n" +
@@ -382,490 +294,10 @@ namespace BotTelegram.Handlers
                 "💡 *Comandos disponibles:*\n" +
                 "`/start` - Menú principal\n" +
                 "`/help` - Ayuda rápida\n" +
-                "`/remember` - Crear recordatorio\n" +
-                "`/list` - Ver recordatorios\n" +
-                "`/chat` - IA conversacional\n" +
-                "`/rpg` - Juego RPG",
-                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                replyMarkup: keyboard,
-                cancellationToken: ct);
-        }
-
-        private static async Task HandleShowRememberHelpCallback(
-            ITelegramBotClient bot,
-            long chatId,
-            int messageId,
-            CancellationToken ct)
-        {
-            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-            {
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🕐 Usar Atajos Rápidos", "quick_times")
-                },
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Ver Lista", "list"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú", "start")
-                }
-            });
-
-            await bot.EditMessageText(
-                chatId,
-                messageId,
-                "⏰ *CREAR RECORDATORIO*\n\n" +
-                "📝 *Escribe tu recordatorio así:*\n" +
-                "`/remember <texto> en <tiempo>`\n\n" +
-                "💡 *Ejemplos:*\n" +
-                "• `/remember Tomar agua en 10 min`\n" +
-                "• `/remember Reunión mañana a las 14:30`\n" +
-                "• `/remember Llamar a Juan en 2 horas`\n" +
-                "• `/remember Comprar comida hoy a las 19:00`\n" +
-                "• `/remember Vacaciones en 30 días`\n\n" +
-                "🕐 *Tiempos soportados:*\n" +
-                "• `en X segundos/min/horas/días`\n" +
-                "• `hoy a las HH:MM`\n" +
-                "• `mañana a las HH:MM`\n\n" +
-                "⚡ *O usa Atajos Rápidos para tiempos comunes*",
-                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                replyMarkup: keyboard,
-                cancellationToken: ct);
-        }
-
-        private static async Task HandleQuickTimesCallback(
-            ITelegramBotClient bot,
-            long chatId,
-            int messageId,
-            CancellationToken ct)
-        {
-            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-            {
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔥 5 minutos", "quick_remind:5min"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⏱️ 15 minutos", "quick_remind:15min")
-                },
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🕐 1 hora", "quick_remind:1h"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🕑 3 horas", "quick_remind:3h")
-                },
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📅 Mañana 9 AM", "quick_remind:tomorrow9"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🌙 Hoy 20:00", "quick_remind:today20")
-                },
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("✏️ Escribir manualmente", "show_remember_help"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú", "start")
-                }
-            });
-
-            await bot.EditMessageText(
-                chatId,
-                messageId,
-                "🕐 *ATAJOS RÁPIDOS*\n\n" +
-                "Selecciona un tiempo y luego escribe qué recordar:\n\n" +
-                "🔥 Ideal para tareas urgentes\n" +
-                "📅 Planifica para mañana\n" +
-                "🌙 Recordatorios nocturnos",
-                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                replyMarkup: keyboard,
-                cancellationToken: ct);
-        }
-
-        private static async Task HandleSpecificHelpCallback(
-            ITelegramBotClient bot,
-            long chatId,
-            int messageId,
-            string data,
-            CancellationToken ct)
-        {
-            var helpType = data.Replace("help_", "");
-            string helpText = "";
-            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-            {
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📋 Ver Lista", "list"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("❓ Ayuda", "help")
-                },
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
-                }
-            });
-
-            switch (helpType)
-            {
-                case "edit":
-                    helpText = "✏️ *EDITAR RECORDATORIO*\n\n" +
-                              "Para modificar un recordatorio:\n" +
-                              "`/edit <id> <nuevo texto>`\n\n" +
-                              "📝 *Ejemplo:*\n" +
-                              "`/edit abc123 Llamar a María en lugar de Juan`\n\n" +
-                              "💡 *Nota:* El ID lo ves con `/list`";
-                    break;
-                case "delete":
-                    helpText = "🗑️ *ELIMINAR RECORDATORIO*\n\n" +
-                              "Para eliminar un recordatorio:\n" +
-                              "`/delete <id>`\n\n" +
-                              "📝 *Ejemplo:*\n" +
-                              "`/delete abc123`\n\n" +
-                              "💡 *Nota:* También puedes usar el botón 🗑️ en `/list`";
-                    break;
-                case "recur":
-                    helpText = "🔄 *RECORDATORIOS RECURRENTES*\n\n" +
-                              "Haz que un recordatorio se repita:\n" +
-                              "`/recur <id> <tipo>`\n\n" +
-                              "📝 *Tipos disponibles:*\n" +
-                              "• `daily` - Todos los días\n" +
-                              "• `weekly` - Una vez por semana\n" +
-                              "• `monthly` - Una vez al mes\n" +
-                              "• `yearly` - Una vez al año\n" +
-                              "• `none` - Desactivar recurrencia\n\n" +
-                              "💡 *Ejemplo:* `/recur abc123 daily`";
-                    break;
-                default:
-                    helpText = "❓ Ayuda no encontrada";
-                    break;
-            }
-
-            await bot.EditMessageText(
-                chatId,
-                messageId,
-                helpText,
-                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                replyMarkup: keyboard,
-                cancellationToken: ct);
-        }
-
-        private static async Task HandleListCallback(
-            ITelegramBotClient bot,
-            long chatId,
-            int messageId,
-            CancellationToken ct,
-            int page = 1)
-        {
-            const int PAGE_SIZE = 5;
-            
-            var reminders = _reminderService.GetAll()
-                .Where(r => r.ChatId == chatId && !r.Notified)
-                .OrderBy(r => r.DueAt)
-                .ToList();
-
-            if (!reminders.Any())
-            {
-                var emptyKeyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-                {
-                    new[]
-                    {
-                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
-                    }
-                });
-                await bot.SendMessage(chatId, "📭 No tienes recordatorios pendientes.", 
-                    replyMarkup: emptyKeyboard, cancellationToken: ct);
-                return;
-            }
-            
-            // Paginación
-            var totalPages = (int)Math.Ceiling(reminders.Count / (double)PAGE_SIZE);
-            if (totalPages == 0) totalPages = 1;
-            if (page < 1) page = 1;
-            if (page > totalPages) page = totalPages;
-            
-            var remindersPagina = reminders
-                .Skip((page - 1) * PAGE_SIZE)
-                .Take(PAGE_SIZE)
-                .ToList();
-
-            var text = $"📋 *TUS RECORDATORIOS PENDIENTES*\n📊 Página {page}/{totalPages}\n\n";
-            var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
-
-            foreach (var r in remindersPagina)
-            {
-                var recurrenceStr = r.Recurrence != Models.RecurrenceType.None ? $" [🔄 {r.Recurrence}]" : "";
-                text += $"🔹 `{r.Id}`\n⏰ {r.DueAt:dd/MM HH:mm} - {r.Text}{recurrenceStr}\n\n";
-
-                // Agregar botones para este recordatorio
-                buttons.Add(new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🗑️ {r.Id}", $"delete:{r.Id}"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🔄 Recurrente", $"recur:{r.Id}")
-                });
-            }
-            
-            // Botones de navegación de páginas
-            if (totalPages > 1)
-            {
-                var navButtons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
-                
-                if (page > 1)
-                {
-                    navButtons.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("◀️ Anterior", $"list_page:{page - 1}"));
-                }
-                
-                navButtons.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"📝 {page}/{totalPages}", "list_refresh"));
-                
-                if (page < totalPages)
-                {
-                    navButtons.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("Siguiente ▶️", $"list_page:{page + 1}"));
-                }
-                
-                buttons.Add(navButtons.ToArray());
-            }
-
-            // Agregar botón de menú al final
-            buttons.Add(new[]
-            {
-                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
-            });
-
-            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons);
-            
-            // Crear mensaje NUEVO en lugar de editar
-            await bot.SendMessage(
-                chatId, 
-                text, 
-                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                replyMarkup: keyboard,
-                cancellationToken: ct);
-        }
-
-        private static async Task HandleDeleteCallback(
-            ITelegramBotClient bot,
-            long chatId,
-            int messageId,
-            string data,
-            CancellationToken ct)
-        {
-            var reminderId = data.Replace("delete:", "");
-            var reminders = _reminderService.GetAll();
-            var reminder = reminders.FirstOrDefault(r => r.Id == reminderId && r.ChatId == chatId);
-
-            if (reminder == null)
-            {
-                await bot.EditMessageText(chatId, messageId, $"❌ No encontré un recordatorio con ID: {reminderId}", cancellationToken: ct);
-                return;
-            }
-
-            // Mostrar confirmación
-            var text = $"⚠️ ¿Estás seguro de eliminar este recordatorio?\n\n📝 {reminder.Text}\n⏰ {reminder.DueAt:dd/MM HH:mm}";
-            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-            {
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("✅ Sí, eliminar", $"confirm_delete:{reminderId}"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("❌ Cancelar", $"cancel_delete:{reminderId}")
-                }
-            });
-
-            await bot.EditMessageText(chatId, messageId, text, replyMarkup: keyboard, cancellationToken: ct);
-        }
-
-        private static async Task HandleConfirmDeleteCallback(
-            ITelegramBotClient bot,
-            CallbackQuery callbackQuery,
-            string data,
-            CancellationToken ct)
-        {
-            var reminderId = data.Replace("confirm_delete:", "");
-            var chatId = callbackQuery.Message!.Chat.Id;
-            var messageId = callbackQuery.Message.MessageId;
-
-            var reminders = _reminderService.GetAll();
-            var reminder = reminders.FirstOrDefault(r => r.Id == reminderId && r.ChatId == chatId);
-
-            if (reminder == null)
-            {
-                await bot.EditMessageText(chatId, messageId, $"❌ No encontré un recordatorio con ID: {reminderId}", cancellationToken: ct);
-                return;
-            }
-
-            reminders.Remove(reminder);
-            _reminderService.UpdateAll(reminders);
-
-            await bot.EditMessageText(
-                chatId,
-                messageId,
-                $"✅ Recordatorio eliminado:\n📝 {reminder.Text}",
-                cancellationToken: ct);
-
-            // Mostrar un mensaje de feedback con animación
-            await bot.AnswerCallbackQuery(callbackQuery.Id, "✅ Recordatorio eliminado", cancellationToken: ct);
-
-            Console.WriteLine($"   [CallbackQueryHandler] ✅ Recordatorio {reminderId} eliminado");
-        }
-
-        private static async Task HandleCancelDeleteCallback(
-            ITelegramBotClient bot,
-            long chatId,
-            int messageId,
-            string data,
-            CancellationToken ct)
-        {
-            await bot.EditMessageText(chatId, messageId, "❌ Eliminación cancelada. Usa /list para ver tus recordatorios.", cancellationToken: ct);
-        }
-
-        private static async Task HandleRecurCallback(
-            ITelegramBotClient bot,
-            long chatId,
-            int messageId,
-            string data,
-            CancellationToken ct)
-        {
-            var reminderId = data.Replace("recur:", "");
-            var reminders = _reminderService.GetAll();
-            var reminder = reminders.FirstOrDefault(r => r.Id == reminderId && r.ChatId == chatId);
-
-            if (reminder == null)
-            {
-                await bot.EditMessageText(chatId, messageId, $"❌ No encontré un recordatorio con ID: {reminderId}", cancellationToken: ct);
-                return;
-            }
-
-            // Mostrar opciones de recurrencia
-            var text = $"🔄 Selecciona la recurrencia para:\n\n📝 {reminder.Text}\n⏰ {reminder.DueAt:dd/MM HH:mm}\n\n🔁 Recurrencia actual: {reminder.Recurrence}";
-            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-            {
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📅 Diaria", $"set_recur:{reminderId}:Daily"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📆 Semanal", $"set_recur:{reminderId}:Weekly")
-                },
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Mensual", $"set_recur:{reminderId}:Monthly"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗓️ Anual", $"set_recur:{reminderId}:Yearly")
-                },
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("❌ Sin recurrencia", $"set_recur:{reminderId}:None")
-                }
-            });
-
-            await bot.EditMessageText(chatId, messageId, text, replyMarkup: keyboard, cancellationToken: ct);
-        }
-
-        private static async Task HandleSetRecurCallback(
-            ITelegramBotClient bot,
-            CallbackQuery callbackQuery,
-            string data,
-            CancellationToken ct)
-        {
-            var parts = data.Replace("set_recur:", "").Split(':');
-            if (parts.Length != 2)
-            {
-                await bot.SendMessage(callbackQuery.Message!.Chat.Id, "❌ Error procesando la recurrencia.", cancellationToken: ct);
-                return;
-            }
-
-            var reminderId = parts[0];
-            var recurrenceType = parts[1];
-            var chatId = callbackQuery.Message!.Chat.Id;
-            var messageId = callbackQuery.Message.MessageId;
-
-            var reminders = _reminderService.GetAll();
-            var reminder = reminders.FirstOrDefault(r => r.Id == reminderId && r.ChatId == chatId);
-
-            if (reminder == null)
-            {
-                await bot.EditMessageText(chatId, messageId, $"❌ No encontré un recordatorio con ID: {reminderId}", cancellationToken: ct);
-                return;
-            }
-
-            // Actualizar recurrencia
-            if (Enum.TryParse<Models.RecurrenceType>(recurrenceType, out var recurrence))
-            {
-                reminder.Recurrence = recurrence;
-                _reminderService.UpdateAll(reminders);
-
-                var recurrenceIcon = recurrence switch
-                {
-                    Models.RecurrenceType.Daily => "📅",
-                    Models.RecurrenceType.Weekly => "📆",
-                    Models.RecurrenceType.Monthly => "📊",
-                    Models.RecurrenceType.Yearly => "🗓️",
-                    _ => "❌"
-                };
-
-                await bot.EditMessageText(
-                    chatId,
-                    messageId,
-                    $"✅ Recurrencia actualizada: {recurrenceIcon} {recurrence}\n\n📝 {reminder.Text}\n⏰ {reminder.DueAt:dd/MM HH:mm}",
-                    cancellationToken: ct);
-
-                await bot.AnswerCallbackQuery(callbackQuery.Id, $"✅ Recurrencia: {recurrence}", cancellationToken: ct);
-
-                Console.WriteLine($"   [CallbackQueryHandler] ✅ Recurrencia actualizada para {reminderId}: {recurrence}");
-            }
-            else
-            {
-                await bot.EditMessageText(chatId, messageId, "❌ Tipo de recurrencia inválido.", cancellationToken: ct);
-            }
-        }
-
-        private static async Task HandleQuickRemindCallback(
-            ITelegramBotClient bot,
-            long chatId,
-            int messageId,
-            string data,
-            CancellationToken ct)
-        {
-            var timeCode = data.Replace("quick_remind:", "");
-            string timeText = "";
-            string commandExample = "";
-
-            switch (timeCode)
-            {
-                case "5min":
-                    timeText = "5 minutos";
-                    commandExample = "/remember Tarea urgente en 5 min";
-                    break;
-                case "15min":
-                    timeText = "15 minutos";
-                    commandExample = "/remember Revisar correo en 15 min";
-                    break;
-                case "1h":
-                    timeText = "1 hora";
-                    commandExample = "/remember Llamada importante en 1 hora";
-                    break;
-                case "3h":
-                    timeText = "3 horas";
-                    commandExample = "/remember Preparar cena en 3 horas";
-                    break;
-                case "tomorrow9":
-                    timeText = "mañana a las 09:00";
-                    commandExample = "/remember Reunión proyecto mañana a las 09:00";
-                    break;
-                case "today20":
-                    timeText = "hoy a las 20:00";
-                    commandExample = "/remember Ver serie favorita hoy a las 20:00";
-                    break;
-                default:
-                    timeText = "tiempo desconocido";
-                    commandExample = "/remember <texto> en <tiempo>";
-                    break;
-            }
-
-            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
-            {
-                new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Otros tiempos", "quick_times"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
-                }
-            });
-
-            await bot.EditMessageText(
-                chatId,
-                messageId,
-                $"⏰ *Tiempo seleccionado: {timeText}*\n\n" +
-                $"📝 *Ahora escribe tu recordatorio así:*\n" +
-                $"`{commandExample}`\n\n" +
-                $"💡 *Formato:*\n" +
-                $"`/remember <tu texto> en {timeText}`",
+                "`/rpg` - Juego RPG\n" +
+                "`/pets` - Gestionar mascotas\n" +
+                "`/leaderboard` - Rankings\n" +
+                "`/chat` - IA conversacional",
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
                 cancellationToken: ct);

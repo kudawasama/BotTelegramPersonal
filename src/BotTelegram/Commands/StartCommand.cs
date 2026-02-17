@@ -29,11 +29,7 @@ namespace BotTelegram.Commands
             {
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("📅 RECORDATORIOS", "menu_reminders")
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("🤖 INTELIGENCIA ARTIFICIAL", "menu_ai")
+                    InlineKeyboardButton.WithCallbackData("🎮 JUEGO RPG", "menu_ai")
                 },
                 new[]
                 {
@@ -43,11 +39,12 @@ namespace BotTelegram.Commands
 
             await client.SendMessage(
                 chatId: message.Chat.Id,
-                text: "👋 *¡Bienvenido al Bot Multifuncional!*\n\n" +
-                      "✨ Tu asistente personal todo-en-uno:\n" +
-                      "• Recordatorios inteligentes\n" +
+                text: "👋 *¡Bienvenido al Bot RPG con IA!*\n\n" +
+                      "✨ Tu aventura épica comienza aquí:\n" +
+                      "• Juego RPG inmersivo con combate por turnos\n" +
                       "• Chat con IA avanzada\n" +
-                      "• Juego RPG inmersivo\n\n" +
+                      "• Sistema de mascotas y habilidades\n" +
+                      "• Rankings globales y competencia\n\n" +
                       "🎯 *Selecciona una categoría:*",
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
