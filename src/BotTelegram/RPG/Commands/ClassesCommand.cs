@@ -41,10 +41,12 @@ namespace BotTelegram.RPG.Commands
             text.AppendLine("━━━━━━━━━━━━━━━━━━━━");
             text.AppendLine();
 
-            // Clase activa
+            // Clase activa con sus bonos aplicados
             var activeEmoji = player.ClassEmoji;
             var activeName = GetClassName(player.Class);
+            var activeBonus = ClassBonusService.GetBonusDescription(player.ActiveClassId);
             text.AppendLine($"**CLASE ACTIVA:** {activeEmoji} {activeName}");
+            text.AppendLine($"🎁 Bonos activos: {activeBonus}");
             text.AppendLine($"👤 Nivel {player.Level} | 🔓 {unlockedIds.Count + 1} clases desbloqueadas");
             text.AppendLine();
 
@@ -66,7 +68,9 @@ namespace BotTelegram.RPG.Commands
                     if (isUnlocked)
                     {
                         var activeTag = isActive ? " ◄ ACTIVA" : "";
+                        var bonus = ClassBonusService.GetBonusDescription(def.ClassId);
                         text.AppendLine($"  ✅ {def.Emoji} **{def.Name}**{activeTag}");
+                        text.AppendLine($"      🎁 {bonus}");
                     }
                     else if (progress > 0 || canUnlock)
                     {

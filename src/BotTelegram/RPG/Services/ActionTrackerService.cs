@@ -98,7 +98,7 @@ namespace BotTelegram.RPG.Services
         }
         
         /// <summary>
-        /// FASE 4: Cambia la clase activa del jugador
+        /// FASE 4: Cambia la clase activa del jugador y aplica los bonos de stats correspondientes
         /// </summary>
         public bool EquipClass(RpgPlayer player, string classId)
         {
@@ -106,7 +106,10 @@ namespace BotTelegram.RPG.Services
             
             var def = ClassUnlockDatabase.GetAllClassDefinitions()
                 .FirstOrDefault(d => d.ClassId == classId);
-            
+
+            // Aplicar bonos de stats (quita anteriores, aplica nuevos)
+            ClassBonusService.ApplyClass(player, classId);
+
             player.ActiveClassId = classId;
             
             if (def != null)

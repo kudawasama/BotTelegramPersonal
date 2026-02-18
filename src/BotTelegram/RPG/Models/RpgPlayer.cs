@@ -121,6 +121,16 @@ namespace BotTelegram.RPG.Models
         
         /// <summary>ID de la clase actualmente equipada (clase activa)</summary>
         public string ActiveClassId { get; set; } = "adventurer";
+
+        // ═══════════════════════════════════════
+        // CLASS BONUS STATS (aplicados al equipar clase)
+        // ═══════════════════════════════════════
+        public int ClassBonusStr { get; set; } = 0;
+        public int ClassBonusInt { get; set; } = 0;
+        public int ClassBonusDex { get; set; } = 0;
+        public int ClassBonusCon { get; set; } = 0;
+        public int ClassBonusWis { get; set; } = 0;
+        public int ClassBonusCha { get; set; } = 0;
         
         // ═══════════════════════════════════════
         // FSM STATE MACHINE (FASE 6)
@@ -179,55 +189,55 @@ namespace BotTelegram.RPG.Models
         public int PhysicalAttack => GetPhysicalAttack();
         
         /// <summary>
-        /// STR Activo = Base + Equipment
+        /// STR Activo = Base + Equipment + Class Bonus
         /// </summary>
         [JsonIgnore]
-        public int ActiveStrength => Strength + 
+        public int ActiveStrength => Strength + ClassBonusStr +
             (EquippedWeaponNew?.BonusStrength ?? 0) + 
             (EquippedArmorNew?.BonusStrength ?? 0) + 
             (EquippedAccessoryNew?.BonusStrength ?? 0);
         
         /// <summary>
-        /// INT Activo = Base + Equipment
+        /// INT Activo = Base + Equipment + Class Bonus
         /// </summary>
         [JsonIgnore]
-        public int ActiveIntelligence => Intelligence + 
+        public int ActiveIntelligence => Intelligence + ClassBonusInt +
             (EquippedWeaponNew?.BonusIntelligence ?? 0) + 
             (EquippedArmorNew?.BonusIntelligence ?? 0) + 
             (EquippedAccessoryNew?.BonusIntelligence ?? 0);
         
         /// <summary>
-        /// DEX Activo = Base + Equipment
+        /// DEX Activo = Base + Equipment + Class Bonus
         /// </summary>
         [JsonIgnore]
-        public int ActiveDexterity => Dexterity + 
+        public int ActiveDexterity => Dexterity + ClassBonusDex +
             (EquippedWeaponNew?.BonusDexterity ?? 0) + 
             (EquippedArmorNew?.BonusDexterity ?? 0) + 
             (EquippedAccessoryNew?.BonusDexterity ?? 0);
         
         /// <summary>
-        /// CON Activo = Base + Equipment
+        /// CON Activo = Base + Equipment + Class Bonus
         /// </summary>
         [JsonIgnore]
-        public int ActiveConstitution => Constitution + 
+        public int ActiveConstitution => Constitution + ClassBonusCon +
             (EquippedWeaponNew?.BonusConstitution ?? 0) + 
             (EquippedArmorNew?.BonusConstitution ?? 0) + 
             (EquippedAccessoryNew?.BonusConstitution ?? 0);
         
         /// <summary>
-        /// WIS Activo = Base + Equipment
+        /// WIS Activo = Base + Equipment + Class Bonus
         /// </summary>
         [JsonIgnore]
-        public int ActiveWisdom => Wisdom + 
+        public int ActiveWisdom => Wisdom + ClassBonusWis +
             (EquippedWeaponNew?.BonusWisdom ?? 0) + 
             (EquippedArmorNew?.BonusWisdom ?? 0) + 
             (EquippedAccessoryNew?.BonusWisdom ?? 0);
         
         /// <summary>
-        /// CHA Activo = Base + Equipment
+        /// CHA Activo = Base + Equipment + Class Bonus
         /// </summary>
         [JsonIgnore]
-        public int ActiveCharisma => Charisma + 
+        public int ActiveCharisma => Charisma + ClassBonusCha +
             (EquippedWeaponNew?.BonusCharisma ?? 0) + 
             (EquippedArmorNew?.BonusCharisma ?? 0) + 
             (EquippedAccessoryNew?.BonusCharisma ?? 0);

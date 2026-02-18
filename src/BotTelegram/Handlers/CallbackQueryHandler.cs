@@ -1810,20 +1810,59 @@ Bienvenido a {player.CurrentLocation}
                 return;
             }
 
+            // ═══════════════════════════════════════════════════════════════
+            // TIENDA — ShopCommand (rpg_shop, shop_buy, shop_sell, shop_buy_item:, shop_sell_item:, shop_sell_equip:)
+            // ═══════════════════════════════════════════════════════════════
             if (data == "rpg_shop")
             {
-                var (shopText, shopKeyboard) = BuildShopMenu(currentPlayer);
-                
-                await bot.EditMessageText(
-                    chatId,
-                    messageId,
-                    shopText,
-                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                    replyMarkup: shopKeyboard,
-                    cancellationToken: ct);
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                await BotTelegram.RPG.Commands.ShopCommand.ShowShopMain(bot, chatId, currentPlayer, ct, messageId);
                 return;
             }
-            
+
+            if (data == "shop_buy")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                await BotTelegram.RPG.Commands.ShopCommand.ShowBuyMenu(bot, chatId, currentPlayer, ct, messageId);
+                return;
+            }
+
+            if (data == "shop_sell")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                await BotTelegram.RPG.Commands.ShopCommand.ShowSellMenu(bot, chatId, currentPlayer, ct, messageId);
+                return;
+            }
+
+            if (data.StartsWith("shop_buy_item:"))
+            {
+                var shopItemId = data["shop_buy_item:".Length..];
+                var invSvc = new BotTelegram.RPG.Services.InventoryService(rpgService);
+                await BotTelegram.RPG.Commands.ShopCommand.BuyItem(bot, chatId, currentPlayer, shopItemId, invSvc, ct, messageId, callbackQuery.Id);
+                return;
+            }
+
+            if (data.StartsWith("shop_sell_item:"))
+            {
+                var itemId = data["shop_sell_item:".Length..];
+                var invSvc = new BotTelegram.RPG.Services.InventoryService(rpgService);
+                var (ok, msg) = invSvc.SellItem(currentPlayer, itemId);
+                await bot.AnswerCallbackQuery(callbackQuery.Id, ok ? "💰 Vendido" : "❌ Error", cancellationToken: ct);
+                await BotTelegram.RPG.Commands.ShopCommand.ShowSellMenu(bot, chatId, currentPlayer, ct, messageId);
+                return;
+            }
+
+            if (data.StartsWith("shop_sell_equip:"))
+            {
+                var equipId = data["shop_sell_equip:".Length..];
+                var invSvc = new BotTelegram.RPG.Services.InventoryService(rpgService);
+                var (ok, msg) = invSvc.SellEquipment(currentPlayer, equipId);
+                await bot.AnswerCallbackQuery(callbackQuery.Id, ok ? "💰 Vendido" : "❌ Error", cancellationToken: ct);
+                await BotTelegram.RPG.Commands.ShopCommand.ShowSellMenu(bot, chatId, currentPlayer, ct, messageId);
+                return;
+            }
+
+            // ─── legacy rpg_shop_buy_ (equipo de EquipmentDatabase) ──────
             if (data.StartsWith("rpg_shop_buy_"))
             {
                 var itemId = data.Replace("rpg_shop_buy_", "");
