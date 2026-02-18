@@ -9,7 +9,7 @@
 ✅ Fase 1: Mejoras de Combate             [██████████] 100%
 ✅ Fase 2: Sistema de Mapas y Zonas       [██████████] 100%
 ⏸️ Fase 3: Sistema de Mazmorras          [░░░░░░░░░░]   0%
-⏸️ Fase 3.5: Leveling Mascotas/Minions   [░░░░░░░░░░]   0%
+✅ Fase 3.5: Leveling Mascotas/Minions   [██████████] 100% ← COMPLETADA
 ⏸️ Fase 4: Reestructuración de Clases    [░░░░░░░░░░]   0%
 ✅ Fase 5: Refactorización UI/UX          [██████████] 100% ← COMPLETADA (5.1✅ 5.2✅ 5.3✅ 5.4✅)
 ⏸️ Fase 6: Máquina de Estados FSM        [░░░░░░░░░░]   0%
@@ -718,6 +718,70 @@ Lv 20: Evolución (cambia de tipo/apariencia)
 - `src/BotTelegram/RPG/Services/RpgCombatService.cs`
 - `src/BotTelegram/RPG/Commands/CompanionsCommand.cs` (nuevo)
 
+---
+
+### ✅ IMPLEMENTACIÓN COMPLETADA (Commit: 41897c1)
+
+**Cambios Realizados:**
+
+1. **RpgPet.cs**
+   - ✅ Agregada propiedad `CombatsParticipated`
+   - ✅ Implementado método `GainExperience(int xp)` retorna bool si levelup
+   - ✅ Implementado método `LevelUp()` con stat scaling:
+     - Stage 1: +5% stats por nivel
+     - Stage 2: +8% stats por nivel
+     - Stage 3: +12% stats por nivel
+   - ✅ Bonificaciones especiales en niveles 5, 10, 15
+
+2. **Minion.cs**
+   - ✅ Agregadas propiedades: Level, Experience, ExperienceNeeded, CombatsSurvived, TotalDamageDealt, Kills, IsPermanent
+   - ✅ Implementado método `GainExperience(int xp)`
+   - ✅ Implementado método `LevelUp()`:
+     - +10% HP por nivel
+     - +5% Attack por nivel
+     - +3% Defense por nivel
+   - ✅ Bonificaciones en niveles 5, 10, 15
+
+3. **RpgCombatService.cs**
+   - ✅ Agregadas propiedades en CombatResult:
+     - `List<string> PetLevelUps`
+     - `List<string> MinionLevelUps`
+   - ✅ Actualizado `GetCombatNarrative()` para mostrar levelups después de victoria
+
+4. **RpgCombatService.Actions.cs**
+   - ✅ Actualizado `ApplyVictoryRewards()` con lógica de distribución de XP:
+     - **Pets:** 50 base + 100 kill bonus + 500 boss bonus
+     - **Minions:** 30 survival + 150 participation + 300 boss bonus
+   - ✅ Tracking de `CombatsParticipated`, `TotalKills`, `BossKills` para pets
+   - ✅ Tracking de `CombatsSurvived`, `Kills` para minions
+   - ✅ Detección y display de levelups en narrativa
+
+5. **CompanionsCommand.cs (NUEVO)**
+   - ✅ Comando `/companions` para ver todos los compañeros
+   - ✅ Muestra mascotas activas con:
+     - Level, HP, Attack, Defense
+     - XP con barra de progreso
+     - Estadísticas: CombatsParticipated, TotalKills, BossKills
+   - ✅ Muestra minions activos con:
+     - Level, HP, Attack
+     - XP con barra de progreso
+     - Estadísticas: CombatsSurvived, Kills, TotalDamageDealt
+   - ✅ Muestra mascotas en descanso (inventario)
+   - ✅ Botones: Alimentar, Entrenar, Evolucionar, Gestionar
+
+6. **CommandRouter.cs**
+   - ✅ Registrado comando `/companions` y `/compañeros`
+
+**Resultados:**
+- 🎯 Sistema completamente funcional
+- 🎮 Feedback visual de levelups en combate
+- 📊 Comando dedicado para gestión de compañeros
+- 🔥 450+ líneas de código implementadas
+- ✅ Compilación exitosa sin errores
+
+**Siguiente Fase:** FASE 3 - Sistema de Mazmorras
+
+---
 ---
 
 ## <a name="fase-5"></a>🔥 FASE 5: REFACTORIZACIÓN UI/UX (CRÍTICA) (10-12 horas)
