@@ -103,6 +103,35 @@ namespace BotTelegram.RPG.Services
                 };
             }
             
+            // ═══ ENCUENTRO CON JEFE (raro) ═══
+            // Probabilidad base 3%, +1% por cada 10 niveles del jugador (max 8%)
+            // Solo disponible para jugadores Lv 5+ y zonas no seguras
+            var bossChance = 0.03 + Math.Min(0.05, player.Level / 100.0);
+            bool isBossEncounter = player.Level >= 5 && _random.NextDouble() < bossChance;
+            
+            if (isBossEncounter)
+            {
+                var bossLevel = Math.Max(player.Level, zone.MaxEnemyLevel);
+                var boss = _rpgService.GenerateEnemy(bossLevel, EnemyDifficulty.Boss);
+                
+                if (boss != null)
+                {
+                    return new ExplorationResult
+                    {
+                        Type = ExplorationResultType.Combat,
+                        Enemy = boss,
+                        Message = $"💀 **⚠️ ¡ENCUENTRO CON JEFE!**\n\n" +
+                                 $"{boss.Emoji} **{boss.Name}** (Nivel {boss.Level})\n" +
+                                 $"❤️ {boss.HP}/{boss.MaxHP} HP\n" +
+                                 $"⚔️ Ataque: {boss.Attack} | 🔮 Magia: {boss.MagicPower}\n" +
+                                 $"🛡️ Defensa: {boss.PhysicalDefense}\n\n" +
+                                 $"⚠️ *¡Este enemigo es extremadamente peligroso!*\n" +
+                                 $"🔑 *Derrotarlo puede dar una Llave de Mazmorra*\n" +
+                                 $"📍 {zone.Name}"
+                    };
+                }
+            }
+            
             // Determinar dificultad basada en nivel de zona
             EnemyDifficulty difficulty;
             if (zone.MinEnemyLevel <= 5)
