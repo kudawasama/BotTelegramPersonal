@@ -2508,42 +2508,19 @@ Bienvenido a {player.CurrentLocation}
                     
                     currentPlayer.IsInCombat = true;
                     currentPlayer.CurrentEnemy = enemy;
-                    rpgService.SavePlayer(currentPlayer);
                     
-                    // Construir mensaje de combate con información de mascotas activas
-                    var combatText = $"⚔️ **¡COMBATE!**\n\n" +
-                        $"Mientras exploras, te encuentras con:\n\n" +
-                        $"{enemy.Emoji} **{enemy.Name}** (Nv.{enemy.Level}) - {enemy.Type}\n" +
-                        $"❤️ {enemy.HP}/{enemy.MaxHP} HP\n" +
-                        $"⚔️ Ataque: {enemy.Attack} | 🔮 Magia: {enemy.MagicPower}\n" +
-                        $"🛡️ Def.Física: {enemy.PhysicalDefense} | 🌀 Def.Mágica: {enemy.MagicResistance}\n\n";
-                    
-                    // Mostrar mascotas activas si las hay
-                    if (currentPlayer.ActivePets != null && currentPlayer.ActivePets.Any(p => p.HP > 0))
-                    {
-                        combatText += "━━━━━━━━━━━━━━━\n";
-                        combatText += "🐾 **TUS COMPAÑERAS:**\n\n";
-                        foreach (var pet in currentPlayer.ActivePets.Where(p => p.HP > 0))
-                        {
-                            var petEmoji = GetPetEmoji(pet.Species);
-                            var hpPercent = (double)pet.HP / pet.MaxHP * 100;
-                            var hpBar = hpPercent > 70 ? "💚" : hpPercent > 30 ? "💛" : "❤️";
-                            combatText += $"{petEmoji} **{pet.Name}** (Lv.{pet.Level})\n";
-                            combatText += $"   {hpBar} HP: {pet.HP}/{pet.MaxHP} | ⚔️ ATK: {pet.EffectiveAttack} | 🛡️ DEF: {pet.EffectiveDefense}\n";
-                            combatText += $"   {pet.LoyaltyEmoji} {pet.Loyalty} (+{(int)(pet.LoyaltyStatBonus * 100)}% bonus)\n\n";
-                        }
-                        combatText += "━━━━━━━━━━━━━━━\n\n";
-                    }
-                    
-                    combatText += "💡 _Usa 👁️Observar para ver debilidades_\n\n¿Qué haces?";
-                    
+                    // Fase 5.2: Enviar mensaje inicial y guardar MessageId
                     await bot.DeleteMessage(chatId, messageId, ct);
-                    await bot.SendMessage(
+                    var combatMessage = await bot.SendMessage(
                         chatId,
-                        combatText,
+                        combatService.GenerateCombatView(currentPlayer),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                         replyMarkup: GetCombatKeyboard(),
                         cancellationToken: ct);
+                    
+                    // Guardar MessageId del combate
+                    currentPlayer.ActiveCombatMessageId = combatMessage.MessageId;
+                    rpgService.SavePlayer(currentPlayer);
                 }
                 else if (explorationResult.Type == BotTelegram.RPG.Services.ExplorationResultType.Treasure)
                 {
@@ -3154,11 +3131,18 @@ Bienvenido a {player.CurrentLocation}
                     "combat_attack",
                     $"Attacked {enemy.Name}. Hit: {result.PlayerHit}. Damage: {result.PlayerDamage}. Enemy HP: {enemy.HP}");
                 
+                // Fase 5.2: Usar MessageId guardado o fallback al actual
+                var combatMessageId = currentPlayer.ActiveCombatMessageId ?? messageId;
+                
                 if (result.EnemyDefeated)
                 {
+                    // Limpiar MessageId de combate
+                    currentPlayer.ActiveCombatMessageId = null;
+                    rpgService.SavePlayer(currentPlayer);
+                    
                     await bot.EditMessageText(
                         chatId,
-                        messageId,
+                        combatMessageId,
                         narrative,
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                         replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
@@ -3172,9 +3156,14 @@ Bienvenido a {player.CurrentLocation}
                 }
                 else if (result.PlayerDefeated)
                 {
+                    // Limpiar MessageId de combate
+                    currentPlayer.ActiveCombatMessageId = null;
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                    
                     await bot.EditMessageText(
                         chatId,
-                        messageId,
+                        combatMessageId,
                         narrative + "\n\n💀 **Game Over**\n\nRegresaste a la taberna...",
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                         replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
@@ -3185,17 +3174,14 @@ Bienvenido a {player.CurrentLocation}
                             }
                         }),
                         cancellationToken: ct);
-                        
-                    // Restore some HP
-                    currentPlayer.HP = currentPlayer.MaxHP / 2;
-                    rpgService.SavePlayer(currentPlayer);
                 }
                 else
                 {
+                    // Fase 5.2: Actualizar vista unificada de combate
                     await bot.EditMessageText(
                         chatId,
-                        messageId,
-                        narrative + "\n\n*¿Qué haces?*",
+                        combatMessageId,
+                        combatService.GenerateCombatView(currentPlayer),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                         replyMarkup: GetCombatKeyboard(),
                         cancellationToken: ct);
@@ -3534,22 +3520,24 @@ Bienvenido a {player.CurrentLocation}
                     return;
                 }
                 
-                // Feedback inmediato
                 await bot.AnswerCallbackQuery(callbackQuery.Id, "🛡️ Defendiendo...", showAlert: false, cancellationToken: ct);
                 
-                // Guardar referencia al enemigo
                 var enemy = currentPlayer.CurrentEnemy;
                 var result = combatService.PlayerDefend(currentPlayer, enemy);
-                // Agregar timestamp para evitar mensajes idénticos
-                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy) + $"\n\n`[{DateTime.Now:HH:mm:ss}]`";
-                
                 rpgService.SavePlayer(currentPlayer);
+                
+                var combatMessageId = currentPlayer.ActiveCombatMessageId ?? messageId;
                 
                 if (result.PlayerDefeated)
                 {
+                    currentPlayer.ActiveCombatMessageId = null;
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
                     await bot.EditMessageText(
                         chatId,
-                        messageId,
+                        combatMessageId,
                         narrative + "\n\n💀 **Game Over**\n\nRegresaste a la taberna...",
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                         replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
@@ -3560,16 +3548,14 @@ Bienvenido a {player.CurrentLocation}
                             }
                         }),
                         cancellationToken: ct);
-                        
-                    currentPlayer.HP = currentPlayer.MaxHP / 2;
-                    rpgService.SavePlayer(currentPlayer);
                 }
                 else
                 {
+                    // Fase 5.2: Actualizar vista unificada
                     await bot.EditMessageText(
                         chatId,
-                        messageId,
-                        narrative + "\n\n*Próximo turno...*",
+                        combatMessageId,
+                        combatService.GenerateCombatView(currentPlayer),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                         replyMarkup: GetCombatKeyboard(),
                         cancellationToken: ct);
@@ -3586,19 +3572,21 @@ Bienvenido a {player.CurrentLocation}
                     return;
                 }
                 
-                // Feedback inmediato
                 await bot.AnswerCallbackQuery(callbackQuery.Id, "🏃 Intentando huir...", showAlert: false, cancellationToken: ct);
                 
-                // Guardar referencia al enemigo
                 var enemy = currentPlayer.CurrentEnemy;
                 var success = combatService.TryToFlee(currentPlayer, enemy);
-                rpgService.SavePlayer(currentPlayer);
+                
+                var combatMessageId = currentPlayer.ActiveCombatMessageId ?? messageId;
                 
                 if (success)
                 {
+                    currentPlayer.ActiveCombatMessageId = null;
+                    rpgService.SavePlayer(currentPlayer);
+                    
                     await bot.EditMessageText(
                         chatId,
-                        messageId,
+                        combatMessageId,
                         $"🏃 **¡Huiste exitosamente!**\n\n" +
                         $"Escapaste del combate.\n" +
                         $"❤️ HP restante: {currentPlayer.HP}/{currentPlayer.MaxHP}",

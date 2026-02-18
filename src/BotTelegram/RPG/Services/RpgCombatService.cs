@@ -1273,6 +1273,174 @@ namespace BotTelegram.RPG.Services
             
             return status.ToString();
         }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // FASE 5.2: SINGLE MESSAGE INTERACTION - VISTA UNIFICADA DE COMBATE
+        // ═══════════════════════════════════════════════════════════════
+        
+        /// <summary>
+        /// Genera la vista completa del combate (Fase 5.2 - UI/UX mejorada)
+        /// </summary>
+        public string GenerateCombatView(RpgPlayer player)
+        {
+            if (player.CurrentEnemy == null || !player.IsInCombat)
+                return "No estás en combate.";
+            
+            var enemy = player.CurrentEnemy;
+            var view = new System.Text.StringBuilder();
+            
+            // Header
+            view.AppendLine("⚔️ **COMBATE EN CURSO**");
+            view.AppendLine("━━━━━━━━━━━━━━━━━━━━━━\n");
+            
+            // Player stats
+            var classEmoji = player.Class switch
+            {
+                CharacterClass.Warrior => "⚔️",
+                CharacterClass.Mage => "🔮",
+                CharacterClass.Rogue => "🗡️",
+                CharacterClass.Cleric => "✨",
+                _ => "👤"
+            };
+            
+            view.AppendLine($"{classEmoji} **{player.Name}** Lv.{player.Level}");
+            
+            // Player HP bar
+            var playerHpBar = GenerateProgressBar(player.HP, player.MaxHP);
+            view.AppendLine($"   ❤️ {playerHpBar} {player.HP}/{player.MaxHP} HP");
+            
+            // Player Mana bar
+            if (player.MaxMana > 0)
+            {
+                var playerManaBar = GenerateProgressBar(player.Mana, player.MaxMana);
+                view.AppendLine($"   💙 {playerManaBar} {player.Mana}/{player.MaxMana} Mana");
+            }
+            
+            // Player Stamina bar
+            if (player.MaxStamina > 0)
+            {
+                var playerStaminaBar = GenerateProgressBar(player.Stamina, player.MaxStamina);
+                view.AppendLine($"   ⚡ {playerStaminaBar} {player.Stamina}/{player.MaxStamina} Stamina");
+            }
+            
+            // Player status effects
+            if (player.StatusEffects.Any())
+            {
+                view.Append("   📋 ");
+                foreach (var effect in player.StatusEffects)
+                {
+                    var effectEmoji = effect.Type switch
+                    {
+                        StatusEffectType.Bleeding => "🩸",
+                        StatusEffectType.Burning => "🔥",
+                        StatusEffectType.Poisoned => "☠️",
+                        StatusEffectType.Stunned => "💫",
+                        StatusEffectType.Empowered => "💪",
+                        StatusEffectType.Shielded => "🛡️",
+                        _ => "📋"
+                    };
+                    view.Append($"{effectEmoji}{effect.Duration} ");
+                }
+                view.AppendLine();
+            }
+            
+            view.AppendLine();
+            
+            // Separator
+            view.AppendLine("        🆚");
+            view.AppendLine();
+            
+            // Enemy stats
+            view.AppendLine($"{enemy.Emoji} **{enemy.Name}** Lv.{enemy.Level}");
+            
+            // Enemy HP bar
+            var enemyHpBar = GenerateProgressBar(enemy.HP, enemy.MaxHP);
+            view.AppendLine($"   ❤️ {enemyHpBar} {enemy.HP}/{enemy.MaxHP} HP");
+            
+            // Enemy status effects
+            if (enemy.StatusEffects.Any())
+            {
+                view.Append("   📋 ");
+                foreach (var effect in enemy.StatusEffects)
+                {
+                    var effectEmoji = effect.Type switch
+                    {
+                        StatusEffectType.Bleeding => "🩸",
+                        StatusEffectType.Burning => "🔥",
+                        StatusEffectType.Poisoned => "☠️",
+                        StatusEffectType.Stunned => "💫",
+                        _ => " 📋"
+                    };
+                    view.Append($"{effectEmoji}{effect.Duration} ");
+                }
+                view.AppendLine();
+            }
+            
+            view.AppendLine("\n━━━━━━━━━━━━━━━━━━━━━━");
+            
+            // Combat log (últimas 3 acciones)
+            if (player.CombatLog != null && player.CombatLog.Any())
+            {
+                view.AppendLine("\n📜 **LOG DE COMBATE:**");
+                var recentLogs = player.CombatLog.TakeLast(3);
+                foreach (var log in recentLogs)
+                {
+                    view.AppendLine($"   • {log.Action} → {log.Result}");
+                }
+            }
+            
+            // Combo counter
+            if (player.ComboCount > 1)
+            {
+                view.AppendLine($"\n🔥 **COMBO x{player.ComboCount}** (+{(player.ComboCount - 1) * 5}% daño)");
+            }
+            
+            // Active pets
+            if (player.ActivePets != null && player.ActivePets.Any(p => p.HP > 0))
+            {
+                view.AppendLine($"\n🐾 **COMPAÑEROS:**");
+                foreach (var pet in player.ActivePets.Where(p => p.HP > 0).Take(3))
+                {
+                    var petHpPercent = (double)pet.HP / pet.MaxHP;
+                    var petHpEmoji = petHpPercent > 0.7 ? "💚" : petHpPercent > 0.3 ? "💛" : "❤️";
+                    view.AppendLine($"   • {pet.Name} (Lv.{pet.Level}) {petHpEmoji} {pet.HP}/{pet.MaxHP} HP");
+                }
+            }
+            
+            // Active minions
+            if (player.ActiveMinions != null && player.ActiveMinions.Any())
+            {
+                view.AppendLine($"\n⚔️ **ESBIRROS:**");
+                foreach (var minion in player.ActiveMinions.Take(3))
+                {
+                    var controlIcon = minion.IsControlled ? "✅" : "⚠️";
+                    view.AppendLine($"   • {minion.Emoji} {minion.Name} {controlIcon} {minion.HP}/{minion.MaxHP} HP");
+                }
+            }
+            
+            view.AppendLine("\n*¿Qué haces?*");
+            
+            return view.ToString();
+        }
+        
+        /// <summary>
+        /// Genera una barra de progreso visual
+        /// </summary>
+        private static string GenerateProgressBar(int current, int max, int length = 10)
+        {
+            if (max <= 0) return new string('░', length);
+            
+            var percentage = (double)current / max;
+            percentage = Math.Clamp(percentage, 0.0, 1.0);
+            
+            var filled = (int)(percentage * length);
+            var empty = length - filled;
+            
+            // Color de la barra según porcentaje
+            var color = percentage > 0.7 ? "💚" : percentage > 0.3 ? "💛" : "❤️";
+            
+            return color + new string('█', filled) + new string('░', empty);
+        }
     }
     
     public class CombatResult

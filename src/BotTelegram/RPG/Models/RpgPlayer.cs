@@ -121,6 +121,9 @@ namespace BotTelegram.RPG.Models
         public bool IsInCombat { get; set; } = false;
         public RpgEnemy? CurrentEnemy { get; set; }
         
+        // Fase 5.2: Single Message Interaction - MessageId del mensaje de combate actual
+        public int? ActiveCombatMessageId { get; set; }
+        
         // Combat avanzado
         public int ComboCount { get; set; } = 0; // Ataques consecutivos exitosos
         public int CombatTurnCount { get; set; } = 0; // Turno actual del combate
