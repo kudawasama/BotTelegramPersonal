@@ -31,14 +31,30 @@ namespace BotTelegram.RPG.Services
                 };
             }
             
-            // Zonas seguras no tienen encuentros
+            // Si es zona segura, no hay combate pero sí exploración
             if (zone.IsSafeZone)
             {
+                var safeRoll = _random.NextDouble();
+                
+                // 40% chance de descubrir zona conectada
+                if (safeRoll <= 0.40)
+                {
+                    return GenerateZoneDiscovery(player, zone);
+                }
+                
+                // 20% chance de encontrar recursos (mercado, NPCs)
+                if (safeRoll <= 0.60)
+                {
+                    return GenerateResourceFind(player, zone);
+                }
+                
+                // 40% nada encontrado
                 return new ExplorationResult
                 {
                     Type = ExplorationResultType.Nothing,
-                    Message = $"🏘️ Estás en {zone.Name}, una zona segura.\n\n" +
-                             "No hay enemigos aquí. Viaja a otra zona para explorar."
+                    Message = $"🏘️ Exploraste {zone.Name}...\n\n" +
+                             "Los aldeanos hablan de tierras lejanas, pero no encuentras nada especial.\n" +
+                             "💡 *Tip: Sigue explorando para descubrir nuevas zonas*"
                 };
             }
             
@@ -51,14 +67,14 @@ namespace BotTelegram.RPG.Services
                 return GenerateCombatEncounter(player, zone);
             }
             
-            // 10% de encontrar zona conectada nueva
-            if (roll <= zone.EncounterRate + 0.10)
+            // 20% de encontrar zona conectada nueva
+            if (roll <= zone.EncounterRate + 0.20)
             {
                 return GenerateZoneDiscovery(player, zone);
             }
             
-            // 5% de encontrar recursos
-            if (roll <= zone.EncounterRate + 0.15)
+            // 10% de encontrar recursos
+            if (roll <= zone.EncounterRate + 0.30)
             {
                 return GenerateResourceFind(player, zone);
             }
@@ -155,15 +171,20 @@ namespace BotTelegram.RPG.Services
             RegionDatabase.UnlockZone(player, newZoneId);
             _rpgService.SavePlayer(player);
             
+            var discoveryMsg = zone.IsSafeZone
+                ? $"Hablaste con los aldeanos y te indicaron cómo llegar a un nuevo lugar."
+                : $"Mientras exploras, divisas un nuevo camino a lo lejos.";
+            
             return new ExplorationResult
             {
                 Type = ExplorationResultType.ZoneDiscovered,
                 Message = $"🗺️ **¡NUEVA ZONA DESCUBIERTA!**\n\n" +
+                         $"{discoveryMsg}\n\n" +
                          $"{newZone.Emoji} **{newZone.Name}**\n" +
                          $"📖 {newZone.Description}\n\n" +
                          $"📊 Nivel de enemigos: {newZone.MinEnemyLevel}-{newZone.MaxEnemyLevel}\n" +
                          $"⚔️ Tasa de encuentro: {newZone.EncounterRate * 100:F0}%\n\n" +
-                         $"💡 Usa `/travel {newZone.Name}` para viajar allí"
+                         $"💡 Usa `/map` para ver y viajar a la nueva zona"
             };
         }
         
@@ -173,6 +194,7 @@ namespace BotTelegram.RPG.Services
         private ExplorationResult GenerateResourceFind(RpgPlayer player, GameZone zone)
         {
             var roll = _random.Next(1, 4);
+            var isSafe = zone.IsSafeZone;
             
             switch (roll)
             {
@@ -182,11 +204,15 @@ namespace BotTelegram.RPG.Services
                     player.TotalGoldEarned += goldAmount;
                     _rpgService.SavePlayer(player);
                     
+                    var goldMsg = isSafe
+                        ? $"Ayudaste a un aldeano y te recompensó con oro."
+                        : $"Encontraste un cofre oculto en {zone.Name}.";
+                    
                     return new ExplorationResult
                     {
                         Type = ExplorationResultType.Treasure,
                         Message = $"💰 **¡TESORO ENCONTRADO!**\n\n" +
-                                 $"Encontraste un cofre oculto en {zone.Name}.\n\n" +
+                                 $"{goldMsg}\n\n" +
                                  $"💰 +{goldAmount:N0} oro\n" +
                                  $"💼 Oro total: {player.Gold:N0}"
                     };
@@ -196,11 +222,15 @@ namespace BotTelegram.RPG.Services
                     player.HP = Math.Min(player.MaxHP, player.HP + healthRestored);
                     _rpgService.SavePlayer(player);
                     
+                    var potionMsg = isSafe
+                        ? $"Compraste una poción en la tienda del pueblo."
+                        : $"Encontraste una poción de salud abandonada.";
+                    
                     return new ExplorationResult
                     {
                         Type = ExplorationResultType.Treasure,
                         Message = $"⚗️ **¡POCIÓN ENCONTRADA!**\n\n" +
-                                 $"Encontraste una poción de salud.\n\n" +
+                                 $"{potionMsg}\n\n" +
                                  $"💚 +{healthRestored} HP\n" +
                                  $"❤️ HP actual: {player.HP}/{player.MaxHP}"
                     };
@@ -210,11 +240,15 @@ namespace BotTelegram.RPG.Services
                     player.XP += xpAmount;
                     _rpgService.SavePlayer(player);
                     
+                    var xpMsg = isSafe
+                        ? $"Conversaste con un anciano sabio que te enseñó nuevas técnicas."
+                        : $"Encontraste un pergamino antiguo en {zone.Name}.";
+                    
                     return new ExplorationResult
                     {
                         Type = ExplorationResultType.Treasure,
                         Message = $"📚 **¡CONOCIMIENTO ANCESTRAL!**\n\n" +
-                                 $"Encontraste un pergamino antiguo en {zone.Name}.\n\n" +
+                                 $"{xpMsg}\n\n" +
                                  $"⭐ +{xpAmount:N0} XP\n" +
                                  $"📊 XP total: {player.XP:N0}"
                     };
