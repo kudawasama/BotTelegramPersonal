@@ -1,4 +1,5 @@
 using BotTelegram.RPG.Models;
+using BotTelegram.RPG.Services;
 
 namespace BotTelegram.RPG.Services
 {
@@ -1246,7 +1247,16 @@ namespace BotTelegram.RPG.Services
             player.CombatTurnCount = 0;
             player.StatusEffects.Clear();
             StateManager.ForceState(player, GameState.Idle, "victory"); // FSM
-            
+
+            // ═══ FASE 9: Tracking de objetivos de misión ═══
+            // Kill objectives
+            var questKillNotifs = QuestService.UpdateKillObjective(player, enemy.Name, enemy.Level);
+            result.QuestNotifications.AddRange(questKillNotifs);
+
+            // Collect objectives (items que acaban de dropear)
+            var questCollectNotifs = QuestService.UpdateCollectObjective(player);
+            result.QuestNotifications.AddRange(questCollectNotifs);
+
             AddCombatLog(player, "Victoria", $"✅ ¡{enemy.Name} derrotado!");
             Console.WriteLine($"[Combat] ✅ ¡{enemy.Name} derrotado! +{result.XPGained} XP, +{result.GoldGained} oro");
         }

@@ -424,6 +424,10 @@ namespace BotTelegram.RPG.Services
             // Actualizar estadísticas
             player.TotalDungeonsCompleted++;
             player.TotalDungeonFloorsCleaned += dungeon.TotalFloors;
+
+            // ═══ FASE 9: Tracking de objetivos de misión (explorar mazmorra) ═══
+            var questNotifs = QuestService.UpdateExploreObjective(player, dungeon.Id);
+            // Las notificaciones se guardan pero no se muestran aquí (el UI las recupera del próximo mensaje)
             
             if (!player.DungeonsCompleted.ContainsKey(dungeon.Id))
             {

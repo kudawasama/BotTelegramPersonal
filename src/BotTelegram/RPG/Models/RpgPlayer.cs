@@ -141,6 +141,16 @@ namespace BotTelegram.RPG.Models
         public List<string> CompletedQuestIds { get; set; } = new();
 
         // ═══════════════════════════════════════
+        // GUILD SYSTEM (FASE 10)
+        // ═══════════════════════════════════════
+        /// <summary>ID del gremio al que pertenece el jugador (null si no tiene)</summary>
+        public string? GuildId { get; set; }
+        /// <summary>Rol del jugador en el gremio</summary>
+        public GuildRole GuildRole { get; set; } = GuildRole.Member;
+        /// <summary>Oro total aportado al banco del gremio (histórico)</summary>
+        public int GuildContribution { get; set; } = 0;
+
+        // ═══════════════════════════════════════
         // FSM STATE MACHINE (FASE 6)
         // ═══════════════════════════════════════
         /// <summary>Estado actual del jugador en la Máquina de Estados Finita (FSM)</summary>

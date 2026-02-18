@@ -42,7 +42,7 @@ namespace BotTelegram.RPG.Services
 
         // ── Actualizar progreso (Kill) ──────────────────────────────────────
         /// <summary>Llamar tras derrotar un enemigo. Devuelve mensajes de misión completada si los hay.</summary>
-        public static List<string> UpdateKillObjective(RpgPlayer player, string enemyId, int enemyLevel = 0)
+        public static List<string> UpdateKillObjective(RpgPlayer player, string enemyName, int enemyLevel = 0)
         {
             var notifications = new List<string>();
             foreach (var quest in player.ActiveQuests.ToList())
@@ -52,9 +52,9 @@ namespace BotTelegram.RPG.Services
 
                 foreach (var obj in quest.Objectives.Where(o => o.Type == QuestType.Kill && !o.IsCompleted))
                 {
-                    bool matches = obj.TargetId == enemyId
+                    bool matches = enemyName.Contains(obj.TargetId, StringComparison.OrdinalIgnoreCase)
                         || (obj.TargetId == "boss_any" && enemyLevel >= 10)
-                        || (obj.TargetId.StartsWith("any"));
+                        || obj.TargetId.Equals("any", StringComparison.OrdinalIgnoreCase);
 
                     if (matches)
                     {

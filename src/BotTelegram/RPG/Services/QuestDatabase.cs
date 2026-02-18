@@ -23,7 +23,7 @@ namespace BotTelegram.RPG.Services
                     {
                         Description = "Eliminar lobos",
                         Type        = QuestType.Kill,
-                        TargetId    = "wolf",
+                        TargetId    = "lobo",
                         Required    = 5,
                         Current     = 0
                     }
@@ -67,7 +67,7 @@ namespace BotTelegram.RPG.Services
                     {
                         Description = "Derrotar al dragón",
                         Type        = QuestType.Kill,
-                        TargetId    = "dragon",
+                        TargetId    = "dragón",
                         Required    = 1,
                         Current     = 0
                     }

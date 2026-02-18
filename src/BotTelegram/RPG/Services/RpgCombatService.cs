@@ -948,7 +948,15 @@ namespace BotTelegram.RPG.Services
                 }
                 
                 narrative += "🎉 ¡Victoria!";
-                
+
+                // Notificaciones de misiones
+                if (result.QuestNotifications.Any())
+                {
+                    narrative += "\n\n📜 **MISIONES:**\n";
+                    foreach (var qn in result.QuestNotifications)
+                        narrative += $"   {qn}\n";
+                }
+
                 // Limpiar log después de mostrar
                 player.CombatLog.Clear();
                 return narrative;
@@ -1540,6 +1548,9 @@ namespace BotTelegram.RPG.Services
         // Leveling de compañeros (Fase 3.5)
         public List<string> PetLevelUps { get; set; } = new(); // "Zorro Rojo alcanzó nivel 5!"
         public List<string> MinionLevelUps { get; set; } = new(); // "Esqueleto alcanzó nivel 3!"
+
+        // Notificaciones de misiones (Fase 9)
+        public List<string> QuestNotifications { get; set; } = new();
         
         // Legacy (compatibilidad)
         [Obsolete("Use HitChancePercent y HitRoll instead")]

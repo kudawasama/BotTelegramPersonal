@@ -118,10 +118,30 @@ namespace BotTelegram.Core
                 return;
             }
 
-            if (message.Text.StartsWith("/misiones") || message.Text.StartsWith("/quests") || message.Text.StartsWith("/gremio"))
+            if (message.Text.StartsWith("/misiones") || message.Text.StartsWith("/quests"))
             {
                 Console.WriteLine("   [CommandRouter] → Ejecutando QuestCommand (Sistema de Misiones)");
                 await new QuestCommand().Execute(bot, message, ct);
+                return;
+            }
+
+            if (message.Text.StartsWith("/gremio") || message.Text.StartsWith("/guild"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando GuildCommand (Sistema de Gremio)");
+                var guildPlayer = new BotTelegram.RPG.Services.RpgService().GetPlayer(message.Chat.Id);
+                if (guildPlayer is null)
+                {
+                    await bot.SendMessage(message.Chat.Id, "❌ Aún no tienes perfil RPG. Usa /rpg para comenzar.", cancellationToken: System.Threading.CancellationToken.None);
+                    return;
+                }
+
+                // Subcomando: /gremio crear ...
+                if (message.Text.Contains("crear", StringComparison.OrdinalIgnoreCase))
+                {
+                    await BotTelegram.RPG.Commands.GuildCommand.HandleCreateCommand(bot, message, guildPlayer, ct);
+                    return;
+                }
+                await new BotTelegram.RPG.Commands.GuildCommand().Execute(bot, message, ct);
                 return;
             }
 
