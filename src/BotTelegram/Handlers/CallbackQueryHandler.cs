@@ -95,14 +95,22 @@ namespace BotTelegram.Handlers
                 {
                     await HandleLeaderboardCallback(bot, callbackQuery, data, ct);
                 }
+                // Guild Callbacks (FASE 10)
+                else if (data.StartsWith("guild_"))
+                {
+                    await BotTelegram.RPG.Commands.GuildCommand.HandleCallback(bot, callbackQuery, data, ct);
+                }
+                // PvP Callbacks (FASE 11)
+                else if (data.StartsWith("pvp_"))
+                {
+                    await BotTelegram.RPG.Commands.PvpCommand.HandleCallback(bot, callbackQuery, data, ct);
+                }
                 // RPG Callbacks
                 else if (data == "rpg_main" || data.StartsWith("rpg_") ||
                          data.StartsWith("shop_") || data == "shop_buy" || data == "shop_sell" ||
                          data == "shop_buy_equip_menu" ||
                          data.StartsWith("craft_") ||
-                         data.StartsWith("quest_") ||
-                         data.StartsWith("guild_") ||
-                         data.StartsWith("pvp_"))
+                         data.StartsWith("quest_"))
                 {
                     await HandleRpgCallback(bot, callbackQuery, data, ct);
                 }
