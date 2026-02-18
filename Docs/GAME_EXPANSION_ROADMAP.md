@@ -11,7 +11,7 @@
 ⏸️ Fase 3: Sistema de Mazmorras          [░░░░░░░░░░]   0%
 ⏸️ Fase 3.5: Leveling Mascotas/Minions   [░░░░░░░░░░]   0%
 ⏸️ Fase 4: Reestructuración de Clases    [░░░░░░░░░░]   0%
-🔄 Fase 5: Refactorización UI/UX          [██████░░░░]  60% ← EN PROGRESO (Menús ✅)
+🔄 Fase 5: Refactorización UI/UX          [████████░░]  85% ← EN PROGRESO (5.1✅ 5.2✅)
 ⏸️ Fase 6: Máquina de Estados FSM        [░░░░░░░░░░]   0%
 ⏸️ Fase 7: Generación de Imágenes        [░░░░░░░░░░]   0%
 ⏸️ Fase 8: Telegram Mini App              [░░░░░░░░░░]   0%
@@ -1309,11 +1309,12 @@ result.Message = narrative + result.Message;
 4. ✅ Implementar menús: Aventura, Personaje, Ciudad, Ayuda
 5. ✅ Testing de navegación
 
-**Semana 2: Single Message Interaction (3-4h)** ⏳ **PENDIENTE**
-1. ⏳ Modificar RpgCombatService para guardar MessageId
-2. ⏳ Implementar EditMessage en lugar de SendMessage
-3. ⏳ Crear método GenerateCombatView()
-4. ⏳ Testing de combate con edición en tiempo real
+**Semana 2: Single Message Interaction (3-4h)** ✅ **COMPLETADO**
+1. ✅ Modificar RpgPlayer con ActiveCombatMessageId
+2. ✅ Implementar GenerateCombatView() con barras de progreso
+3. ✅ Actualizar acciones principales de combate (attack, defend, flee)
+4. ✅ Vista unificada con log de combate visible
+5. ⏳ Actualizar acciones secundarias (magic, skills, items) - 90%
 
 **Semana 3: Transición a InlineKeyboard (3h)** ⏳ **PENDIENTE**
 1. ⏳ Reemplazar ReplyKeyboardMarkup por InlineKeyboardMarkup
