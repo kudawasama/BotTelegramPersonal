@@ -1,12 +1,35 @@
 # 🎮 HOJA DE RUTA - EXPANSIÓN DEL SISTEMA RPG
 
+**Última actualización:** 18 de febrero de 2026  
+**Versión:** 2.0 - Refactorización Mayor
+
+## 📊 PROGRESO GENERAL
+```
+✅ Fase 0: Corrección Invocaciones         [██████████] 100%
+✅ Fase 1: Mejoras de Combate             [██████████] 100%
+✅ Fase 2: Sistema de Mapas y Zonas       [██████████] 100%
+⏸️ Fase 3: Sistema de Mazmorras          [░░░░░░░░░░]   0%
+⏸️ Fase 3.5: Leveling Mascotas/Minions   [░░░░░░░░░░]   0%
+⏸️ Fase 4: Reestructuración de Clases    [░░░░░░░░░░]   0%
+🔄 Fase 5: Refactorización UI/UX          [░░░░░░░░░░]   0% ← EN PROGRESO
+⏸️ Fase 6: Máquina de Estados FSM        [░░░░░░░░░░]   0%
+⏸️ Fase 7: Generación de Imágenes        [░░░░░░░░░░]   0%
+⏸️ Fase 8: Telegram Mini App              [░░░░░░░░░░]   0%
+⏸️ Fase 9: IA Narrativa (Dungeon Master) [░░░░░░░░░░]   0%
+```
+
 ## 📋 ÍNDICE
-1. [Fase 0: Corrección Inmediata](#fase-0)
-2. [Fase 1: Mejoras de Combate](#fase-1)
-3. [Fase 2: Sistema de Mapas y Zonas](#fase-2)
+1. [✅ Fase 0: Corrección Inmediata](#fase-0) - COMPLETADA
+2. [✅ Fase 1: Mejoras de Combate](#fase-1) - COMPLETADA
+3. [✅ Fase 2: Sistema de Mapas y Zonas](#fase-2) - COMPLETADA
 4. [Fase 3: Sistema de Mazmorras](#fase-3)
-5. [Fase 4: Reestructuración de Clases](#fase-4)
-6. [Fase 5: Contenido Adicional](#fase-5)
+5. [Fase 3.5: Leveling de Mascotas/Minions](#fase-3-5)
+6. [Fase 4: Reestructuración de Clases](#fase-4)
+7. [🔥 Fase 5: Refactorización UI/UX (CRÍTICA)](#fase-5)
+8. [Fase 6: Máquina de Estados Finita](#fase-6)
+9. [Fase 7: Generación de Imágenes Dinámicas](#fase-7)
+10. [Fase 8: Telegram Mini App](#fase-8)
+11. [Fase 9: IA Narrativa (Dungeon Master)](#fase-9)
 
 ---
 
@@ -580,57 +603,732 @@ Skills: 4/8 desbloqueadas
 
 ---
 
-## <a name="fase-5"></a>🌟 FASE 5: CONTENIDO ADICIONAL (Variable)
+## <a name="fase-3-5"></a>🐾 FASE 3.5: LEVELING DE MASCOTAS/MINIONS (4-6 horas)
 
-### 5.1 Sistema de Facciones
-- Reputación con diferentes grupos
-- Misiones exclusivas por facción
-- Conflictos entre facciones
+### 3.5.1 Sistema de XP para Mascotas
 
-### 5.2 Crafteo y Mejora de Equipment
-- Craftear items con materiales
-- Mejorar equipment existente (+1, +2, +3...)
-- Encantar con propiedades especiales
+**Modelo Actualizado:**
+```csharp
+public class RpgPet
+{
+    // Existing properties...
+    public int Experience { get; set; }
+    public int ExperienceToNextLevel => Level * 100;
+    public int CombatsParticipated { get; set; }
+    public int DamageDealt { get; set; }
+    public int KillsEarned { get; set; }
+    public int BossesDefeated { get; set; }
+}
+```
 
-### 5.3 PvP Arena
-- Duelos 1v1
-- Rankings competitivos
-- Recompensas semanales
+**Formas de ganar XP:**
+- 🎯 **Combate Activo** (50 XP): Por participar en el combate
+- 💀 **Kill Enemigo** (100 XP): Si la mascota da el golpe final
+- 👑 **Boss Kill** (500 XP): Participar en matar un jefe
+- 🗺️ **Exploración** (15 XP): Por estar equipada durante exploración
+- ⚒️ **Entrenamiento** (`/train <pet>`, 100 oro → 200 XP)
 
-### 5.4 Eventos Temporales
-- Invasiones de jefes mundiales
-- Eventos estacionales
-- Mazmorras limitadas
+**Bonificaciones por Nivel:**
+```
+Lv 5:  +5% stats
+Lv 10: +10% stats + nueva habilidad
+Lv 15: +15% stats
+Lv 20: +20% stats + evolución de habilidad
+Lv 25: +30% stats + habilidad única
+Lv 30: +50% stats + transformación especial
+```
 
-### 5.5 Sistema de Logros
-- 100+ logros desbloqueables
-- Títulos y recompensas
-- Progreso visible en perfil
+### 3.5.2 Sistema de XP para Minions
+
+**Modelo Actualizado:**
+```csharp
+public class Minion
+{
+    // Existing properties...
+    public int Level { get; set; } = 1;
+    public int Experience { get; set; }
+    public int CombatsServived { get; set; }
+    public int TotalDamageDealt { get; set; }
+    public int Kills { get; set; }
+    public bool IsPermanent { get; set; } // Guardado entre combates
+}
+```
+
+**Formas de ganar XP:**
+- 🛡️ **Supervivencia** (30 XP): Por no morir en un combate
+- ⚔️ **Daño Infligido** (1 XP por cada 10 de daño)
+- 💀 **Kill Obtenido** (150 XP): Si el minion mata al enemigo
+- 👑 **Boss Participación** (300 XP): Si participa contra jefe
+
+**Persistencia de Minions:**
+- Los minions ahora se guardan entre combates (como compañeros permanentes)
+- Máximo 3 minions activos permanentes
+- Al invocar uno nuevo con slots llenos, debe "retirar" uno existente
+- Comando `/minions` para ver stats y gestionar el equipo
+
+**Bonificaciones por Nivel:**
+```
+Cada nivel: +10% HP, +5% ataque
+Lv 5:  Habilidad mejorada
+Lv 10: Segunda habilidad
+Lv 15: +50% duración (más turnos)
+Lv 20: Evolución (cambia de tipo/apariencia)
+```
+
+### 3.5.3 UI de Compañeros
+
+**Comando `/companions`:**
+```
+🐾 **TUS COMPAÑEROS**
+
+━━━━━━━━━━━━━━━━━━━━━
+🦊 MASCOTAS ACTIVAS
+━━━━━━━━━━━━━━━━━━━━━
+
+🦊 Zorro Rojo ⭐ Lv.12
+   💚 HP: 450/450
+   💪 Atk: 85 | 🛡️ Def: 40
+   ✨ XP: 850/1200
+   🎯 Combates: 45 | 💀 Kills: 23
+   👑 Jefes: 3 | 🏆 Boss: 3
+
+━━━━━━━━━━━━━━━━━━━━━
+💀 ESBIRROS PERMANENTES
+━━━━━━━━━━━━━━━━━━━━━
+
+💀 Esqueleto Guerrero ⭐ Lv.8
+   💚 HP: 320/320
+   ⚔️ Atk: 65 | 🛡️ Def: 25
+   ✨ XP: 450/800
+   ⏱️ Supervivencias: 15 | 💀 Kills: 8
+
+👻 Espectro Guardián ⭐ Lv.5
+   💚 HP: 200/200
+   🔮 Mag: 90 | ⚡ Spd: 70
+   ✨ XP: 200/500
+   💀 Kills: 8 | 👑 Boss: 1
+
+━━━━━━━━━━━━━━━━━━━━━
+[⚒️ Entrenar] [👁️ Ver Detalles] [🔄 Gestionar]
+```
+
+**Archivos a Modificar:**
+- `src/BotTelegram/RPG/Models/RpgPet.cs`
+- `src/BotTelegram/RPG/Models/Minion.cs`
+- `src/BotTelegram/RPG/Services/RpgCombatService.cs`
+- `src/BotTelegram/RPG/Commands/CompanionsCommand.cs` (nuevo)
 
 ---
 
-## 📊 PRIORIZACIÓN Y TIEMPOS
+## <a name="fase-5"></a>🔥 FASE 5: REFACTORIZACIÓN UI/UX (CRÍTICA) (10-12 horas)
+
+**⚠️ PRIORIDAD CRÍTICA** - Basado en auditoría de UX
+
+### 5.1 Problema Identificado
+
+**Issues Actuales:**
+1. ❌ **21 botones simultáneos** → Sobrecarga cognitiva
+2. ❌ **Teclado ocupa 60% de pantalla** → Scroll constante
+3. ❌ **Nuevo mensaje por acción** → Spam en chat
+4. ❌ **ReplyKeyboardMarkup** → Sin edición en tiempo real
+
+### 5.2 Arquitectura Jerárquica de Menús
+
+**Diseño Nuevo (4 Categorías Madre):**
+```
+🏠 MENÚ PRINCIPAL
+┌─────────────────────┐
+│ ⚔️ Aventura         │
+│ 👤 Personaje        │
+│ 🏘️ Ciudad           │
+│ ⚙️ Ayuda            │
+└─────────────────────┘
+
+⚔️ AVENTURA
+┌─────────────────────┐
+│ 🎯 Combate          │
+│ 🗺️ Explorar         │
+│ 🏰 Mazmorra         │
+│ 🔙 Volver           │
+└─────────────────────┘
+
+👤 PERSONAJE
+┌─────────────────────┐
+│ 📊 Stats            │
+│ 🎒 Inventario       │
+│ ✨ Skills           │
+│ 🐾 Compañeros       │
+│ 🎭 Clases           │
+│ 🔙 Volver           │
+└─────────────────────┘
+
+🏘️ CIUDAD
+┌─────────────────────┐
+│ 🛒 Tienda           │
+│ ⚒️ Herrería         │
+│ 🏛️ Gremio           │
+│ 🏆 Rankings         │
+│ 🔙 Volver           │
+└─────────────────────┘
+```
+
+**Beneficio:** Máximo 6 botones por pantalla, navegación intuitiva
+
+### 5.3 Single Message Interaction (SMI)
+
+**Concepto:**
+En lugar de enviar múltiples mensajes, **editar un solo mensaje** en tiempo real.
+
+**Ejemplo - ANTES:**
+```
+[MSG 1] ⚔️ Atacas al Goblin (45 daño)
+[MSG 2] 🩸 Goblin contraataca (32 daño)
+[MSG 3] ⚔️ Atacas al Goblin (51 daño)
+[MSG 4] ⚔️ Goblin muere. +120 XP
+[MSG 5] 💰 Loot: 85 oro
+```
+
+**Ejemplo - DESPUÉS:**
+```
+[EDICIÓN EN TIEMPO REAL DEL MISMO MENSAJE]
+
+⚔️ **COMBATE EN CURSO**
+━━━━━━━━━━━━━━━━━━━━━━
+👤 Kudawa Lv.23
+   ❤️ ████████░░ 180/220 HP
+   💙 ██████████ 95/95 Mana
+   
+🐗 Goblin Salvaje Lv.21
+   ❤️ ██░░░░░░░░ 35/180 HP
+
+━━━━━━━━━━━━━━━━━━━━━━
+📜 COMBATE LOG:
+   ⚔️ Atacaste (45 daño)
+   🩸 Goblin contraataca (32 daño)
+   ⚔️ Atacaste (51 daño)
+   
+[⚔️ Atacar] [🛡️ Defender] [✨ Skills] [🎒 Items]
+```
+
+**Implementación:**
+```csharp
+// Guardar MessageId del combate
+var combatMessage = await bot.SendMessage(chatId, "Iniciando combate...");
+player.ActiveCombatMessageId = combatMessage.MessageId;
+
+// En cada turno, EDITAR en lugar de ENVIAR NUEVO
+while (combat.IsActive)
+{
+    await bot.EditMessageText(
+        chatId, 
+        player.ActiveCombatMessageId,
+        GenerateCombatView(combat),
+        replyMarkup: GetCombatKeyboard()
+    );
+}
+```
+
+### 5.4 Transición a InlineKeyboardMarkup
+
+**Cambiar de ReplyKeyboardMarkup → InlineKeyboardMarkup**
+
+**Ventajas:**
+- ✅ No ocupa espacio del teclado del usuario
+- ✅ Desaparece al completar la acción
+- ✅ Se puede editar dinámicamente
+- ✅ Usa `CallbackData` para procesamiento limpio
+
+**Ejemplo:**
+```csharp
+// ANTES (ReplyKeyboardMarkup)
+var keyboard = new ReplyKeyboardMarkup(new[]
+{
+    new KeyboardButton[] { "⚔️ Atacar", "🛡️ Defender" },
+    new KeyboardButton[] { "✨ Skills", "🎒 Items" }
+})
+{
+    ResizeKeyboard = true
+};
+
+// DESPUÉS (InlineKeyboardMarkup)
+var keyboard = new InlineKeyboardMarkup(new[]
+{
+    new[]
+    {
+        InlineKeyboardButton.WithCallbackData("⚔️ Atacar", "combat_attack"),
+        InlineKeyboardButton.WithCallbackData("🛡️ Defender", "combat_defend")
+    },
+    new[]
+    {
+        InlineKeyboardButton.WithCallbackData("✨ Skills", "combat_skills"),
+        InlineKeyboardButton.WithCallbackData("🎒 Items", "combat_items")
+    }
+});
+```
+
+### 5.5 Barras de Progreso Animadas
+
+**Implementación:**
+```csharp
+public static string GenerateProgressBar(int current, int max, int length = 10)
+{
+    var percentage = (double)current / max;
+    var filled = (int)(percentage * length);
+    var empty = length - filled;
+    
+    var color = percentage > 0.7 ? "💚" : percentage > 0.3 ? "💛" : "❤️";
+    
+    return color + new string('█', filled) + new string('░', empty);
+}
+
+// Uso:
+var hpBar = GenerateProgressBar(player.HP, player.MaxHP);
+// Resultado: 💚████████░░
+```
+
+### 5.6 Plan de Refactorización
+
+**Archivos a Modificar:**
+1. `RpgCommand.cs` - Menú principal jerárquico
+2. `CallbackQueryHandler.cs` - Procesar nuevos callbacks
+3. `RpgCombatService.cs` - Single message combat
+4. `MapCommand.cs` - InlineKeyboard
+5. `TravelCommand.cs` - InlineKeyboard
+6. Todos los comandos que usen ReplyKeyboardMarkup
+
+**Tiempo estimado:** 10-12 horas  
+**Impacto UX:** ⭐⭐⭐⭐⭐ CRÍTICO
+
+---
+
+## <a name="fase-6"></a>🧩 FASE 6: MÁQUINA DE ESTADOS FINITA (FSM) (8-10 horas)
+
+### 6.1 Problema Actual
+
+El código tiene múltiples `if/else` y `switch` gigantes que hacen difícil:
+- Mantener el flujo del juego
+- Validar acciones disponibles según contexto
+- Agregar nuevas features sin romper lógica existente
+
+### 6.2 Solución: State Machine
+
+**Definición de Estados:**
+```csharp
+public enum GameState
+{
+    Idle,           // En menú principal
+    Exploring,      // Explorando zona
+    InCombat,       // En combate activo
+    InDungeon,      // Dentro de mazmorra
+    Shopping,       // En tienda
+    Resting,        // Descansando en posada
+    Crafting,       // Creando items
+    TravelMenu,     // Viendo mapa/viajando
+    PetManagement,  // Gestionando mascotas
+    SkillsMenu      // Viendo/usando skills
+}
+
+public class PlayerState
+{
+    public GameState CurrentState { get; set; } = GameState.Idle;
+    public Dictionary<GameState, List<string>> AllowedActions { get; set; }
+    public Dictionary<GameState, List<GameState>> ValidTransitions { get; set; }
+}
+```
+
+**Configuración:**
+```csharp
+public class StateManager
+{
+    private static readonly Dictionary<GameState, List<string>> AllowedCommands = new()
+    {
+        [GameState.Idle] = new() { "rpg_adventure", "rpg_character", "rpg_city", "rpg_map" },
+        [GameState.InCombat] = new() { "combat_attack", "combat_defend", "combat_skills", "combat_items" },
+        [GameState.Shopping] = new() { "shop_buy", "shop_sell", "shop_exit" },
+        [GameState.InDungeon] = new() { "dungeon_advance", "dungeon_rest", "dungeon_use_item" }
+    };
+    
+    public bool CanExecuteAction(RpgPlayer player, string action)
+    {
+        return AllowedCommands[player.State.CurrentState].Contains(action);
+    }
+    
+    public bool TransitionTo(RpgPlayer player, GameState newState)
+    {
+        if (!ValidTransitions[player.State.CurrentState].Contains(newState))
+            return false;
+            
+        player.State.CurrentState = newState;
+        return true;
+    }
+}
+```
+
+**Beneficio:**
+- ✅ Solo se muestran botones válidos para el estado actual
+- ✅ No más "Este comando no está disponible en combate"
+- ✅ Código más mantenible y escalable
+
+**Archivos a Crear:**
+- `src/BotTelegram/RPG/Models/GameState.cs`
+- `src/BotTelegram/RPG/Services/StateManager.cs`
+
+**Tiempo estimado:** 8-10 horas  
+**Impacto Técnico:** ⭐⭐⭐⭐⭐ MUY ALTO
+
+---
+
+## <a name="fase-7"></a>🎨 FASE 7: GENERACIÓN DE IMÁGENES DINÁMICAS (12-15 horas)
+
+### 7.1 Concepto
+
+En lugar de solo texto, generar **tarjetas visuales** para:
+- Stats del personaje
+- Inventario (mostrar items con iconos)
+- Combate (barras de vida animadas)
+- Mapas (vista gráfica de zonas)
+
+### 7.2 Tecnología: SkiaSharp
+
+```csharp
+using SkiaSharp;
+
+public class CardGenerator
+{
+    public byte[] GenerateStatsCard(RpgPlayer player)
+    {
+        using var surface = SKSurface.Create(new SKImageInfo(800, 600));
+        var canvas = surface.Canvas;
+        
+        // Fondo
+        canvas.Clear(SKColors.DarkSlateGray);
+        
+        // Avatar (emoji grande)
+        var avatarPaint = new SKPaint
+        {
+            TextSize = 120,
+            IsAntialias = true,
+            Color = SKColors.White
+        };
+        canvas.DrawText(player.Emoji, 50, 150, avatarPaint);
+        
+        // Nombre y Nivel
+        var namePaint = new SKPaint
+        {
+            TextSize = 48,
+            IsAntialias = true,
+            Color = SKColors.Gold,
+            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
+        };
+        canvas.DrawText($"{player.Name} - Lv.{player.Level}", 200, 100, namePaint);
+        
+        // Barras de HP/Mana/XP
+        DrawProgressBar(canvas, 200, 150, 500, 30, player.HP, player.MaxHP, SKColors.Green);
+        DrawProgressBar(canvas, 200, 200, 500, 30, player.Mana, player.MaxMana, SKColors.Blue);
+        DrawProgressBar(canvas, 200, 250, 500, 30, player.XP, player.ExperienceToNextLevel, SKColors.Gold);
+        
+        // Stats en columnas
+        DrawStats(canvas, 200, 320, player);
+        
+        return surface.Snapshot().Encode(SKEncodedImageFormat.Png, 90).ToArray();
+    }
+}
+```
+
+### 7.3 Ejemplos de Uso
+
+**Stats:**
+```
+/stats → Envía imagen en lugar de texto
+```
+
+**Inventario:**
+```
+/inventory → Grid visual con iconos de items
+```
+
+**Combate:**
+```
+Durante combate → Imagen con barras animadas que bajan en tiempo real
+```
+
+**Beneficio:**
+- ✅ Visual mucho más atractivo
+- ✅ Más fácil de leer stats
+- ✅ Se ve profesional (AAA quality)
+- ✅ Compatible con Telegram (enviar como foto)
+
+**Archivos a Crear:**
+- `src/BotTelegram/RPG/Services/ImageGenerator.cs`
+- `src/BotTelegram/RPG/Services/CombatVisualizer.cs`
+- `src/BotTelegram/RPG/Services/InventoryRenderer.cs`
+
+**Tiempo estimado:** 12-15 horas  
+**Impacto UX:** ⭐⭐⭐⭐⭐ MUY ALTO  
+**Prioridad:** BAJA (feature premium)
+
+---
+
+## <a name="fase-8"></a>📱 FASE 8: TELEGRAM MINI APP (TMA) (20-30 horas)
+
+### 8.1 Concepto
+
+Crear un **panel web interactivo** que se abre dentro de Telegram para:
+- Gestión de inventario complejo (drag & drop)
+- Mapa interactivo (clickeable)
+- Árbol de skills visual
+- Crafting con preview
+- Leaderboards con filtros
+- Dashboard de estadísticas
+
+### 8.2 Stack Tecnológico
+
+```
+Frontend:  Blazor WebAssembly / React
+Backend:   ASP.NET Core Web API (ya existente)
+Database:  Actual sistema de JSON
+Integration: Telegram.Bot.WebApp
+```
+
+### 8.3 Arquitectura
+
+```
+src/
+├── BotTelegram/              (Existing)
+│   ├── RPG/
+│   └── API/                  (NEW - Web API endpoints)
+│       ├── StatsController.cs
+│       ├── InventoryController.cs
+│       └── CombatController.cs
+│
+└── BotTelegram.WebApp/       (NEW - Blazor/React project)
+    ├── Pages/
+    │   ├── Dashboard.razor
+    │   ├── Inventory.razor
+    │   ├── Map.razor
+    │   └── Skills.razor
+    ├── Components/
+    │   ├── StatCard.razor
+    │   ├── ItemGrid.razor
+    │   └── SkillTree.razor
+    └── wwwroot/
+        ├── css/
+        └── js/
+```
+
+### 8.4 Funcionalidades
+
+**Dashboard:**
+- Vista general de personaje
+- Gráficos de progresión
+- Últimas actividades
+- Quick actions
+
+**Inventario Avanzado:**
+- Drag & drop para equipar
+- Filtros por tipo/rareza
+- Comparación de items
+- Vender múltiples items
+
+**Mapa Interactivo:**
+- Vista 2D del mundo
+- Click para viajar
+- Zonas descubiertas/bloqueadas
+- Información de zonas al hover
+
+**Árbol de Skills:**
+- Visualización de dependencias
+- Preview de skills
+- Asignación de puntos
+- Respec con costo
+
+**Beneficio:**
+- ✅ Experiencia de usuario AAA
+- ✅ No limitado por UI de Telegram
+- ✅ Funcionalidades avanzadas (drag & drop, animaciones)
+- ✅ Abre dentro de Telegram sin salir
+
+**Tiempo estimado:** 20-30 horas  
+**Impacto UX:** ⭐⭐⭐⭐⭐ EXTREMO  
+**Prioridad:** BAJA (proyecto avanzado)
+
+---
+
+## <a name="fase-9"></a>🤖 FASE 9: IA NARRATIVA (DUNGEON MASTER) (15-20 horas)
+
+### 9.1 Concepto
+
+La IA no solo chatea, sino que **narra dinámicamente** las consecuencias de las acciones del jugador.
+
+### 9.2 Ejemplo
+
+**ANTES:**
+```
+⚔️ Atacaste al goblin
+🩸 45 de daño
+❤️ Goblin: 75/120 HP
+```
+
+**DESPUÉS (con IA narrativa):**
+```
+⚔️ Tu espada corta el aire con un silbido. El goblin intenta 
+esquivar pero es demasiado lento. La hoja se clava en su hombro, 
+arrancándole un grito de dolor. Verde icor brota de la herida, 
+manchando el suelo del bosque.
+
+🩸 45 de daño ❤️ 75/120 HP
+
+El goblin retrocede, furioso, blandiendo su daga oxidada con 
+renovada ferocidad. Sus ojos amarillos brillan con odio.
+```
+
+### 9.3 Implementación
+
+```csharp
+using Microsoft.SemanticKernel;
+
+public class NarrativeAI
+{
+    private readonly IKernel _kernel;
+    
+    public async Task<string> NarrateCombatAction(
+        CombatAction action, 
+        RpgPlayer player, 
+        RpgEnemy enemy, 
+        int damage)
+    {
+        var prompt = $@"
+Eres un Dungeon Master épico al estilo de D&D. Narra en 2-3 líneas dramáticas:
+
+CONTEXTO:
+- Acción: {action.Name}
+- Jugador: {player.Name} (Lv.{player.Level} {player.Class})
+- Enemigo: {enemy.Name} (Lv.{enemy.Level})
+- Daño causado: {damage}
+- HP enemigo restante: {enemy.HP}/{enemy.MaxHP}
+
+ESTILO:
+- Descriptivo y cinematográfico
+- Lenguaje medieval/fantasy
+- Enfocado en la acción física
+- Sin diálogo
+- Máximo 3 líneas
+
+NARRATIVA:";
+        
+        var result = await _kernel.InvokePromptAsync(prompt);
+        return result.ToString();
+    }
+    
+    public async Task<string> NarrateExploration(
+        GameZone zone, 
+        ExplorationResult result)
+    {
+        var prompt = $@"
+Narra en 2-3 líneas el resultado de explorar {zone.Name}:
+
+RESULTADO: {result.Type}
+{(result.Enemy != null ? $"Enemigo encontrado: {result.Enemy.Name}" : "")}
+{(result.Treasure != null ? $"Tesoro: {result.Treasure.Name}" : "")}
+
+Descripción de zona: {zone.Description}
+
+NARRATIVA:";
+        
+        var result = await _kernel.InvokePromptAsync(prompt);
+        return result.ToString();
+    }
+}
+```
+
+### 9.4 Integración
+
+**Combate:**
+```csharp
+// En RpgCombatService.cs
+var narrative = await _narrativeAI.NarrateCombatAction(action, player, enemy, damage);
+result.Message = narrative + $"\n\n🩸 {damage} daño ❤️ {enemy.HP}/{enemy.MaxHP} HP";
+```
+
+**Exploración:**
+```csharp
+// En ExplorationService.cs
+var narrative = await _narrativeAI.NarrateExploration(zone, result);
+result.Message = narrative + result.Message;
+```
+
+**Beneficio:**
+- ✅ Cada combate es único e impredecible
+- ✅ Inmersión narrativa total
+- ✅ El jugador se siente en un D&D real
+- ✅ Diferenciador competitivo total
+
+**Archivos a Crear:**
+- `src/BotTelegram/AI/NarrativeEngine.cs`
+- `src/BotTelegram/AI/CombatNarrator.cs`
+- `src/BotTelegram/AI/ExplorationNarrator.cs`
+
+**Tiempo estimado:** 15-20 horas  
+**Impacto UX:** ⭐⭐⭐⭐⭐ EXTREMO  
+**Prioridad:** MEDIA (diferenciador competitivo)
+
+---
+
+## 📊 PRIORIZACIÓN Y TIEMPOS ACTUALIZADOS
 
 ### Ruta Crítica (Orden Recomendado)
-1. ✅ **Fase 0**: Corrección invocaciones (1-2h) - **URGENTE**
-2. ⚔️ **Fase 1**: Mejoras combate (3-4h) - **ALTA PRIORIDAD**
-3. 🗺️ **Fase 2**: Mapas y zonas (8-10h) - **MEDIA-ALTA**
-4. 🏰 **Fase 3**: Mazmorras (12-15h) - **MEDIA**
-5. 🎭 **Fase 4**: Clases (6-8h) - **MEDIA-BAJA**
-6. 🌟 **Fase 5**: Contenido extra (Variable) - **BAJA**
+1. ✅ **Fase 0**: Corrección invocaciones (1-2h) - **COMPLETADA**
+2. ✅ **Fase 1**: Mejoras combate (3-4h) - **COMPLETADA**
+3. ✅ **Fase 2**: Mapas y zonas (8-10h) - **COMPLETADA**
+4. 🔥 **Fase 5**: Refactorización UI/UX (10-12h) - **CRÍTICA** ← **SIGUIENTE**
+5. 🐾 **Fase 3.5**: Leveling mascotas/minions (4-6h) - **ALTA**
+6. 🏰 **Fase 3**: Mazmorras (12-15h) - **MEDIA**
+7. 🎭 **Fase 4**: Clases (6-8h) - **MEDIA**
+8. 🧩 **Fase 6**: FSM (8-10h) - **MEDIA-BAJA**
+9. 🤖 **Fase 9**: IA Narrativa (15-20h) - **MEDIA-BAJA**
+10. 🎨 **Fase 7**: Imágenes (12-15h) - **BAJA** (opcional)
+11. 📱 **Fase 8**: Mini App (20-30h) - **BAJA** (proyecto avanzado)
 
 ### Tiempo Total Estimado
-- **Núcleo esencial** (Fases 0-2): ~12-16 horas
-- **Experiencia completa** (Fases 0-4): ~30-39 horas
-- **Todo el contenido** (Fases 0-5): 50+ horas
+- **Núcleo esencial** (Fases 0-2): ~12-16 horas ✅ **COMPLETADO**
+- **Con UI mejorada** (+ Fase 5): ~22-28 horas
+- **Con features core** (+ Fases 3, 3.5, 4): ~44-57 horas
+- **Experiencia completa** (+ Fases 6, 9): ~67-87 horas
+- **Todo el contenido** (+ Fases 7, 8): ~99-132 horas
 
 ---
 
 ## 🎯 PRÓXIMOS PASOS INMEDIATOS
 
-1. **Aprobar esta hoja de ruta** o solicitar cambios
-2. **Comenzar Fase 0**: Fix de invocaciones (1-2h)
-3. **Decidir si continuar** con Fase 1 o saltar a Fase 2/3
-4. **Iteración progresiva**: Implementar, probar, mejorar
+### Fase 5 (UI/UX) - Desglose de Tareas
 
-¿Quieres que comience con la **Fase 0** ahora?
+**Semana 1: Arquitectura de Menús (4-5h)**
+1. ✨ Diseñar estructura jerárquica de 4 categorías
+2. ✨ Crear nuevos callbacks para navegación
+3. ✨ Refactorizar RpgCommand.cs con menú principal
+4. ✨ Implementar menús: Aventura, Personaje, Ciudad, Ayuda
+5. ✨ Testing de navegación
+
+**Semana 2: Single Message Interaction (3-4h)**
+1. ✨ Modificar RpgCombatService para guardar MessageId
+2. ✨ Implementar EditMessage en lugar de SendMessage
+3. ✨ Crear método GenerateCombatView()
+4. ✨ Testing de combate con edición en tiempo real
+
+**Semana 3: Transición a InlineKeyboard (3h)**
+1. ✨ Reemplazar ReplyKeyboardMarkup por InlineKeyboardMarkup
+2. ✨ Actualizar todos los comandos con InlineKeyboard
+3. ✨ Agregar barras de progreso animadas
+4. ✨ Testing general
+
+---
+
+## 🏁 CONCLUSIÓN
+
+El bot tiene un **potencial enorme**. La base con Dapper, integración IA y sistema de combate ya te ponen por delante del 90% de los bots amateurs.
+
+El siguiente paso lógico es la **limpieza de la interfaz (Fase 5)** y la **dinamicidad de los mensajes**. Esto hará que todas las features existentes se sientan mucho mejor y facilita la implementación de las fases futuras.
+
+---
+
+**¿Comenzamos con Fase 5 (UI/UX)?**
