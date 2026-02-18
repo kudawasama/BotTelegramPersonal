@@ -113,6 +113,15 @@ namespace BotTelegram.RPG.Models
         public string CurrentZone { get; set; } = "puerto_esperanza"; // ID de la zona actual
         public List<string> UnlockedZones { get; set; } = new() { "puerto_esperanza" }; // Zonas desbloqueadas
         
+        // ═══════════════════════════════════════
+        // DUNGEON SYSTEM (FASE 3)
+        // ═══════════════════════════════════════
+        public Dungeon? CurrentDungeon { get; set; } // Mazmorra activa (null si no está en mazmorra)
+        public List<DungeonKey> DungeonKeys { get; set; } = new(); // Llaves de mazmorra disponibles
+        public Dictionary<string, int> DungeonsCompleted { get; set; } = new(); // dungeonId -> veces completado
+        public int TotalDungeonsCompleted { get; set; } = 0;
+        public int TotalDungeonFloorsCleaned { get; set; } = 0;
+        
         // Progress
         public string CurrentLocation { get; set; } = "Taberna de Puerto Esperanza";
         public DateTime LastActionTime { get; set; } = DateTime.UtcNow;

@@ -67,6 +67,13 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/dungeon") || message.Text.StartsWith("/mazmorra"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando DungeonCommand (Sistema de Mazmorras)");
+                await new DungeonCommand().Execute(bot, message, ct);
+                return;
+            }
+
             if (message.Text.StartsWith("/rpgstats") || message.Text.StartsWith("/stats"))
             {
                 Console.WriteLine("   [CommandRouter] → Ejecutando RpgStatsCommand (Estadísticas Detalladas)");
