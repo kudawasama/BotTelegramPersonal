@@ -928,6 +928,134 @@ Si quieres que olvide el contexto anterior:
                 return;
             }
             
+            // Fase 5 - Hierarchical Menu Navigation
+            if (data == "rpg_menu_adventure")
+            {
+                var player = rpgService.GetPlayer(chatId);
+                if (player == null) return;
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⚔️ Aventura", cancellationToken: ct);
+                
+                var text = $@"⚔️ **AVENTURA**
+
+{player.Name}, ¿qué deseas explorar?
+
+🗺️ **Explorar:** Encuentra enemigos, tesoros y nuevas zonas
+🏰 **Mazmorras:** Desafía dungeons peligrosos
+🎲 **Aventura Aleatoria:** ¿Te sientes con suerte?
+😴 **Descansar:** Recupera HP, Mana y Energía
+💼 **Trabajar:** Gana oro (cuesta energía)
+🗺️ **Mapa:** Viaja entre zonas";
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: rpgCommand.GetAdventureMenu(),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            if (data == "rpg_menu_character")
+            {
+                var player = rpgService.GetPlayer(chatId);
+                if (player == null) return;
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "👤 Personaje", cancellationToken: ct);
+                
+                var classEmoji = player.Class switch
+                {
+                    BotTelegram.RPG.Models.CharacterClass.Warrior => "⚔️",
+                    BotTelegram.RPG.Models.CharacterClass.Mage => "🔮",
+                    BotTelegram.RPG.Models.CharacterClass.Rogue => "🗡️",
+                    BotTelegram.RPG.Models.CharacterClass.Cleric => "✨",
+                    _ => "👤"
+                };
+                
+                var text = $@"👤 **PERSONAJE**
+
+{classEmoji} **{player.Name}** - {player.Class} Nv.{player.Level}
+💰 **Oro:** {player.Gold}
+📍 **Ubicación:** {player.CurrentLocation}
+
+📊 **Stats:** Consulta tus estadísticas detalladas
+🎒 **Inventario:** Equipamiento y consumibles
+✨ **Skills:** Habilidades especiales de combate
+🐾 **Mascotas:** Gestiona tus compañeros
+🎭 **Clases:** Cambiar o desbloquear clases ocultas
+💎 **Pasivas:** Beneficios permanentes";
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: rpgCommand.GetCharacterMenu(),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            if (data == "rpg_menu_city")
+            {
+                var player = rpgService.GetPlayer(chatId);
+                if (player == null) return;
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🏘️ Ciudad", cancellationToken: ct);
+                
+                var text = $@"🏘️ **CIUDAD**
+
+Bienvenido a {player.CurrentLocation}
+
+🏪 **Tienda:** Compra equipamiento y consumibles
+⚒️ **Herrería:** Mejora tu equipo (próximamente)
+🏛️ **Gremio:** Misiones y recompensas (próximamente)
+🏆 **Rankings:** Tabla de líderes globales
+🛡️ **Entrenar:** Mejora tus estadísticas
+🌟 **Progreso:** Consulta tus logros";
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: rpgCommand.GetCityMenu(),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            if (data == "rpg_menu_help")
+            {
+                var player = rpgService.GetPlayer(chatId);
+                if (player == null) return;
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⚙️ Ayuda", cancellationToken: ct);
+                
+                var text = @"⚙️ **AYUDA Y CONFIGURACIÓN**
+
+📖 **Guía:** Tutorial completo del juego
+💬 **Chat IA:** Pregunta sobre mecánicas o estrategia
+🎯 **Tutorial:** Paso a paso para principiantes
+⚙️ **Opciones:** Exportar/importar personaje
+📊 **Comandos:** Lista de todos los comandos
+🐛 **Reportar Bug:** Informa de errores o sugerencias
+
+**Comandos básicos:**
+/rpg - Abrir menú principal
+/map - Ver mapa de zonas
+/pets - Gestionar mascotas
+/stats - Ver estadísticas";
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: rpgCommand.GetHelpMenu(),
+                    cancellationToken: ct);
+                return;
+            }
+            
             // New game
             if (data == "rpg_new_game")
             {

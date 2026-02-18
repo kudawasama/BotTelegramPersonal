@@ -136,54 +136,135 @@ Solo los más valientes pueden enfrentar este destino...
         
         private InlineKeyboardMarkup GetExplorationKeyboard()
         {
+            // Main menu with 4 categories (Fase 5 - Hierarchical UI)
             return new InlineKeyboardMarkup(new[]
             {
-                // ACCIONES PRINCIPALES
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("⚔️ Explorar", "rpg_explore_menu"),
-                    InlineKeyboardButton.WithCallbackData("🗺️ Mapa", "rpg_map"),
-                    InlineKeyboardButton.WithCallbackData("🐾 Mascotas", "rpg_pets_menu")
+                    InlineKeyboardButton.WithCallbackData("⚔️ Aventura", "rpg_menu_adventure"),
+                    InlineKeyboardButton.WithCallbackData("👤 Personaje", "rpg_menu_character")
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("🎲 Aventura", "rpg_adventure"),
-                    InlineKeyboardButton.WithCallbackData("😴 Descansar", "rpg_rest"),
-                    InlineKeyboardButton.WithCallbackData("💼 Trabajar", "rpg_work")
+                    InlineKeyboardButton.WithCallbackData("🏘️ Ciudad", "rpg_menu_city"),
+                    InlineKeyboardButton.WithCallbackData("⚙️ Ayuda", "rpg_menu_help")
                 },
-                // INFORMACIÓN Y PROGRESO
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("📊 Stats", "rpg_stats"),
-                    InlineKeyboardButton.WithCallbackData("🎒 Inventario", "rpg_inventory"),
-                    InlineKeyboardButton.WithCallbackData("🏪 Tienda", "rpg_shop")
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("� Rankings", "leaderboard_main"),
-                    InlineKeyboardButton.WithCallbackData("🌟 Progreso", "rpg_progress"),
-                    InlineKeyboardButton.WithCallbackData("💎 Pasivas", "rpg_passives")
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("📈 Counters", "rpg_counters"),
-                    InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_skills"),
-                    InlineKeyboardButton.WithCallbackData("🎯 Combos", "rpg_combo_skills")
-                },
-                // HABILIDADES Y COMBATE
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("🛡️ Entrenar", "rpg_train"),
-                    InlineKeyboardButton.WithCallbackData("💬 Chat IA", "rpg_ai_chat"),
-                    InlineKeyboardButton.WithCallbackData("⚙️ Opciones", "rpg_options")
-                },
-                // UTILIDADES
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("🏠 Salir", "start")
                 }
             });
         }
+        
+        /// <summary>
+        /// Adventure submenu: Exploration, combat, dungeons, work
+        /// </summary>
+        public InlineKeyboardMarkup GetAdventureMenu()
+        {
+            return new InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🗺️ Explorar", "rpg_explore_menu"),
+                    InlineKeyboardButton.WithCallbackData("🏰 Mazmorra", "rpg_dungeon"),
+                    InlineKeyboardButton.WithCallbackData("🎲 Aventura", "rpg_adventure")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("😴 Descansar", "rpg_rest"),
+                    InlineKeyboardButton.WithCallbackData("💼 Trabajar", "rpg_work"),
+                    InlineKeyboardButton.WithCallbackData("🗺️ Mapa", "rpg_map")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                }
+            });
+        }
+        
+        /// <summary>
+        /// Character submenu: Stats, inventory, skills, pets, classes
+        /// </summary>
+        public InlineKeyboardMarkup GetCharacterMenu()
+        {
+            return new InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("📊 Stats", "rpg_stats"),
+                    InlineKeyboardButton.WithCallbackData("🎒 Inventario", "rpg_inventory"),
+                    InlineKeyboardButton.WithCallbackData("✨ Skills", "rpg_skills")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🐾 Mascotas", "rpg_pets_menu"),
+                    InlineKeyboardButton.WithCallbackData("🎭 Clases", "rpg_hidden_classes"),
+                    InlineKeyboardButton.WithCallbackData("💎 Pasivas", "rpg_passives")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("📈 Counters", "rpg_counters"),
+                    InlineKeyboardButton.WithCallbackData("🎯 Combos", "rpg_combo_skills")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                }
+            });
+        }
+        
+        /// <summary>
+        /// City submenu: Shop, guild, leaderboards, training
+        /// </summary>
+        public InlineKeyboardMarkup GetCityMenu()
+        {
+            return new InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🏪 Tienda", "rpg_shop"),
+                    InlineKeyboardButton.WithCallbackData("⚒️ Herrería", "rpg_blacksmith"),
+                    InlineKeyboardButton.WithCallbackData("🏛️ Gremio", "rpg_guild")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🏆 Rankings", "leaderboard_main"),
+                    InlineKeyboardButton.WithCallbackData("🛡️ Entrenar", "rpg_train"),
+                    InlineKeyboardButton.WithCallbackData("🌟 Progreso", "rpg_progress")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                }
+            });
+        }
+        
+        /// <summary>
+        /// Help submenu: Guide, AI chat, tutorial, settings
+        /// </summary>
+        public InlineKeyboardMarkup GetHelpMenu()
+        {
+            return new InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("📖 Guía", "rpg_guide"),
+                    InlineKeyboardButton.WithCallbackData("💬 Chat IA", "rpg_ai_chat"),
+                    InlineKeyboardButton.WithCallbackData("🎯 Tutorial", "rpg_tutorial")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("⚙️ Opciones", "rpg_options"),
+                    InlineKeyboardButton.WithCallbackData("📊 Comandos", "rpg_commands"),
+                    InlineKeyboardButton.WithCallbackData("🐛 Reportar", "rpg_bug_report")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                }
+            });
+        }
+
         
         public InlineKeyboardMarkup GetCombatKeyboard()
         {
