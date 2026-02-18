@@ -251,6 +251,11 @@ namespace BotTelegram.Handlers
                 },
                 new[]
                 {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🛡️ Gremio", "guild_menu"),
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Arena PvP", "pvp_menu")
+                },
+                new[]
+                {
                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú Principal", "start")
                 }
             });
@@ -314,6 +319,8 @@ namespace BotTelegram.Handlers
                 "`/rpg` - Juego RPG\n" +
                 "`/pets` - Gestionar mascotas\n" +
                 "`/leaderboard` - Rankings\n" +
+                "`/gremio` - Sistema de Gremios\n" +
+                "`/arena` - Arena PvP\n" +
                 "`/chat` - IA conversacional",
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
@@ -1034,7 +1041,9 @@ Bienvenido a {player.CurrentLocation}
 🏛️ **Misiones:** Acepta quests y gana recompensas
 🏆 **Rankings:** Tabla de líderes globales
 🛡️ **Entrenar:** Mejora tus estadísticas
-🌟 **Progreso:** Consulta tus logros";
+🌟 **Progreso:** Consulta tus logros
+🛡️ **Gremio:** Únete o crea un gremio
+⚔️ **Arena PvP:** Desafía a otros jugadores";
                 
                 await bot.EditMessageText(
                     chatId,

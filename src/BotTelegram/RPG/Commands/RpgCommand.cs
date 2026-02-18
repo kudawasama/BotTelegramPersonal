@@ -136,7 +136,7 @@ Solo los más valientes pueden enfrentar este destino...
         
         private InlineKeyboardMarkup GetExplorationKeyboard()
         {
-            // Main menu with 4 categories (Fase 5 - Hierarchical UI)
+            // Main menu with 5 categories (Fase 5 - Hierarchical UI + Social)
             return new InlineKeyboardMarkup(new[]
             {
                 new[]
@@ -148,6 +148,11 @@ Solo los más valientes pueden enfrentar este destino...
                 {
                     InlineKeyboardButton.WithCallbackData("🏘️ Ciudad", "rpg_menu_city"),
                     InlineKeyboardButton.WithCallbackData("⚙️ Ayuda", "rpg_menu_help")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🛡️ Gremio", "guild_menu"),
+                    InlineKeyboardButton.WithCallbackData("⚔️ Arena PvP", "pvp_menu")
                 },
                 new[]
                 {
@@ -234,7 +239,12 @@ Solo los más valientes pueden enfrentar este destino...
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                    InlineKeyboardButton.WithCallbackData("�️ Gremio", "guild_menu"),
+                    InlineKeyboardButton.WithCallbackData("⚔️ Arena PvP", "pvp_menu")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("�🔙 Volver", "rpg_main")
                 }
             });
         }
