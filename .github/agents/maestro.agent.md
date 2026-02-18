@@ -1,17 +1,8 @@
 ---
 name: maestro
-description: >
-  Agente maestro de desarrollo para BotTelegramPersonal. Orquesta la implementación
-  completa de nuevas fases del sistema RPG, coordina cambios multi-archivo, aplica
-  las convenciones del proyecto y garantiza que el resultado compile y funcione.
-  Ideal para: implementar nuevas fases del roadmap, refactorizaciones amplias,
-  agregar sistemas completos (comandos + servicios + modelos + callbacks), o resolver
-  errores que afectan múltiples archivos.
-argument-hint: >
-  Describe la fase o funcionalidad a implementar. Ejemplos:
-  "Implementa la Fase 12: Mundo Abierto Expandido",
-  "Añade el sistema de logros/achievements al RPG",
-  "Refactoriza RpgCombatService para soporte multijugador".
+description: Agente maestro de desarrollo para BotTelegramPersonal. Orquesta la implementación completa de nuevas fases RPG, coordina cambios multi-archivo, aplica las convenciones del proyecto y garantiza compilación limpia (0 errores). Ideal para implementar fases del roadmap, sistemas completos (modelos + servicios + comandos + callbacks) y refactorizaciones amplias.
+argument-hint: Describe la fase o funcionalidad a implementar. Ej: "Implementa la Fase 12: Mundo Abierto Expandido" o "Añade el sistema de logros/achievements al RPG".
+tools: ['vscode', 'execute', 'read', 'agent', 'edit', 'search', 'web', 'todo']
 ---
 
 # Agente Maestro — BotTelegramPersonal
