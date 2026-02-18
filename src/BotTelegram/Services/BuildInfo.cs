@@ -14,9 +14,9 @@ namespace BotTelegram.Services
         private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(30);
 
         // Fallback: se actualiza manualmente al hacer deploy
-        private const string FallbackCommit = "5666ba0";
+        private const string FallbackCommit = "d4e6451";
         private const string FallbackDate   = "2026-02-18";
-        private const string BotVersion     = "3.1.2";
+        private const string BotVersion     = "3.1.3";
 
         /// <summary>
         /// Obtiene el hash corto del último commit git (7 chars).
