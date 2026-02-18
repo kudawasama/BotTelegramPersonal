@@ -100,7 +100,8 @@ namespace BotTelegram.Handlers
                          data == "shop_buy_equip_menu" ||
                          data.StartsWith("craft_") ||
                          data.StartsWith("quest_") ||
-                         data.StartsWith("guild_"))
+                         data.StartsWith("guild_") ||
+                         data.StartsWith("pvp_"))
                 {
                     await HandleRpgCallback(bot, callbackQuery, data, ct);
                 }
@@ -7136,6 +7137,13 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 return;
             }
             
+            // ═══ FASE 11: PVP CALLBACKS ══════════════════════════════════════
+            if (data.StartsWith("pvp_"))
+            {
+                await BotTelegram.RPG.Commands.PvpCommand.HandleCallback(bot, callbackQuery, data, ct);
+                return;
+            }
+
             // ═══ FASE 10: GUILD CALLBACKS ════════════════════════════════════
             if (data.StartsWith("guild_"))
             {

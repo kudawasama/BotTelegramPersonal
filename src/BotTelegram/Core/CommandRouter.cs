@@ -125,6 +125,13 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/arena") || message.Text.StartsWith("/pvp"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando PvpCommand (Arena PvP)");
+                await new BotTelegram.RPG.Commands.PvpCommand().Execute(bot, message, ct);
+                return;
+            }
+
             if (message.Text.StartsWith("/gremio") || message.Text.StartsWith("/guild"))
             {
                 Console.WriteLine("   [CommandRouter] → Ejecutando GuildCommand (Sistema de Gremio)");

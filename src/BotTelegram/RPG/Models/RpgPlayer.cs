@@ -141,6 +141,20 @@ namespace BotTelegram.RPG.Models
         public List<string> CompletedQuestIds { get; set; } = new();
 
         // ═══════════════════════════════════════
+        // PVP ARENA (FASE 11)
+        // ═══════════════════════════════════════
+        /// <summary>Rating ELO del jugador en PvP</summary>
+        public int PvpRating { get; set; } = 1200;
+        /// <summary>Victorias PvP</summary>
+        public int PvpWins { get; set; } = 0;
+        /// <summary>Derrotas PvP</summary>
+        public int PvpLosses { get; set; } = 0;
+        /// <summary>Empates PvP</summary>
+        public int PvpDraws { get; set; } = 0;
+        /// <summary>Última pelea PvP (para cooldown)</summary>
+        public DateTime LastPvpBattle { get; set; } = DateTime.MinValue;
+
+        // ═══════════════════════════════════════
         // GUILD SYSTEM (FASE 10)
         // ═══════════════════════════════════════
         /// <summary>ID del gremio al que pertenece el jugador (null si no tiene)</summary>
