@@ -727,11 +727,11 @@ namespace BotTelegram.RPG.Services
                 }
                 
                 // Calcular probabilidad base una vez
-                var (probability, probDetails) = CalculateSummonProbability(player, MinionType.Skeleton, enemy);
+                var (armyProb, armyProbDetails) = CalculateSummonProbability(player, MinionType.Skeleton, enemy);
                 
                 var summoned = 0;
                 var failed = 0;
-                var summonDetails = $"🎖️ **Ejército de los Muertos**\n{probDetails}\n\n";
+                var summonDetails = $"🎖️ **Ejército de los Muertos**\n{armyProbDetails}\n\n";
                 
                 for (int i = 0; i < 5; i++)
                 {
@@ -741,21 +741,21 @@ namespace BotTelegram.RPG.Services
                         break;
                     }
                     
-                    var roll = Random.Shared.NextDouble() * 100.0;
+                    var armyRoll = Random.Shared.NextDouble() * 100.0;
                     
-                    if (roll <= probability)
+                    if (armyRoll <= armyProb)
                     {
                         var message = SummonMinion(player, MinionType.Skeleton);
                         if (!message.Contains("❌"))
                         {
                             summoned++;
-                            summonDetails += $"✅ Esqueleto #{summoned}: Roll {roll:F1}% ≤ {probability:F1}%\n";
+                            summonDetails += $"✅ Esqueleto #{summoned}: Roll {armyRoll:F1}% ≤ {armyProb:F1}%\n";
                         }
                     }
                     else
                     {
                         failed++;
-                        summonDetails += $"❌ Invocación #{i+1} falló: Roll {roll:F1}% > {probability:F1}%\n";
+                        summonDetails += $"❌ Invocación #{i+1} falló: Roll {armyRoll:F1}% > {armyProb:F1}%\n";
                     }
                 }
                 
@@ -882,11 +882,12 @@ namespace BotTelegram.RPG.Services
                 MinionType.Zombie => 75.0,
                 MinionType.Ghost => 65.0,
                 MinionType.Lich => 50.0,
-                MinionType.AbyssalHorror => 40.0,
+                MinionType.VoidHorror => 40.0,
                 MinionType.FireElemental => 70.0,
                 MinionType.WaterElemental => 70.0,
                 MinionType.EarthElemental => 70.0,
                 MinionType.AirElemental => 70.0,
+                MinionType.Aberration => 35.0,
                 _ => 60.0
             };
             
