@@ -1,7 +1,7 @@
 # 🎮 HOJA DE RUTA - EXPANSIÓN DEL SISTEMA RPG
 
-**Última actualización:** 21 de enero de 2025  
-**Versión:** 3.0 - Sistema Completo
+**Última actualización:** 18 de febrero de 2026  
+**Versión:** 4.0 - Sistema Crafteo + Misiones
 
 ## 📊 PROGRESO GENERAL
 ```
@@ -13,10 +13,11 @@
 ✅ Fase 4: Sistema de Clases Desbloqueables [██████████] 100% ← COMPLETADA
 ✅ Fase 5: Refactorización UI/UX          [██████████] 100% ← COMPLETADA (5.1✅ 5.2✅ 5.3✅ 5.4✅)
 ✅ Fase 6: Máquina de Estados FSM        [██████████] 100% ← COMPLETADA
-✅ Fase 7: Inventario + Menús + Combate  [██████████] 100% ← COMPLETADA (esta sesión)
-⏸️ Fase 8: Sistema de Crafteo            [░░░░░░░░░░]   0%
-⏸️ Fase 9: Sistema de Misiones/Quests    [░░░░░░░░░░]   0%
-⏸️ Fase 10: Sistema de Gremio (Guild)    [░░░░░░░░░░]   0%
+✅ Fase 7: Inventario + Menús + Combate  [██████████] 100% ← COMPLETADA
+✅ Fase 7.5: Class Bonuses + Tienda      [██████████] 100% ← COMPLETADA (commit 9287d49)
+✅ Fase 8: Sistema de Crafteo            [██████████] 100% ← COMPLETADA (commit 59a8fa4)
+✅ Fase 9: Sistema de Misiones/Quests    [██████████] 100% ← COMPLETADA (commit 59a8fa4)
+⏸️ Fase 10: Sistema de Gremio (Guild)    [░░░░░░░░░░]   0% ← SIGUIENTE
 ⏸️ Fase 11: PvP Arena                    [░░░░░░░░░░]   0%
 ⏸️ Fase 12: Mundo Abierto Expandido      [░░░░░░░░░░]   0%
 ⏸️ Fase 13: Eventos Temporales           [░░░░░░░░░░]   0%
@@ -35,8 +36,8 @@
 7. [✅ Fase 5: Refactorización UI/UX](#fase-5) - COMPLETADA
 8. [✅ Fase 6: Máquina de Estados Finita](#fase-6) - COMPLETADA
 9. [✅ Fase 7: Inventario + Menús + Acciones de Combate](#fase-7) - COMPLETADA
-10. [Fase 8: Sistema de Crafteo](#fase-8)
-11. [Fase 9: Sistema de Misiones/Quests](#fase-9)
+10. [✅ Fase 8: Sistema de Crafteo](#fase-8) - COMPLETADA
+11. [✅ Fase 9: Sistema de Misiones/Quests](#fase-9) - COMPLETADA
 12. [Fase 10: Sistema de Gremio (Guild)](#fase-10)
 13. [Fase 11: PvP Arena](#fase-11)
 14. [Fase 12: Mundo Abierto Expandido](#fase-12)
@@ -1165,7 +1166,138 @@ Durante combate → Imagen con barras animadas que bajan en tiempo real
 
 ---
 
-## <a name="fase-8"></a>📱 FASE 8: TELEGRAM MINI APP (TMA) (20-30 horas)
+## <a name="fase-8"></a>⚒️ FASE 8: SISTEMA DE CRAFTEO ✅ COMPLETADA (commit 59a8fa4)
+
+### Implementado el 18 de febrero de 2026
+
+**Archivos creados:**
+
+| Archivo | Descripción |
+|---------|-------------|
+| `RPG/Models/CraftAndQuest.cs` | Modelos: `CraftRecipe`, `CraftIngredient`, `CraftResultType`, `QuestDefinition`, `PlayerQuest`, `QuestObjective`, `QuestReward`, `QuestStatus`, `QuestType` |
+| `RPG/Services/CraftingDatabase.cs` | 9 recetas Tier 1-3: pociones (Poción Mayor, Elixir de Maná, Poción Suprema, Tónico de Fuerza), equipos (Espada de Cristal, Vara Mágica, Armadura Reforzada), épicos Lv10+ (Arma Rúnica, Manto de Sombras) |
+| `RPG/Services/CraftingService.cs` | `CheckIngredients`, `Craft`, `ConsumeIngredients`, `IngredientStatusText` |
+| `RPG/Commands/CraftingCommand.cs` | UI `/herreria` — callbacks: `craft_menu`, `craft_view:{id}`, `craft_do:{id}` |
+
+**Comandos de texto:** `/herreria`, `/forge`, `/craft`  
+**Acceso en menú:** Ciudad → ⚒️ Herrería
+
+**Materiales de crafteo (coinciden exactamente con drops de combate):**
+- `Fragmento de Cristal` 🔷
+- `Esencia Mágica` ✨
+- `Gema Oscura` 🖤
+- `Runa Antigua` 🔶
+
+**RpgPlayer actualizado:**
+- `List<PlayerQuest> ActiveQuests` — misiones activas
+- `List<string> CompletedQuestIds` — historial de misiones completadas
+
+---
+
+## <a name="fase-9"></a>📜 FASE 9: SISTEMA DE MISIONES/QUESTS ✅ COMPLETADA (commit 59a8fa4)
+
+### Implementado el 18 de febrero de 2026
+
+**Archivos creados:**
+
+| Archivo | Descripción |
+|---------|-------------|
+| `RPG/Services/QuestDatabase.cs` | 8 misiones: Kill (lobos×5, goblins×10, dragón×1, boss Lv10+×1), Collect (Esencia Mágica×3, Fragmento Cristal×5, Runas×3), Craft (cualquier poción), Explore (mazmorra×1) |
+| `RPG/Services/QuestService.cs` | `AcceptQuest`, `UpdateKillObjective`, `UpdateCollectObjective`, `UpdateCraftObjective`, `UpdateExploreObjective`, `CompleteQuest` (con level-up automático) |
+| `RPG/Commands/QuestCommand.cs` | UI `/misiones` — callbacks: `quest_menu`, `quest_view:{id}`, `quest_accept:{id}`, `quest_complete:{id}` |
+
+**Comandos de texto:** `/misiones`, `/quests`, `/gremio`  
+**Acceso en menú:** Ciudad → 🏛️ Misiones
+
+**Tipos de misiones:**
+- `Kill` — matar N enemigos por ID o tipo (`boss_any` para jefes Lv10+)
+- `Collect` — tener N ítems en inventario (verifica en tiempo real)
+- `Craft` — craftear receta específica o categoría (`potion_any`)
+- `Explore` — completar mazmorra por ID o `dungeon_any`
+
+**⚠️ Integraciones pendientes (no bloquean el sistema, son mejoras adicionales):**
+```csharp
+// 1. En RpgCombatService.Actions.cs → ApplyVictoryRewards():
+var killNotifs = QuestService.UpdateKillObjective(player, enemy.Id, enemy.Level);
+
+// 2. Al obtener drops → InventoryService:
+var collectNotifs = QuestService.UpdateCollectObjective(player);
+
+// 3. En DungeonCommand al completar piso final:
+var exploreNotifs = QuestService.UpdateExploreObjective(player, dungeon.Id);
+
+// 4. En CraftingCommand.DoCraft():
+var craftNotifs = QuestService.UpdateCraftObjective(player, recipeId);
+```
+
+---
+
+## <a name="fase-10"></a>🛡️ FASE 10: SISTEMA DE GREMIO (GUILD) (10-14 horas) ← SIGUIENTE
+
+### Objetivo
+Añadir la capa **social y cooperativa**: los jugadores pueden crear/unirse a gremios, trabajar juntos en misiones de gremio y competir en el leaderboard de gremios.
+
+### 10.1 Modelos Necesarios
+
+```csharp
+public class Guild
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public string Emoji { get; set; }
+    public string Description { get; set; }
+    public long OwnerId { get; set; }
+    public List<GuildMember> Members { get; set; }
+    public int Level { get; set; } = 1;
+    public int Experience { get; set; }
+    public int GuildBank { get; set; }  // Oro compartido
+    public DateTime CreatedAt { get; set; }
+}
+
+public class GuildMember
+{
+    public long ChatId { get; set; }
+    public string Name { get; set; }
+    public GuildRole Role { get; set; } // Owner, Officer, Member
+    public int Contribution { get; set; }
+    public DateTime JoinedAt { get; set; }
+}
+
+public enum GuildRole { Owner, Officer, Member }
+```
+
+**En `RpgPlayer`:**
+```csharp
+public string? GuildId { get; set; }
+public GuildRole GuildRole { get; set; }
+```
+
+### 10.2 Funcionalidades
+
+- `/gremio` — Ver gremio propio o buscar gremios
+- Crear gremio (costo: 1000 oro)
+- Unirse/salir de gremio
+- Banco de gremio (depositar/retirar oro)
+- Misiones de gremio (requieren N miembros para completar)
+- Leaderboard de gremios por contribución/nivel
+- Chat de gremio (mensajes a miembros)
+- Kick/invite (solo Officer/Owner)
+
+### 10.3 Archivos a Crear
+
+- `RPG/Models/Guild.cs`
+- `RPG/Services/GuildDatabase.cs` (persistencia JSON)
+- `RPG/Services/GuildService.cs`
+- `RPG/Commands/GuildCommand.cs`
+- `Handlers/CallbackQueryHandler.cs` — añadir `guild_*`
+
+**Tiempo estimado:** 10-14 horas  
+**Impacto gameplay:** ⭐⭐⭐⭐ ALTO  
+**Prioridad:** ALTA — siguiente fase
+
+---
+
+## <a name="fase-tma"></a>📱 FASE AVANZADA: TELEGRAM MINI APP (TMA) (20-30 horas)
 
 ### 8.1 Concepto
 
@@ -1381,49 +1513,66 @@ result.Message = narrative + result.Message;
 6. ✅ **Fase 4**: Clases (6-8h) - **COMPLETADA**
 7. ✅ **Fase 5**: Refactorización UI/UX (10-12h) - **COMPLETADA**
 8. ✅ **Fase 6**: FSM (8-10h) - **COMPLETADA**
-9. ✅ **Fase 7**: Inventario + Menús + Acciones Combate (6-8h) - **COMPLETADA** ← Esta sesión
-10. ⚒️ **Fase 8**: Crafteo (8-10h) - **SIGUIENTE**
-11. 📜 **Fase 9**: Misiones/Quests (10-12h) - **ALTA**
-12. 🛡️ **Fase 10**: Guild (10-14h) - **MEDIA**
-13. ⚔️ **Fase 11**: PvP Arena (8-12h) - **MEDIA**
-14. 🌍 **Fase 12**: Mundo Abierto Expandido (15-20h) - **MEDIA**
-15. 🎉 **Fase 13**: Eventos Temporales (6-8h) - **MEDIA-BAJA**
-16. 🤖 **Fase 16**: IA Narrativa (15-20h) - **MEDIA-BAJA**
-17. 🎨 **Fase 14**: Imágenes (12-15h) - **BAJA**
-18. 📱 **Fase 15**: Mini App (20-30h) - **BAJA**
+9. ✅ **Fase 7**: Inventario + Menús + Acciones Combate (6-8h) - **COMPLETADA**
+10. ✅ **Fase 7.5**: Class Bonuses + Tienda completa (4-6h) - **COMPLETADA** (commits 9ca8761 → 9287d49)
+11. ✅ **Fase 8**: Crafteo (8-10h) - **COMPLETADA** (commit 59a8fa4)
+12. ✅ **Fase 9**: Misiones/Quests (10-12h) - **COMPLETADA** (commit 59a8fa4)
+13. 🛡️ **Fase 10**: Guild (10-14h) - **SIGUIENTE**
+14. ⚔️ **Fase 11**: PvP Arena (8-12h) - **MEDIA**
+15. 🌍 **Fase 12**: Mundo Abierto Expandido (15-20h) - **MEDIA**
+16. 🎉 **Fase 13**: Eventos Temporales (6-8h) - **MEDIA-BAJA**
+17. 🤖 **Fase 16**: IA Narrativa (15-20h) - **MEDIA-BAJA**
+18. 🎨 **Fase 14**: Imágenes (12-15h) - **BAJA**
+19. 📱 **Fase 15**: Mini App (20-30h) - **BAJA**
 
 ### Tiempo Total Estimado
-- **Completado** (Fases 0-7): ~50-65 horas ✅ **COMPLETADO**
-- **Próximo sprint** (+ Fases 8-9 Crafteo+Quests): ~68-87 horas
-- **Contenido social** (+ Fases 10-11 Guild+PvP): ~86-113 horas
-- **Mundo completo** (+ Fases 12-13): ~107-141 horas
-- **Todo el contenido** (+ Fases 14-16): ~134-176 horas
+- **Completado** (Fases 0-9): ~70-90 horas ✅ **COMPLETADO**
+- **Social** (+ Fases 10-11 Guild+PvP): ~88-116 horas
+- **Mundo completo** (+ Fases 12-13): ~109-144 horas
+- **Todo el contenido** (+ Fases 14-16): ~136-179 horas
 
 ---
 
 ## 🎯 PRÓXIMOS PASOS INMEDIATOS
 
-**🔴 Sprint 1 — Crafteo + Quests (18-22h)**
-1. ⚒️ Fase 8: `CraftingService` + `CraftingDatabase` + UI herrería en menú Ciudad
-2. 📜 Fase 9: `QuestService` + tracking de progreso en combate/exploración + UI misiones
+**🔴 Sprint 3 — Social + PvP (18-26h)** ← ACTUAL
+1. 🛡️ **Fase 10: Sistema de Gremio (Guild)** — `GuildService` + `GuildCommand` + ranking + `/gremio` resuelto con la UI de misiones. Falta: guerras de gremio, banco compartido, chat de gremio.
+2. ⚔️ **Fase 11: PvP Arena** — `PvpService` + `ArenaCommand` + sistema ELO + matchmaking por nivel.
 
-**🟡 Sprint 2 — Social + PvP (18-26h)**
-1. 🛡️ Fase 10: `GuildService` + `GuildCommand` + ranking de gremios
-2. ⚔️ Fase 11: `PvpService` + `ArenaCommand` + sistema ELO
+**Integraciones pendientes de Fase 8+9 (no bloqueantes):**
+- Llamar `QuestService.UpdateKillObjective(player, enemy.Id)` en `RpgCombatService` tras victoria
+- Llamar `QuestService.UpdateCollectObjective(player)` al obtener drops
+- Llamar `QuestService.UpdateExploreObjective(player, dungeon.Id)` al completar mazmorra
+- Llamar `QuestService.UpdateCraftObjective(player, recipeId)` en `CraftingCommand.DoCraft`
 
-**🟢 Sprint 3 — Mundo + Eventos (21-28h)**
+**🟡 Sprint 4 — Mundo + Eventos (21-28h)**
 1. 🌍 Fase 12: `WorldDatabase` expandido + facciones + NPCs con diálogo
 2. 🎉 Fase 13: `EventService` + eventos estacionales automáticos
+
+**🟢 Sprint 5 — Premium (27-35h)**
+1. 🎨 Fase 14: Generación de imágenes para stats/combate/inventario
+2. 🤖 Fase 16: IA Narrativa (Dungeon Master) con Semantic Kernel
+3. 📱 Fase 15: Telegram Mini App (Blazor/React)
 
 ---
 
 ## 🏁 CONCLUSIÓN
 
-El bot tiene una **base sólida production-ready** con 7 fases completadas. El teclado de combate táctico (6 acciones directas accesibles), el inventario completo con drops funcionales y los menús contextuales posicionan al bot como un RPG competitivo en Telegram.
+El bot tiene una **base sólida production-ready** con 9 fases completadas (+ Fase 7.5). El ciclo de gameplay **explorar → recolectar → craftear → misiones → equipar → combatir** está completamente funcional. El sistema de misiones incluye objetivos de Kill, Collect, Craft y Explore con recompensas de oro, XP y equipo.
 
-**La siguiente gran mejora** es el **Sistema de Crafteo (Fase 8)** que completará el ciclo de gameplay: explorar → recolectar materiales → craftear → equipar → combatir.
-
+**La siguiente gran mejora** es el **Sistema de Gremio (Fase 10)** que añadirá la capa social: crear/unirse a gremios, banco compartido, ranking de gremios y cooperación entre jugadores.
 
 ---
 
-**¿Comenzamos con Fase 5 (UI/UX)?**
+## ✅ REGISTRO DE COMMITS
+
+| Commit | Contenido | Fecha |
+|--------|-----------|-------|
+| `41897c1` | Fase 3.5: Leveling mascotas/minions + CompanionsCommand | ene 2025 |
+| `1f35c48` | Fase 4: Sistema de clases desbloqueables | ene 2025 |
+| `188a539` | Fase 5-6: UI/UX refactor + FSM | ene 2025 |
+| `6fe3412` | Fase 7: Inventario + menús + combate táctico | ene 2025 |
+| `9ca8761` | Fase 7.5a: ClassBonusService + ShopCommand | feb 2026 |
+| `301ae92` | Fix: Router shop callbacks | feb 2026 |
+| `9287d49` | Fase 7.5b: Equipos en tienda con EquipmentDatabase | feb 2026 |
+| `59a8fa4` | Fase 8+9: Crafteo + Misiones/Quests completos | feb 2026 |

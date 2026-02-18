@@ -4,9 +4,9 @@
 
 ---
 
-## 📊 Estado actual (v1.1)
+## 📊 Estado actual (v2.0 — Feb 2026)
 
-✅ **Completado:**
+✅ **Completado (Bot base):**
 - Bot de Telegram con comandos básicos
 - Sistema de recordatorios con parsing natural
 - Persistencia en JSON
@@ -15,7 +15,16 @@
 - Recordatorios recurrentes
 - ⭐ **Botones inline interactivos** (InlineKeyboardMarkup)
 - ⭐ **FAQ/Manual completo** integrado en el bot
-- ⭐ **UX mejorada** con menús intuitivos y atajos rápidos
+
+✅ **Completado (RPG — 9 fases + extra):**
+- ⭐ **Fases 0-7**: Combate táctico, mapas, mazmorras, mascotas, clases, UI/UX, FSM, inventario
+- ⭐ **Fase 7.5**: Bonos de clase activa + Tienda completa (consumibles, equipos, vender)
+- ⭐ **Fase 8**: Sistema de Crafteo — 9 recetas Tier 1-3, `/herreria`
+- ⭐ **Fase 9**: Sistema de Misiones/Quests — 8 misiones Kill/Collect/Craft/Explore, `/misiones`
+
+🔜 **Siguiente (RPG):**
+- Fase 10: Sistema de Gremio (Guild)
+- Fase 11: PvP Arena
 
 ---
 
@@ -181,11 +190,11 @@
 ## 📅 Timeline tentativo
 
 ```
-Feb 2026  → FASE 1 (Base sólida)
-Mar 2026  → FASE 2 (UX mejorada)
-Apr 2026  → FASE 3 (Características avanzadas)
-May 2026  → FASE 4 (Integraciones)
-Jun 2026  → FASE 5 (Monetización)
+Feb 2026  → RPG Fase 10-11 (Guild + PvP Arena)
+Mar 2026  → RPG Fase 12-13 (Mundo Abierto + Eventos)
+Abr 2026  → Base bot: SQLite + Tests + Dashboard web
+May 2026  → Features IA: transcripción audio + búsqueda web
+Jun 2026  → RPG Fase 14-16 (Imágenes + Mini App + IA Narrativa)
 ```
 
 ---
@@ -235,4 +244,4 @@ Se buscan colaboradores en:
 
 ---
 
-**Última actualización:** 10 de febrero, 2026
+**Última actualización:** 18 de febrero, 2026
