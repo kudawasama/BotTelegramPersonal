@@ -76,6 +76,20 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/map") || message.Text.StartsWith("/mapa"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando MapCommand (Mapa del Mundo)");
+                await new MapCommand().Execute(bot, message, ct);
+                return;
+            }
+
+            if (message.Text.StartsWith("/travel") || message.Text.StartsWith("/viajar"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando TravelCommand (Viajar entre Zonas)");
+                await new TravelCommand().Execute(bot, message, ct);
+                return;
+            }
+
             Console.WriteLine("   [CommandRouter] → Ejecutando UnknownCommand");
             await new UnknownCommand().Execute(bot, message, ct);
         }

@@ -142,14 +142,14 @@ Solo los más valientes pueden enfrentar este destino...
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("⚔️ Explorar", "rpg_explore_menu"),
-                    InlineKeyboardButton.WithCallbackData("🗺️ Aventura", "rpg_adventure"),
+                    InlineKeyboardButton.WithCallbackData("🗺️ Mapa", "rpg_map"),
                     InlineKeyboardButton.WithCallbackData("🐾 Mascotas", "rpg_pets_menu")
                 },
                 new[]
                 {
+                    InlineKeyboardButton.WithCallbackData("🎲 Aventura", "rpg_adventure"),
                     InlineKeyboardButton.WithCallbackData("😴 Descansar", "rpg_rest"),
-                    InlineKeyboardButton.WithCallbackData("💼 Trabajar", "rpg_work"),
-                    InlineKeyboardButton.WithCallbackData("🧘 Meditar", "rpg_action_meditate")
+                    InlineKeyboardButton.WithCallbackData("💼 Trabajar", "rpg_work")
                 },
                 // INFORMACIÓN Y PROGRESO
                 new[]

@@ -784,6 +784,9 @@ Si quieres que olvide el contexto anterior:
             var rpgCommand = new BotTelegram.RPG.Commands.RpgCommand();
             var rpgService = new BotTelegram.RPG.Services.RpgService();
             var combatService = new BotTelegram.RPG.Services.RpgCombatService();
+            var explorationService = new BotTelegram.RPG.Services.ExplorationService(rpgService);
+            var mapCommand = new BotTelegram.RPG.Commands.MapCommand();
+            var travelCommand = new BotTelegram.RPG.Commands.TravelCommand();
             
             Console.WriteLine($"[RPG] Callback: {data}");
             
@@ -2360,59 +2363,213 @@ Si quieres que olvide el contexto anterior:
                 
                 rpgService.ConsumeEnergy(currentPlayer, 15);
                 
-                // Generate random enemy
-                var difficulties = new[] { 
-                    EnemyDifficulty.Easy,
-                    EnemyDifficulty.Easy,
-                    EnemyDifficulty.Medium
-                };
-                var difficulty = difficulties[new Random().Next(difficulties.Length)];
-                var enemy = rpgService.GenerateEnemy(currentPlayer.Level, difficulty);
-                
-                currentPlayer.IsInCombat = true;
-                currentPlayer.CurrentEnemy = enemy;
-                rpgService.SavePlayer(currentPlayer);
+                // Use new ExplorationService
+                var explorationResult = explorationService.Explore(currentPlayer);
                 
                 TelegramLogger.LogRpgEvent(
                     chatId,
                     currentPlayer.Name,
-                    "explore_encounter",
-                    $"Encountered {enemy.Name} (Nv.{enemy.Level}, {difficulty}). Energy left: {currentPlayer.Energy}");
+                    "explore",
+                    $"Result: {explorationResult.Type}. Energy left: {currentPlayer.Energy}");
                 
-                // Construir mensaje de combate con información de mascotas activas
-                var combatText = $"⚔️ **¡COMBATE!**\n\n" +
-                    $"Mientras exploras, te encuentras con:\n\n" +
-                    $"{enemy.Emoji} **{enemy.Name}** (Nv.{enemy.Level}) - {enemy.Type}\n" +
-                    $"❤️ {enemy.HP}/{enemy.MaxHP} HP\n" +
-                    $"⚔️ Ataque: {enemy.Attack} | 🔮 Magia: {enemy.MagicPower}\n" +
-                    $"🛡️ Def.Física: {enemy.PhysicalDefense} | 🌀 Def.Mágica: {enemy.MagicResistance}\n\n";
-                
-                // Mostrar mascotas activas si las hay
-                if (currentPlayer.ActivePets != null && currentPlayer.ActivePets.Any(p => p.HP > 0))
+                // Handle different exploration results
+                if (explorationResult.Type == BotTelegram.RPG.Services.ExplorationResultType.Combat && explorationResult.Enemy != null)
                 {
-                    combatText += "━━━━━━━━━━━━━━━\n";
-                    combatText += "🐾 **TUS COMPAÑERAS:**\n\n";
-                    foreach (var pet in currentPlayer.ActivePets.Where(p => p.HP > 0))
+                    // Combat encounter
+                    var enemy = explorationResult.Enemy;
+                    
+                    currentPlayer.IsInCombat = true;
+                    currentPlayer.CurrentEnemy = enemy;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    // Construir mensaje de combate con información de mascotas activas
+                    var combatText = $"⚔️ **¡COMBATE!**\n\n" +
+                        $"Mientras exploras, te encuentras con:\n\n" +
+                        $"{enemy.Emoji} **{enemy.Name}** (Nv.{enemy.Level}) - {enemy.Type}\n" +
+                        $"❤️ {enemy.HP}/{enemy.MaxHP} HP\n" +
+                        $"⚔️ Ataque: {enemy.Attack} | 🔮 Magia: {enemy.MagicPower}\n" +
+                        $"🛡️ Def.Física: {enemy.PhysicalDefense} | 🌀 Def.Mágica: {enemy.MagicResistance}\n\n";
+                    
+                    // Mostrar mascotas activas si las hay
+                    if (currentPlayer.ActivePets != null && currentPlayer.ActivePets.Any(p => p.HP > 0))
                     {
-                        var petEmoji = GetPetEmoji(pet.Species);
-                        var hpPercent = (double)pet.HP / pet.MaxHP * 100;
-                        var hpBar = hpPercent > 70 ? "💚" : hpPercent > 30 ? "💛" : "❤️";
-                        combatText += $"{petEmoji} **{pet.Name}** (Lv.{pet.Level})\n";
-                        combatText += $"   {hpBar} HP: {pet.HP}/{pet.MaxHP} | ⚔️ ATK: {pet.EffectiveAttack} | 🛡️ DEF: {pet.EffectiveDefense}\n";
-                        combatText += $"   {pet.LoyaltyEmoji} {pet.Loyalty} (+{(int)(pet.LoyaltyStatBonus * 100)}% bonus)\n\n";
+                        combatText += "━━━━━━━━━━━━━━━\n";
+                        combatText += "🐾 **TUS COMPAÑERAS:**\n\n";
+                        foreach (var pet in currentPlayer.ActivePets.Where(p => p.HP > 0))
+                        {
+                            var petEmoji = GetPetEmoji(pet.Species);
+                            var hpPercent = (double)pet.HP / pet.MaxHP * 100;
+                            var hpBar = hpPercent > 70 ? "💚" : hpPercent > 30 ? "💛" : "❤️";
+                            combatText += $"{petEmoji} **{pet.Name}** (Lv.{pet.Level})\n";
+                            combatText += $"   {hpBar} HP: {pet.HP}/{pet.MaxHP} | ⚔️ ATK: {pet.EffectiveAttack} | 🛡️ DEF: {pet.EffectiveDefense}\n";
+                            combatText += $"   {pet.LoyaltyEmoji} {pet.Loyalty} (+{(int)(pet.LoyaltyStatBonus * 100)}% bonus)\n\n";
+                        }
+                        combatText += "━━━━━━━━━━━━━━━\n\n";
                     }
-                    combatText += "━━━━━━━━━━━━━━━\n\n";
+                    
+                    combatText += "💡 _Usa 👁️Observar para ver debilidades_\n\n¿Qué haces?";
+                    
+                    await bot.DeleteMessage(chatId, messageId, ct);
+                    await bot.SendMessage(
+                        chatId,
+                        combatText,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: GetCombatKeyboard(),
+                        cancellationToken: ct);
+                }
+                else if (explorationResult.Type == BotTelegram.RPG.Services.ExplorationResultType.Treasure)
+                {
+                    // Resource found
+                    await bot.DeleteMessage(chatId, messageId, ct);
+                    
+                    var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>
+                    {
+                        new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔍 Explorar otra vez", "rpg_explore"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗺️ Ver mapa", "rpg_map")
+                        },
+                        new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú RPG", "rpg_main")
+                        }
+                    };
+                    
+                    await bot.SendMessage(
+                        chatId,
+                        explorationResult.Message,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
+                        cancellationToken: ct);
+                }
+                else if (explorationResult.Type == BotTelegram.RPG.Services.ExplorationResultType.ZoneDiscovered)
+                {
+                    // New zone unlocked
+                    await bot.DeleteMessage(chatId, messageId, ct);
+                    
+                    var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>
+                    {
+                        new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗺️ Ver mapa", "rpg_map"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔍 Seguir explorando", "rpg_explore")
+                        },
+                        new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú RPG", "rpg_main")
+                        }
+                    };
+                    
+                    await bot.SendMessage(
+                        chatId,
+                        explorationResult.Message,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
+                        cancellationToken: ct);
+                }
+                else if (explorationResult.Type == BotTelegram.RPG.Services.ExplorationResultType.Nothing)
+                {
+                    // Nothing found
+                    await bot.DeleteMessage(chatId, messageId, ct);
+                    
+                    var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>
+                    {
+                        new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔍 Explorar otra vez", "rpg_explore"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗺️ Ver mapa", "rpg_map")
+                        },
+                        new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú RPG", "rpg_main")
+                        }
+                    };
+                    
+                    await bot.SendMessage(
+                        chatId,
+                        explorationResult.Message,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
+                        cancellationToken: ct);
+                }
+                else
+                {
+                    // Error
+                    await bot.DeleteMessage(chatId, messageId, ct);
+                    await bot.SendMessage(
+                        chatId,
+                        explorationResult.Message ?? "❌ Error en la exploración.",
+                        cancellationToken: ct);
                 }
                 
-                combatText += "💡 _Usa 👁️Observar para ver debilidades_\n\n¿Qué haces?";
+                return;
+            }
+            
+            // Map - Show world map
+            if (data == "rpg_map")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🗺️ Cargando mapa...", cancellationToken: ct);
+                
+                var player = rpgService.GetPlayer(chatId);
+                if (player == null)
+                {
+                    await bot.SendMessage(chatId, "❌ No tienes un personaje creado.", cancellationToken: ct);
+                    return;
+                }
                 
                 await bot.DeleteMessage(chatId, messageId, ct);
-                await bot.SendMessage(
-                    chatId,
-                    combatText,
-                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                    replyMarkup: GetCombatKeyboard(),
-                    cancellationToken: ct);
+                
+                // Reuse existing map display logic
+                var mapMsg = new Telegram.Bot.Types.Message
+                {
+                    Chat = callbackQuery.Message.Chat,
+                    Text = "/map"
+                };
+                
+                await mapCommand.Execute(bot, mapMsg, ct);
+                return;
+            }
+            
+            // Travel - Move to another zone
+            if (data.StartsWith("rpg_travel_"))
+            {
+                var targetZoneId = data.Replace("rpg_travel_", "");
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🚶 Viajando...", cancellationToken: ct);
+                
+                var player = rpgService.GetPlayer(chatId);
+                if (player == null)
+                {
+                    await bot.SendMessage(chatId, "❌ No tienes un personaje creado.", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.DeleteMessage(chatId, messageId, ct);
+                await travelCommand.ExecuteTravelById(bot, chatId, player, targetZoneId, ct);
+                return;
+            }
+            
+            // Zones List - Show all available zones
+            if (data == "rpg_zones_list")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "📋 Cargando zonas...", cancellationToken: ct);
+                
+                var player = rpgService.GetPlayer(chatId);
+                if (player == null)
+                {
+                    await bot.SendMessage(chatId, "❌ No tienes un personaje creado.", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.DeleteMessage(chatId, messageId, ct);
+                
+                var travelMsg = new Telegram.Bot.Types.Message
+                {
+                    Chat = callbackQuery.Message.Chat,
+                    Text = "/travel"  // Without args shows zone list
+                };
+                
+                await travelCommand.Execute(bot, travelMsg, ct);
                 return;
             }
             
