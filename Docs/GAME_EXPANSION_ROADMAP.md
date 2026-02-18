@@ -11,7 +11,7 @@
 ⏸️ Fase 3: Sistema de Mazmorras          [░░░░░░░░░░]   0%
 ⏸️ Fase 3.5: Leveling Mascotas/Minions   [░░░░░░░░░░]   0%
 ⏸️ Fase 4: Reestructuración de Clases    [░░░░░░░░░░]   0%
-🔄 Fase 5: Refactorización UI/UX          [░░░░░░░░░░]   0% ← EN PROGRESO
+🔄 Fase 5: Refactorización UI/UX          [██████░░░░]  60% ← EN PROGRESO (Menús ✅)
 ⏸️ Fase 6: Máquina de Estados FSM        [░░░░░░░░░░]   0%
 ⏸️ Fase 7: Generación de Imágenes        [░░░░░░░░░░]   0%
 ⏸️ Fase 8: Telegram Mini App              [░░░░░░░░░░]   0%
@@ -1302,24 +1302,24 @@ result.Message = narrative + result.Message;
 
 ### Fase 5 (UI/UX) - Desglose de Tareas
 
-**Semana 1: Arquitectura de Menús (4-5h)**
-1. ✨ Diseñar estructura jerárquica de 4 categorías
-2. ✨ Crear nuevos callbacks para navegación
-3. ✨ Refactorizar RpgCommand.cs con menú principal
-4. ✨ Implementar menús: Aventura, Personaje, Ciudad, Ayuda
-5. ✨ Testing de navegación
+**Semana 1: Arquitectura de Menús (4-5h)** ✅ **COMPLETADO**
+1. ✅ Diseñar estructura jerárquica de 4 categorías
+2. ✅ Crear nuevos callbacks para navegación
+3. ✅ Refactorizar RpgCommand.cs con menú principal
+4. ✅ Implementar menús: Aventura, Personaje, Ciudad, Ayuda
+5. ✅ Testing de navegación
 
-**Semana 2: Single Message Interaction (3-4h)**
-1. ✨ Modificar RpgCombatService para guardar MessageId
-2. ✨ Implementar EditMessage en lugar de SendMessage
-3. ✨ Crear método GenerateCombatView()
-4. ✨ Testing de combate con edición en tiempo real
+**Semana 2: Single Message Interaction (3-4h)** ⏳ **PENDIENTE**
+1. ⏳ Modificar RpgCombatService para guardar MessageId
+2. ⏳ Implementar EditMessage en lugar de SendMessage
+3. ⏳ Crear método GenerateCombatView()
+4. ⏳ Testing de combate con edición en tiempo real
 
-**Semana 3: Transición a InlineKeyboard (3h)**
-1. ✨ Reemplazar ReplyKeyboardMarkup por InlineKeyboardMarkup
-2. ✨ Actualizar todos los comandos con InlineKeyboard
-3. ✨ Agregar barras de progreso animadas
-4. ✨ Testing general
+**Semana 3: Transición a InlineKeyboard (3h)** ⏳ **PENDIENTE**
+1. ⏳ Reemplazar ReplyKeyboardMarkup por InlineKeyboardMarkup
+2. ⏳ Actualizar todos los comandos con InlineKeyboard
+3. ⏳ Agregar barras de progreso animadas
+4. ⏳ Testing general
 
 ---
 
