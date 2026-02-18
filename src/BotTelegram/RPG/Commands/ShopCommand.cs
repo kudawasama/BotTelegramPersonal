@@ -252,11 +252,24 @@ namespace BotTelegram.RPG.Commands
             InlineKeyboardMarkup markup, CancellationToken ct, int? editMessageId)
         {
             if (editMessageId.HasValue)
-                await bot.EditMessageText(chatId, editMessageId.Value, text,
-                    parseMode: ParseMode.Markdown, replyMarkup: markup, cancellationToken: ct);
-            else
-                await bot.SendMessage(chatId, text,
-                    parseMode: ParseMode.Markdown, replyMarkup: markup, cancellationToken: ct);
+            {
+                try
+                {
+                    await bot.EditMessageText(chatId, editMessageId.Value, text,
+                        parseMode: ParseMode.Markdown, replyMarkup: markup, cancellationToken: ct);
+                    return;
+                }
+                catch (Exception ex) when (ex.Message.Contains("message is not modified"))
+                {
+                    return; // ya tiene el mismo contenido, ok
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ShopCommand] EditMessageText falló: {ex.Message} — enviando nuevo mensaje");
+                }
+            }
+            await bot.SendMessage(chatId, text,
+                parseMode: ParseMode.Markdown, replyMarkup: markup, cancellationToken: ct);
         }
     }
 }

@@ -95,7 +95,8 @@ namespace BotTelegram.Handlers
                     await HandleLeaderboardCallback(bot, callbackQuery, data, ct);
                 }
                 // RPG Callbacks
-                else if (data == "rpg_main" || data.StartsWith("rpg_"))
+                else if (data == "rpg_main" || data.StartsWith("rpg_") ||
+                         data.StartsWith("shop_") || data == "shop_buy" || data == "shop_sell")
                 {
                     await HandleRpgCallback(bot, callbackQuery, data, ct);
                 }
