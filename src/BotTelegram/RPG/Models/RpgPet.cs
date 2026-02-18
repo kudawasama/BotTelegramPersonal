@@ -49,6 +49,7 @@ namespace BotTelegram.RPG.Models
         public int BossKills { get; set; } = 0;
         public int TotalDamageDealt { get; set; } = 0;
         public int TimesRevived { get; set; } = 0;
+        public int CombatsParticipated { get; set; } = 0; // NUEVO: Fase 3.5
         
         // Timestamps
         public DateTime TamedAt { get; set; } = DateTime.UtcNow;
@@ -163,6 +164,70 @@ namespace BotTelegram.RPG.Models
                 2 => 35, // Advanced → Ultimate: Nivel 35
                 _ => 99
             };
+        }
+        
+        /// <summary>
+        /// Gana experiencia y sube de nivel si es necesario (Fase 3.5)
+        /// </summary>
+        /// <returns>True si subió de nivel</returns>
+        public bool GainExperience(int xp)
+        {
+            XP += xp;
+            
+            if (XP >= XPNeeded)
+            {
+                return LevelUp();
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Sube un nivel con bonificaciones de stats (Fase 3.5)
+        /// </summary>
+        public bool LevelUp()
+        {
+            if (XP < XPNeeded) return false;
+            
+            XP -= XPNeeded;
+            Level++;
+            
+            // Bonificaciones por nivel
+            var statGrowth = EvolutionStage switch
+            {
+                1 => 1.05,  // Basic: +5% stats por nivel
+                2 => 1.08,  // Advanced: +8% stats por nivel
+                3 => 1.12,  // Ultimate: +12% stats por nivel
+                _ => 1.05
+            };
+            
+            MaxHP = (int)(MaxHP * statGrowth);
+            HP = MaxHP; // Heal completo al subir de nivel
+            Attack = (int)(Attack * statGrowth);
+            Defense = (int)(Defense * statGrowth);
+            Speed = (int)(Speed * statGrowth);
+            MagicPower = (int)(MagicPower * statGrowth);
+            
+            // Bonificaciones especiales cada 5 niveles
+            if (Level % 5 == 0)
+            {
+                MaxHP += 20;
+                HP = MaxHP;
+                Attack += 5;
+                Defense += 3;
+                
+                // Cada 10 niveles: Bonus extra
+                if (Level % 10 == 0)
+                {
+                    MaxHP += 50;
+                    HP = MaxHP;
+                    Attack += 10;
+                    Defense += 5;
+                    Speed += 2;
+                }
+            }
+            
+            return true;
         }
     }
     

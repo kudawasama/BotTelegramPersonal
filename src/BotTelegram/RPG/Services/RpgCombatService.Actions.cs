@@ -1071,6 +1071,74 @@ namespace BotTelegram.RPG.Services
             player.TotalGoldEarned += result.GoldGained;
             _rpgService.AddXP(player, result.XPGained);
             
+            // ═══ FASE 3.5: XP para Mascotas ═══
+            if (player.ActivePets != null && player.ActivePets.Any())
+            {
+                foreach (var pet in player.ActivePets)
+                {
+                    pet.CombatsParticipated++;
+                    
+                    // 50 XP base por participar en el combate
+                    int petXP = 50;
+                    
+                    // Bonus de 100 XP si la pet dio el golpe final (verificar si su último ataque fue crítico o daño alto)
+                    if (player.ComboCount >= 3 || (result.PetTurns != null && result.PetTurns.Any(pt => pt.Critical)))
+                    {
+                        petXP += 100; // Kill bonus
+                        pet.TotalKills++;
+                    }
+                    
+                    // Boss bonus
+                    if (enemy.Difficulty == EnemyDifficulty.Boss || enemy.Difficulty == EnemyDifficulty.WorldBoss)
+                    {
+                        petXP += 500;
+                        pet.BossKills++;
+                    }
+                    
+                    // Dar XP y verificar levelup
+                    bool leveledUp = pet.GainExperience(petXP);
+                    
+                    if (leveledUp)
+                    {
+                        var petEmoji = PetDatabase.GetSpeciesData(pet.Species)?.Emoji ?? "🐾";
+                        result.PetLevelUps.Add($"{petEmoji} {pet.Name} alcanzó **nivel {pet.Level}**!");
+                    }
+                }
+            }
+            
+            // ═══ FASE 3.5: XP para Minions ═══
+            if (player.ActiveMinions != null && player.ActiveMinions.Any())
+            {
+                foreach (var minion in player.ActiveMinions)
+                {
+                    minion.CombatsSurvived++;
+                    
+                    // 30 XP base por sobrevivir al combate
+                    int minionXP = 30;
+                    
+                    // Bonus de 150 XP si el minion participó activamente
+                    if (result.TotalPetDamage > 0) // Si hubo daño de compañeros, asumimos que minions ayudaron
+                    {
+                        minionXP += 150;
+                        minion.Kills++;
+                    }
+                    
+                    // Boss bonus
+                    if (enemy.Difficulty == EnemyDifficulty.Boss || enemy.Difficulty == EnemyDifficulty.WorldBoss)
+                    {
+                        minionXP += 300;
+                    }
+                    
+                    // Dar XP y verificar levelup
+                    bool leveledUp = minion.GainExperience(minionXP);
+                    
+                    if (leveledUp)
+                    {
+                        result.MinionLevelUps.Add($"{minion.Emoji} {minion.Name} alcanzó **nivel {minion.Level}**!");
+                    }
+                }
+            }
+            
             player.IsInCombat = false;
             player.CurrentEnemy = null;
             player.ComboCount = 0;

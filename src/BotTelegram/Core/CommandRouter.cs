@@ -60,6 +60,13 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/companions") || message.Text.StartsWith("/compañeros"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando CompanionsCommand (Todos los Compañeros)");
+                await new CompanionsCommand().Execute(bot, message, ct);
+                return;
+            }
+
             if (message.Text.StartsWith("/rpgstats") || message.Text.StartsWith("/stats"))
             {
                 Console.WriteLine("   [CommandRouter] → Ejecutando RpgStatsCommand (Estadísticas Detalladas)");

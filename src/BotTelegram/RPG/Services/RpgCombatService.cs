@@ -916,6 +916,27 @@ namespace BotTelegram.RPG.Services
                     narrative += "\n";
                 }
                 
+                // ═══ FASE 3.5: Mostrar levelups de compañeros ═══
+                if (result.PetLevelUps.Any())
+                {
+                    narrative += "✨ **¡NIVEL ASCENDIDO!**\n";
+                    foreach (var levelUp in result.PetLevelUps)
+                    {
+                        narrative += $"   {levelUp}\n";
+                    }
+                    narrative += "\n";
+                }
+                
+                if (result.MinionLevelUps.Any())
+                {
+                    narrative += "💀 **¡ESBIRROS MEJORADOS!**\n";
+                    foreach (var levelUp in result.MinionLevelUps)
+                    {
+                        narrative += $"   {levelUp}\n";
+                    }
+                    narrative += "\n";
+                }
+                
                 narrative += "🎉 ¡Victoria!";
                 
                 // Limpiar log después de mostrar
@@ -1504,6 +1525,10 @@ namespace BotTelegram.RPG.Services
         // Sistema de mascotas (FASE 2)
         public List<PetTurnResult> PetTurns { get; set; } = new();
         public int TotalPetDamage { get; set; }
+        
+        // Leveling de compañeros (Fase 3.5)
+        public List<string> PetLevelUps { get; set; } = new(); // "Zorro Rojo alcanzó nivel 5!"
+        public List<string> MinionLevelUps { get; set; } = new(); // "Esqueleto alcanzó nivel 3!"
         
         // Legacy (compatibilidad)
         [Obsolete("Use HitChancePercent y HitRoll instead")]

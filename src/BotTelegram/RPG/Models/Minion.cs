@@ -23,6 +23,15 @@ namespace BotTelegram.RPG.Models
         public bool IsTemporary { get; set; }
         public bool IsControlled { get; set; } = true; // false = incontrolable
         
+        // Leveling y Persistencia (Fase 3.5)
+        public int Level { get; set; } = 1;
+        public int Experience { get; set; } = 0;
+        public int ExperienceNeeded => Level * 100; // Minions suben cada 100xp por nivel
+        public int CombatsSurvived { get; set; } = 0;
+        public int TotalDamageDealt { get; set; } = 0;
+        public int Kills { get; set; } = 0;
+        public bool IsPermanent { get; set; } = false; // Si true, se guarda entre combates
+        
         // Scaling
         public int SummonerLevel { get; set; } // Nivel del jugador al invocar
         public double StatsMultiplier { get; set; } = 1.0; // Para scaling personalizado
@@ -150,6 +159,72 @@ namespace BotTelegram.RPG.Models
         {
             HP += amount;
             if (HP > MaxHP) HP = MaxHP;
+        }
+        
+        /// <summary>
+        /// Gana experiencia y sube de nivel si es necesario (Fase 3.5)
+        /// </summary>
+        /// <returns>True si subió de nivel</returns>
+        public bool GainExperience(int xp)
+        {
+            Experience += xp;
+            
+            if (Experience >= ExperienceNeeded)
+            {
+                return LevelUp();
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Sube un nivel con bonificaciones de stats (Fase 3.5)
+        /// </summary>
+        public bool LevelUp()
+        {
+            if (Experience < ExperienceNeeded) return false;
+            
+            Experience -= ExperienceNeeded;
+            Level++;
+            
+            // Bonificaciones por nivel
+            // Cada nivel: +10% HP, +5% ataque, +3% defensa
+            MaxHP = (int)(MaxHP * 1.10);
+            HP = MaxHP; // Curación completa al subir de nivel
+            Attack = (int)(Attack * 1.05);
+            Defense = (int)(Defense * 1.03);
+            
+            // Bonificaciones especiales
+            if (Level % 5 == 0)
+            {
+                // Cada 5 niveles: Habilidad mejorada (futura implementación)
+                MaxHP += 30;
+                HP = MaxHP;
+                Attack += 8;
+                Defense += 5;
+                Speed += 1;
+            }
+            
+            if (Level % 10 == 0)
+            {
+                // Cada 10 niveles: Bonus mayor
+                MaxHP += 50;
+                HP = MaxHP;
+                Attack += 15;
+                Defense += 10;
+                Speed += 3;
+            }
+            
+            if (Level >= 15 && IsTemporary)
+            {
+                // Al nivel 15+: +50% duración (más turnos)
+                if (TurnsRemaining > 0)
+                {
+                    TurnsRemaining = (int)(TurnsRemaining * 1.5);
+                }
+            }
+            
+            return true;
         }
     }
     
