@@ -11,7 +11,7 @@
 ⏸️ Fase 3: Sistema de Mazmorras          [░░░░░░░░░░]   0%
 ⏸️ Fase 3.5: Leveling Mascotas/Minions   [░░░░░░░░░░]   0%
 ⏸️ Fase 4: Reestructuración de Clases    [░░░░░░░░░░]   0%
-🔄 Fase 5: Refactorización UI/UX          [████████░░]  85% ← EN PROGRESO (5.1✅ 5.2✅)
+🔄 Fase 5: Refactorización UI/UX          [█████████░]  95% ← EN PROGRESO (5.1✅ 5.2✅ 5.3✅)
 ⏸️ Fase 6: Máquina de Estados FSM        [░░░░░░░░░░]   0%
 ⏸️ Fase 7: Generación de Imágenes        [░░░░░░░░░░]   0%
 ⏸️ Fase 8: Telegram Mini App              [░░░░░░░░░░]   0%
