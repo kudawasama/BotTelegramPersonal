@@ -3,6 +3,7 @@ using Telegram.Bot.Types;
 using BotTelegram.Services;
 using BotTelegram.RPG.Services;
 using BotTelegram.RPG.Models;
+using BotTelegram.RPG.Commands;
 
 namespace BotTelegram.Handlers
 {
@@ -77,6 +78,11 @@ namespace BotTelegram.Handlers
                 else if (data.StartsWith("pets_"))
                 {
                     await HandlePetsCallback(bot, callbackQuery, data, ct);
+                }
+                // Dungeon System Callbacks (FASE 3)
+                else if (data.StartsWith("dungeon_"))
+                {
+                    await HandleDungeonCallback(bot, callbackQuery, data, ct);
                 }
                 // Leaderboard Callbacks
                 else if (data.StartsWith("leaderboard_"))
@@ -6353,6 +6359,339 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: keyboard,
                     cancellationToken: ct);
+                return;
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // FASE 3: DUNGEON SYSTEM CALLBACKS
+        // ═══════════════════════════════════════════════════════════════
+        
+        private static async Task HandleDungeonCallback(ITelegramBotClient bot, CallbackQuery callbackQuery, string data, CancellationToken ct)
+        {
+            var chatId = callbackQuery.Message!.Chat.Id;
+            var messageId = callbackQuery.Message.MessageId;
+            var rpgService = new RpgService();
+            var player = rpgService.GetPlayer(chatId);
+            
+            if (player == null)
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Necesitas crear un personaje primero.", cancellationToken: ct);
+                return;
+            }
+            
+            var dungeonService = new DungeonService(rpgService);
+            var combatService = new RpgCombatService();
+            
+            // dungeon_enter_{dungeonId}
+            if (data.StartsWith("dungeon_enter_"))
+            {
+                var dungeonId = data.Replace("dungeon_enter_", "");
+                
+                if (player.IsInCombat || player.CurrentDungeon != null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Ya estás en combate o en una mazmorra.", cancellationToken: ct);
+                    return;
+                }
+                
+                bool success = dungeonService.StartDungeon(player, dungeonId, consumeKey: true);
+                
+                if (success)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "🏰 ¡Entrando a la mazmorra!", cancellationToken: ct);
+                    
+                    // Mostrar progreso de la mazmorra
+                    var dungeonCommand = new DungeonCommand();
+                    await dungeonCommand.Execute(bot, callbackQuery.Message, ct);
+                }
+                else
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes entrar a esta mazmorra (nivel insuficiente o sin llave).", cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // dungeon_fight_{floor}
+            if (data.StartsWith("dungeon_fight_"))
+            {
+                if (player.CurrentDungeon == null || !player.CurrentDungeon.IsActive)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en una mazmorra.", cancellationToken: ct);
+                    return;
+                }
+                
+                var currentFloor = player.CurrentDungeon.Floors[player.CurrentDungeon.CurrentFloor - 1];
+                
+                if (currentFloor.Enemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No hay enemigos en este piso.", cancellationToken: ct);
+                    return;
+                }
+                
+                // Iniciar combate con el enemigo del piso
+                player.IsInCombat = true;
+                player.CurrentEnemy = currentFloor.Enemy;
+                player.ComboCount = 0;
+                player.CombatTurnCount = 0;
+                player.ActiveCombatMessageId = messageId;
+                
+                rpgService.SavePlayer(player);
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⚔️ ¡Combate iniciado!", cancellationToken: ct);
+                
+                // Mostrar vista de combate - redirigir al comando rpg que maneja el combate
+                var rpgCommand = new RpgCommand();
+                await rpgCommand.Execute(bot, callbackQuery.Message, ct);
+                return;
+            }
+            
+            // dungeon_rest_{floor}
+            if (data.StartsWith("dungeon_rest_"))
+            {
+                if (player.CurrentDungeon == null || !player.CurrentDungeon.IsActive)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en una mazmorra.", cancellationToken: ct);
+                    return;
+                }
+                
+                var currentFloor = player.CurrentDungeon.Floors[player.CurrentDungeon.CurrentFloor - 1];
+                
+                if (currentFloor.Type != FloorType.Rest)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Este no es un piso de descanso.", cancellationToken: ct);
+                    return;
+                }
+                
+                // Restaurar HP/Mana/Stamina
+                var restorePercent = currentFloor.RestorePercentage / 100.0;
+                var hpRestored = (int)(player.MaxHP * restorePercent) - player.HP;
+                var manaRestored = (int)(player.MaxMana * restorePercent) - player.Mana;
+                var staminaRestored = (int)(player.MaxStamina * restorePercent) - player.Stamina;
+                
+                player.HP = Math.Min(player.MaxHP, (int)(player.MaxHP * (1 - restorePercent / 100.0)) + player.HP);
+                player.Mana = Math.Min(player.MaxMana, (int)(player.MaxMana * (1 - restorePercent / 100.0)) + player.Mana);
+                player.Stamina = Math.Min(player.MaxStamina, (int)(player.MaxStamina * (1 - restorePercent / 100.0)) + player.Stamina);
+                
+                // Marcar piso como completado
+                currentFloor.IsCleared = true;
+                
+                rpgService.SavePlayer(player);
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, $"😴 Descansaste. +{hpRestored} HP, +{manaRestored} Mana, +{staminaRestored} Stamina", cancellationToken: ct);
+                
+                // Mostrar progreso actualizado
+                var dungeonCommand = new DungeonCommand();
+                await dungeonCommand.Execute(bot, callbackQuery.Message, ct);
+                return;
+            }
+            
+            // dungeon_avoid_trap_{floor} o dungeon_face_trap_{floor}
+            if (data.StartsWith("dungeon_avoid_trap_") || data.StartsWith("dungeon_face_trap_"))
+            {
+                bool tryAvoid = data.StartsWith("dungeon_avoid_trap_");
+                
+                if (player.CurrentDungeon == null || !player.CurrentDungeon.IsActive)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en una mazmorra.", cancellationToken: ct);
+                    return;
+                }
+                
+                var currentFloor = player.CurrentDungeon.Floors[player.CurrentDungeon.CurrentFloor - 1];
+                
+                if (currentFloor.Type != FloorType.Trap || currentFloor.Trap == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No hay trampa en este piso.", cancellationToken: ct);
+                    return;
+                }
+                
+                var trap = currentFloor.Trap;
+                bool avoided = false;
+                var random = new Random();
+                
+                if (tryAvoid && trap.CanAvoid)
+                {
+                    // DEX check
+                    var dexBonus = player.Dexterity / 2;
+                    var roll = random.Next(1, 21) + dexBonus;
+                    avoided = roll >= trap.AvoidDC;
+                }
+                
+                string resultText;
+                
+                if (avoided)
+                {
+                    resultText = $"✅ ¡Esquivaste la trampa! ({trap.Name})";
+                    
+                    // Posible recompensa
+                    if (trap.SuccessReward != null)
+                    {
+                        player.Gold += trap.SuccessReward.Gold;
+                        resultText += $"\n💰 +{trap.SuccessReward.Gold} oro";
+                    }
+                }
+                else
+                {
+                    resultText = $"💥 {trap.Name}!";
+                    
+                    if (trap.Damage > 0)
+                    {
+                        player.HP = Math.Max(1, player.HP - trap.Damage);
+                        resultText += $"\n💔 -{trap.Damage} HP";
+                    }
+                    
+                    if (trap.ManaDrain > 0)
+                    {
+                        player.Mana = Math.Max(0, player.Mana - trap.ManaDrain);
+                        resultText += $"\n💙 -{trap.ManaDrain} Mana";
+                    }
+                    
+                    if (trap.StaminaDrain > 0)
+                    {
+                        player.Stamina = Math.Max(0, player.Stamina - trap.StaminaDrain);
+                        resultText += $"\n💛 -{trap.StaminaDrain} Stamina";
+                    }
+                    
+                    if (trap.GoldLoss > 0)
+                    {
+                        player.Gold = Math.Max(0, player.Gold - trap.GoldLoss);
+                        resultText += $"\n💰 -{trap.GoldLoss} oro";
+                    }
+                    
+                    // Marcar perfect run como false si recibe daño
+                    if (trap.Damage > 0)
+                    {
+                        player.CurrentDungeon.IsPerfectRun = false;
+                    }
+                }
+                
+                // Marcar piso como completado
+                currentFloor.IsCleared = true;
+                
+                rpgService.SavePlayer(player);
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, resultText, cancellationToken: ct);
+                
+                // Mostrar progreso actualizado
+                var dungeonCommand = new DungeonCommand();
+                await dungeonCommand.Execute(bot, callbackQuery.Message, ct);
+                return;
+            }
+            
+            // dungeon_next_floor
+            if (data == "dungeon_next_floor")
+            {
+                if (player.CurrentDungeon == null || !player.CurrentDungeon.IsActive)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en una mazmorra.", cancellationToken: ct);
+                    return;
+                }
+                
+                bool advanced = dungeonService.AdvanceToNextFloor(player);
+                
+                if (advanced)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, $"➡️ Avanzaste al piso {player.CurrentDungeon.CurrentFloor}", cancellationToken: ct);
+                    
+                    // Mostrar nuevo piso
+                    var dungeonCommand = new DungeonCommand();
+                    await dungeonCommand.Execute(bot, callbackQuery.Message, ct);
+                }
+                else
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes avanzar (piso no completado o es el último).", cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // dungeon_complete
+            if (data == "dungeon_complete")
+            {
+                if (player.CurrentDungeon == null || !player.CurrentDungeon.IsActive)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en una mazmorra.", cancellationToken: ct);
+                    return;
+                }
+                
+                var dungeon = player.CurrentDungeon;
+                
+                // Verificar que todos los pisos están completados
+                if (dungeon.CurrentFloor < dungeon.TotalFloors || !dungeon.Floors.All(f => f.IsCleared))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Aún quedan pisos por completar.", cancellationToken: ct);
+                    return;
+                }
+                
+                dungeonService.CompleteDungeon(player);
+                
+                var text = new System.Text.StringBuilder();
+                text.AppendLine("🏆 **¡MAZMORRA COMPLETADA!**");
+                text.AppendLine($"{dungeon.Emoji} **{dungeon.Name}**");
+                text.AppendLine("━━━━━━━━━━━━━━━━━━━━");
+                text.AppendLine();
+                text.AppendLine("📊 **ESTADÍSTICAS:**");
+                text.AppendLine($"⚔️ Enemigos derrotados: {dungeon.TotalEnemiesDefeated}");
+                text.AppendLine($"💀 Jefes vencidos: {dungeon.TotalBossesDefeated}");
+                text.AppendLine($"📍 Pisos completados: {dungeon.TotalFloors}/{dungeon.TotalFloors}");
+                text.AppendLine($"⭐ Puntuación: {(dungeon.IsPerfectRun ? "S (Perfect Run!)" : "A")}");
+                text.AppendLine();
+                text.AppendLine("━━━━━━━━━━━━━━━━━━━━");
+                text.AppendLine("🎁 **RECOMPENSAS:**");
+                text.AppendLine();
+                text.AppendLine($"💰 Oro: {dungeon.FinalRewards.Gold}");
+                text.AppendLine($"✨ XP: {dungeon.FinalRewards.XP}");
+                
+                if (dungeon.IsPerfectRun)
+                {
+                    var bonusXP = (int)(dungeon.FinalRewards.XP * dungeon.FinalRewards.PerfectionBonus);
+                    text.AppendLine($"⭐ **Perfect Run Bonus:** +{bonusXP} XP ({(int)(dungeon.FinalRewards.PerfectionBonus * 100)}%)");
+                }
+                
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏰 Mazmorras", "dungeon_main"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 RPG", "rpg_main")
+                    }
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text.ToString(),
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                    
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🏆 ¡Mazmorra completada!", cancellationToken: ct);
+                return;
+            }
+            
+            // dungeon_abandon
+            if (data == "dungeon_abandon")
+            {
+                if (player.CurrentDungeon == null || !player.CurrentDungeon.IsActive)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en una mazmorra.", cancellationToken: ct);
+                    return;
+                }
+                
+                dungeonService.AbandonDungeon(player);
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Abandonaste la mazmorra. Perdiste todo el progreso.", cancellationToken: ct);
+                
+                // Volver al menú de mazmorras
+                var dungeonCommand = new DungeonCommand();
+                await dungeonCommand.Execute(bot, callbackQuery.Message, ct);
+                return;
+            }
+            
+            // dungeon_main o callbacks de navegación
+            if (data == "dungeon_main" || data == "dungeon_keys" || data == "dungeon_rankings")
+            {
+                var dungeonCommand = new DungeonCommand();
+                await dungeonCommand.Execute(bot, callbackQuery.Message, ct);
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
                 return;
             }
         }

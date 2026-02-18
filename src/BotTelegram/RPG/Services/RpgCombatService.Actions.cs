@@ -1139,6 +1139,73 @@ namespace BotTelegram.RPG.Services
                 }
             }
             
+            // ═══ FASE 3: Sistema de Mazmorras ═══
+            // Si está en mazmorra, marcar piso actual como completado
+            if (player.CurrentDungeon != null && player.CurrentDungeon.IsActive)
+            {
+                var currentFloor = player.CurrentDungeon.Floors[player.CurrentDungeon.CurrentFloor - 1];
+                
+                if (!currentFloor.IsCleared)
+                {
+                    currentFloor.IsCleared = true;
+                    player.CurrentDungeon.TotalEnemiesDefeated++;
+                    
+                    if (currentFloor.Type == FloorType.Boss)
+                    {
+                        player.CurrentDungeon.TotalBossesDefeated++;
+                    }
+                    
+                    player.TotalDungeonFloorsCleaned++;
+                    
+                    // Aplicar recompensas del piso
+                    if (currentFloor.Reward != null)
+                    {
+                        player.Gold += currentFloor.Reward.Gold;
+                        _rpgService.AddXP(player, currentFloor.Reward.XP);
+                        
+                        result.GoldGained += currentFloor.Reward.Gold;
+                        result.XPGained += currentFloor.Reward.XP;
+                    }
+                }
+            }
+            
+            // ═══ FASE 3: Key Drops de Bosses ═══
+            // Los bosses tienen probabilidad de dropear llaves de mazmorra
+            if (enemy.Difficulty == EnemyDifficulty.Boss || enemy.Difficulty == EnemyDifficulty.WorldBoss)
+            {
+                // Determinar qué llave puede dropear según nivel del jugador
+                DungeonDifficulty? keyDifficulty = null;
+                
+                if (player.Level >= 25) keyDifficulty = DungeonDifficulty.Legendary;
+                else if (player.Level >= 20) keyDifficulty = DungeonDifficulty.Epic;
+                else if (player.Level >= 15) keyDifficulty = DungeonDifficulty.Rare;
+                else if (player.Level >= 10) keyDifficulty = DungeonDifficulty.Uncommon;
+                else if (player.Level >= 5) keyDifficulty = DungeonDifficulty.Common;
+                
+                if (keyDifficulty.HasValue)
+                {
+                    var dropChance = DungeonKey.GetDropChance(keyDifficulty.Value);
+                    var roll = new Random().NextDouble();
+                    
+                    if (roll < dropChance)
+                    {
+                        var key = new DungeonKey
+                        {
+                            Id = $"key_{keyDifficulty.Value.ToString().ToLower()}_{Guid.NewGuid().ToString("N").Substring(0, 8)}",
+                            Name = $"Llave de Mazmorra {DungeonDatabase.GetDifficultyName(keyDifficulty.Value)}",
+                            Emoji = DungeonKey.GetEmojiForDifficulty(keyDifficulty.Value),
+                            UnlocksDifficulty = keyDifficulty.Value,
+                            IsConsumed = false,
+                            ObtainedAt = DateTime.UtcNow
+                        };
+                        
+                        player.DungeonKeys.Add(key);
+                        AddCombatLog(player, "KeyDrop", $"{key.Emoji} ¡Llave de Mazmorra obtenida!");
+                        Console.WriteLine($"[Combat] {key.Emoji} Key drop: {key.Name}");
+                    }
+                }
+            }
+            
             player.IsInCombat = false;
             player.CurrentEnemy = null;
             player.ComboCount = 0;
