@@ -1,7 +1,7 @@
 # 🎮 HOJA DE RUTA - EXPANSIÓN DEL SISTEMA RPG
 
 **Última actualización:** 18 de febrero de 2026  
-**Versión:** 4.0 - Sistema Crafteo + Misiones
+**Versión:** 6.0 - Sistema de Gremio + Arena PvP
 
 ## 📊 PROGRESO GENERAL
 ```
@@ -17,9 +17,9 @@
 ✅ Fase 7.5: Class Bonuses + Tienda      [██████████] 100% ← COMPLETADA (commit 9287d49)
 ✅ Fase 8: Sistema de Crafteo            [██████████] 100% ← COMPLETADA (commit 59a8fa4)
 ✅ Fase 9: Sistema de Misiones/Quests    [██████████] 100% ← COMPLETADA (commit 59a8fa4)
-⏸️ Fase 10: Sistema de Gremio (Guild)    [░░░░░░░░░░]   0% ← SIGUIENTE
-⏸️ Fase 11: PvP Arena                    [░░░░░░░░░░]   0%
-⏸️ Fase 12: Mundo Abierto Expandido      [░░░░░░░░░░]   0%
+✅ Fase 10: Sistema de Gremio (Guild)    [██████████] 100% ← COMPLETADA (commit 08a8ed7)
+✅ Fase 11: PvP Arena                    [██████████] 100% ← COMPLETADA (commit 2322a12)
+⏸️ Fase 12: Mundo Abierto Expandido      [░░░░░░░░░░]   0% ← SIGUIENTE
 ⏸️ Fase 13: Eventos Temporales           [░░░░░░░░░░]   0%
 ⏸️ Fase 14: Generación de Imágenes       [░░░░░░░░░░]   0%
 ⏸️ Fase 15: Telegram Mini App            [░░░░░░░░░░]   0%
@@ -38,8 +38,8 @@
 9. [✅ Fase 7: Inventario + Menús + Acciones de Combate](#fase-7) - COMPLETADA
 10. [✅ Fase 8: Sistema de Crafteo](#fase-8) - COMPLETADA
 11. [✅ Fase 9: Sistema de Misiones/Quests](#fase-9) - COMPLETADA
-12. [Fase 10: Sistema de Gremio (Guild)](#fase-10)
-13. [Fase 11: PvP Arena](#fase-11)
+12. [✅ Fase 10: Sistema de Gremio (Guild)](#fase-10) - COMPLETADA
+13. [✅ Fase 11: PvP Arena](#fase-11) - COMPLETADA
 14. [Fase 12: Mundo Abierto Expandido](#fase-12)
 15. [Fase 13: Eventos Temporales](#fase-13)
 16. [Fase 14: Generación de Imágenes](#fase-14)
@@ -1232,7 +1232,7 @@ var craftNotifs = QuestService.UpdateCraftObjective(player, recipeId);
 
 ---
 
-## <a name="fase-10"></a>🛡️ FASE 10: SISTEMA DE GREMIO (GUILD) (10-14 horas) ← SIGUIENTE
+## <a name="fase-10"></a>🛡️ FASE 10: SISTEMA DE GREMIO (GUILD) ✅ COMPLETADA (commit 08a8ed7)
 
 ### Objetivo
 Añadir la capa **social y cooperativa**: los jugadores pueden crear/unirse a gremios, trabajar juntos en misiones de gremio y competir en el leaderboard de gremios.
@@ -1517,8 +1517,8 @@ result.Message = narrative + result.Message;
 10. ✅ **Fase 7.5**: Class Bonuses + Tienda completa (4-6h) - **COMPLETADA** (commits 9ca8761 → 9287d49)
 11. ✅ **Fase 8**: Crafteo (8-10h) - **COMPLETADA** (commit 59a8fa4)
 12. ✅ **Fase 9**: Misiones/Quests (10-12h) - **COMPLETADA** (commit 59a8fa4)
-13. 🛡️ **Fase 10**: Guild (10-14h) - **SIGUIENTE**
-14. ⚔️ **Fase 11**: PvP Arena (8-12h) - **MEDIA**
+13. ✅ **Fase 10**: Guild (10-14h) - **COMPLETADA** (commit 08a8ed7)
+14. ✅ **Fase 11**: PvP Arena (8-12h) - **COMPLETADA** (commit 2322a12)
 15. 🌍 **Fase 12**: Mundo Abierto Expandido (15-20h) - **MEDIA**
 16. 🎉 **Fase 13**: Eventos Temporales (6-8h) - **MEDIA-BAJA**
 17. 🤖 **Fase 16**: IA Narrativa (15-20h) - **MEDIA-BAJA**
@@ -1526,8 +1526,7 @@ result.Message = narrative + result.Message;
 19. 📱 **Fase 15**: Mini App (20-30h) - **BAJA**
 
 ### Tiempo Total Estimado
-- **Completado** (Fases 0-9): ~70-90 horas ✅ **COMPLETADO**
-- **Social** (+ Fases 10-11 Guild+PvP): ~88-116 horas
+- **Completado** (Fases 0-11): ~88-116 horas ✅ **COMPLETADO**
 - **Mundo completo** (+ Fases 12-13): ~109-144 horas
 - **Todo el contenido** (+ Fases 14-16): ~136-179 horas
 
@@ -1536,20 +1535,11 @@ result.Message = narrative + result.Message;
 ## 🎯 PRÓXIMOS PASOS INMEDIATOS
 
 **🔴 Sprint 3 — Social + PvP (18-26h)** ← ACTUAL
-1. 🛡️ **Fase 10: Sistema de Gremio (Guild)** — `GuildService` + `GuildCommand` + ranking + `/gremio` resuelto con la UI de misiones. Falta: guerras de gremio, banco compartido, chat de gremio.
-2. ⚔️ **Fase 11: PvP Arena** — `PvpService` + `ArenaCommand` + sistema ELO + matchmaking por nivel.
+1. 🛡️ **Fas4 — Mundo + Eventos (21-28h)** ← ACTUAL
+1. 🌍 **Fase 12: Mundo Abierto Expandido** — `WorldDatabase` expandido + facciones + NPCs con diálogo + nuevas zonas.
+2. 🎉 **Fase 13: Eventos Temporales** — `EventService` + eventos estacionales automáticos + recompensas especiales.
 
-**Integraciones pendientes de Fase 8+9 (no bloqueantes):**
-- Llamar `QuestService.UpdateKillObjective(player, enemy.Id)` en `RpgCombatService` tras victoria
-- Llamar `QuestService.UpdateCollectObjective(player)` al obtener drops
-- Llamar `QuestService.UpdateExploreObjective(player, dungeon.Id)` al completar mazmorra
-- Llamar `QuestService.UpdateCraftObjective(player, recipeId)` en `CraftingCommand.DoCraft`
-
-**🟡 Sprint 4 — Mundo + Eventos (21-28h)**
-1. 🌍 Fase 12: `WorldDatabase` expandido + facciones + NPCs con diálogo
-2. 🎉 Fase 13: `EventService` + eventos estacionales automáticos
-
-**🟢 Sprint 5 — Premium (27-35h)**
+**🟡 Sprint 5 — Premium (27-35h)**
 1. 🎨 Fase 14: Generación de imágenes para stats/combate/inventario
 2. 🤖 Fase 16: IA Narrativa (Dungeon Master) con Semantic Kernel
 3. 📱 Fase 15: Telegram Mini App (Blazor/React)
@@ -1558,10 +1548,9 @@ result.Message = narrative + result.Message;
 
 ## 🏁 CONCLUSIÓN
 
-El bot tiene una **base sólida production-ready** con 9 fases completadas (+ Fase 7.5). El ciclo de gameplay **explorar → recolectar → craftear → misiones → equipar → combatir** está completamente funcional. El sistema de misiones incluye objetivos de Kill, Collect, Craft y Explore con recompensas de oro, XP y equipo.
+El bot tiene una **base sólida production-ready** con 11 fases completadas (+ Fase 7.5). El ciclo de gameplay completo: **explorar → recolectar → craftear → misiones → equipar → combatir → gremio → arena PvP** está 100% funcional.
 
-**La siguiente gran mejora** es el **Sistema de Gremio (Fase 10)** que añadirá la capa social: crear/unirse a gremios, banco compartido, ranking de gremios y cooperación entre jugadores.
-
+**La siguiente gran mejora** es el **Mundo Abierto Expandido (Fase 12)** con nuevas zonas, facciones y NPCs con diálogo
 ---
 
 ## ✅ REGISTRO DE COMMITS
@@ -1576,3 +1565,5 @@ El bot tiene una **base sólida production-ready** con 9 fases completadas (+ Fa
 | `301ae92` | Fix: Router shop callbacks | feb 2026 |
 | `9287d49` | Fase 7.5b: Equipos en tienda con EquipmentDatabase | feb 2026 |
 | `59a8fa4` | Fase 8+9: Crafteo + Misiones/Quests completos | feb 2026 |
+| `08a8ed7` | Fase 10: Sistema de Gremio (Guild) | feb 2026 |
+| `2322a12` | Fase 11: Arena PvP + sistema ELO | feb 2026 |

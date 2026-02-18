@@ -16,15 +16,17 @@
 - ⭐ **Botones inline interactivos** (InlineKeyboardMarkup)
 - ⭐ **FAQ/Manual completo** integrado en el bot
 
-✅ **Completado (RPG — 9 fases + extra):**
+✅ **Completado (RPG — 11 fases + extra):**
 - ⭐ **Fases 0-7**: Combate táctico, mapas, mazmorras, mascotas, clases, UI/UX, FSM, inventario
 - ⭐ **Fase 7.5**: Bonos de clase activa + Tienda completa (consumibles, equipos, vender)
 - ⭐ **Fase 8**: Sistema de Crafteo — 9 recetas Tier 1-3, `/herreria`
 - ⭐ **Fase 9**: Sistema de Misiones/Quests — 8 misiones Kill/Collect/Craft/Explore, `/misiones`
+- ⭐ **Fase 10**: Sistema de Gremio — crear/unirse, banco gremio, oficiales, ranking, `/gremio`
+- ⭐ **Fase 11**: Arena PvP — combate simulado, ELO rating, tiers, retos, apuestas, `/arena`
 
 🔜 **Siguiente (RPG):**
-- Fase 10: Sistema de Gremio (Guild)
-- Fase 11: PvP Arena
+- Fase 12: Mundo Abierto Expandido
+- Fase 13: Eventos Temporales
 
 ---
 
@@ -190,7 +192,7 @@
 ## 📅 Timeline tentativo
 
 ```
-Feb 2026  → RPG Fase 10-11 (Guild + PvP Arena)
+Feb 2026  → RPG Fase 10-11 (Guild + PvP Arena)          ✅ COMPLETADO
 Mar 2026  → RPG Fase 12-13 (Mundo Abierto + Eventos)
 Abr 2026  → Base bot: SQLite + Tests + Dashboard web
 May 2026  → Features IA: transcripción audio + búsqueda web
@@ -244,4 +246,4 @@ Se buscan colaboradores en:
 
 ---
 
-**Última actualización:** 18 de febrero, 2026
+**Última actualización:** 18 de febrero de 2026 — Fases 10 y 11 completadas
