@@ -13,9 +13,9 @@ RUN dotnet restore --locked-mode 2>/dev/null || dotnet restore
 WORKDIR /app
 COPY src/ ./src/
 
-# Compilar y publicar (sin volver a restaurar)
+# Compilar y publicar
 WORKDIR /app/src/BotTelegram
-RUN dotnet publish -c Release -o /app/publish --no-restore
+RUN dotnet publish -c Release -o /app/publish
 
 # Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
