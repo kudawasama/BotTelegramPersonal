@@ -1,7 +1,7 @@
 # 🎮 HOJA DE RUTA - EXPANSIÓN DEL SISTEMA RPG
 
-**Última actualización:** 18 de febrero de 2026  
-**Versión:** 2.0 - Refactorización Mayor
+**Última actualización:** 21 de enero de 2025  
+**Versión:** 3.0 - Sistema Completo
 
 ## 📊 PROGRESO GENERAL
 ```
@@ -13,23 +13,37 @@
 ✅ Fase 4: Sistema de Clases Desbloqueables [██████████] 100% ← COMPLETADA
 ✅ Fase 5: Refactorización UI/UX          [██████████] 100% ← COMPLETADA (5.1✅ 5.2✅ 5.3✅ 5.4✅)
 ✅ Fase 6: Máquina de Estados FSM        [██████████] 100% ← COMPLETADA
-⏸️ Fase 7: Generación de Imágenes        [░░░░░░░░░░]   0%
-⏸️ Fase 8: Telegram Mini App              [░░░░░░░░░░]   0%
-⏸️ Fase 9: IA Narrativa (Dungeon Master) [░░░░░░░░░░]   0%
+✅ Fase 7: Inventario + Menús + Combate  [██████████] 100% ← COMPLETADA (esta sesión)
+⏸️ Fase 8: Sistema de Crafteo            [░░░░░░░░░░]   0%
+⏸️ Fase 9: Sistema de Misiones/Quests    [░░░░░░░░░░]   0%
+⏸️ Fase 10: Sistema de Gremio (Guild)    [░░░░░░░░░░]   0%
+⏸️ Fase 11: PvP Arena                    [░░░░░░░░░░]   0%
+⏸️ Fase 12: Mundo Abierto Expandido      [░░░░░░░░░░]   0%
+⏸️ Fase 13: Eventos Temporales           [░░░░░░░░░░]   0%
+⏸️ Fase 14: Generación de Imágenes       [░░░░░░░░░░]   0%
+⏸️ Fase 15: Telegram Mini App            [░░░░░░░░░░]   0%
+⏸️ Fase 16: IA Narrativa (Dungeon Master)[░░░░░░░░░░]   0%
 ```
 
 ## 📋 ÍNDICE
 1. [✅ Fase 0: Corrección Inmediata](#fase-0) - COMPLETADA
 2. [✅ Fase 1: Mejoras de Combate](#fase-1) - COMPLETADA
 3. [✅ Fase 2: Sistema de Mapas y Zonas](#fase-2) - COMPLETADA
-4. [Fase 3: Sistema de Mazmorras](#fase-3)
-5. [Fase 3.5: Leveling de Mascotas/Minions](#fase-3-5)
-6. [Fase 4: Reestructuración de Clases](#fase-4)
-7. [🔥 Fase 5: Refactorización UI/UX (CRÍTICA)](#fase-5)
-8. [Fase 6: Máquina de Estados Finita](#fase-6)
-9. [Fase 7: Generación de Imágenes Dinámicas](#fase-7)
-10. [Fase 8: Telegram Mini App](#fase-8)
-11. [Fase 9: IA Narrativa (Dungeon Master)](#fase-9)
+4. [✅ Fase 3: Sistema de Mazmorras](#fase-3) - COMPLETADA
+5. [✅ Fase 3.5: Leveling de Mascotas/Minions](#fase-3-5) - COMPLETADA
+6. [✅ Fase 4: Reestructuración de Clases](#fase-4) - COMPLETADA
+7. [✅ Fase 5: Refactorización UI/UX](#fase-5) - COMPLETADA
+8. [✅ Fase 6: Máquina de Estados Finita](#fase-6) - COMPLETADA
+9. [✅ Fase 7: Inventario + Menús + Acciones de Combate](#fase-7) - COMPLETADA
+10. [Fase 8: Sistema de Crafteo](#fase-8)
+11. [Fase 9: Sistema de Misiones/Quests](#fase-9)
+12. [Fase 10: Sistema de Gremio (Guild)](#fase-10)
+13. [Fase 11: PvP Arena](#fase-11)
+14. [Fase 12: Mundo Abierto Expandido](#fase-12)
+15. [Fase 13: Eventos Temporales](#fase-13)
+16. [Fase 14: Generación de Imágenes](#fase-14)
+17. [Fase 15: Telegram Mini App](#fase-15)
+18. [Fase 16: IA Narrativa (Dungeon Master)](#fase-16)
 
 ---
 
@@ -1362,55 +1376,53 @@ result.Message = narrative + result.Message;
 1. ✅ **Fase 0**: Corrección invocaciones (1-2h) - **COMPLETADA**
 2. ✅ **Fase 1**: Mejoras combate (3-4h) - **COMPLETADA**
 3. ✅ **Fase 2**: Mapas y zonas (8-10h) - **COMPLETADA**
-4. 🔥 **Fase 5**: Refactorización UI/UX (10-12h) - **CRÍTICA** ← **SIGUIENTE**
-5. 🐾 **Fase 3.5**: Leveling mascotas/minions (4-6h) - **ALTA**
-6. 🏰 **Fase 3**: Mazmorras (12-15h) - **MEDIA**
-7. 🎭 **Fase 4**: Clases (6-8h) - **MEDIA**
-8. 🧩 **Fase 6**: FSM (8-10h) - **MEDIA-BAJA**
-9. 🤖 **Fase 9**: IA Narrativa (15-20h) - **MEDIA-BAJA**
-10. 🎨 **Fase 7**: Imágenes (12-15h) - **BAJA** (opcional)
-11. 📱 **Fase 8**: Mini App (20-30h) - **BAJA** (proyecto avanzado)
+4. ✅ **Fase 3**: Mazmorras (12-15h) - **COMPLETADA**
+5. ✅ **Fase 3.5**: Leveling mascotas/minions (4-6h) - **COMPLETADA**
+6. ✅ **Fase 4**: Clases (6-8h) - **COMPLETADA**
+7. ✅ **Fase 5**: Refactorización UI/UX (10-12h) - **COMPLETADA**
+8. ✅ **Fase 6**: FSM (8-10h) - **COMPLETADA**
+9. ✅ **Fase 7**: Inventario + Menús + Acciones Combate (6-8h) - **COMPLETADA** ← Esta sesión
+10. ⚒️ **Fase 8**: Crafteo (8-10h) - **SIGUIENTE**
+11. 📜 **Fase 9**: Misiones/Quests (10-12h) - **ALTA**
+12. 🛡️ **Fase 10**: Guild (10-14h) - **MEDIA**
+13. ⚔️ **Fase 11**: PvP Arena (8-12h) - **MEDIA**
+14. 🌍 **Fase 12**: Mundo Abierto Expandido (15-20h) - **MEDIA**
+15. 🎉 **Fase 13**: Eventos Temporales (6-8h) - **MEDIA-BAJA**
+16. 🤖 **Fase 16**: IA Narrativa (15-20h) - **MEDIA-BAJA**
+17. 🎨 **Fase 14**: Imágenes (12-15h) - **BAJA**
+18. 📱 **Fase 15**: Mini App (20-30h) - **BAJA**
 
 ### Tiempo Total Estimado
-- **Núcleo esencial** (Fases 0-2): ~12-16 horas ✅ **COMPLETADO**
-- **Con UI mejorada** (+ Fase 5): ~22-28 horas
-- **Con features core** (+ Fases 3, 3.5, 4): ~44-57 horas
-- **Experiencia completa** (+ Fases 6, 9): ~67-87 horas
-- **Todo el contenido** (+ Fases 7, 8): ~99-132 horas
+- **Completado** (Fases 0-7): ~50-65 horas ✅ **COMPLETADO**
+- **Próximo sprint** (+ Fases 8-9 Crafteo+Quests): ~68-87 horas
+- **Contenido social** (+ Fases 10-11 Guild+PvP): ~86-113 horas
+- **Mundo completo** (+ Fases 12-13): ~107-141 horas
+- **Todo el contenido** (+ Fases 14-16): ~134-176 horas
 
 ---
 
 ## 🎯 PRÓXIMOS PASOS INMEDIATOS
 
-### Fase 5 (UI/UX) - Desglose de Tareas
+**🔴 Sprint 1 — Crafteo + Quests (18-22h)**
+1. ⚒️ Fase 8: `CraftingService` + `CraftingDatabase` + UI herrería en menú Ciudad
+2. 📜 Fase 9: `QuestService` + tracking de progreso en combate/exploración + UI misiones
 
-**Semana 1: Arquitectura de Menús (4-5h)** ✅ **COMPLETADO**
-1. ✅ Diseñar estructura jerárquica de 4 categorías
-2. ✅ Crear nuevos callbacks para navegación
-3. ✅ Refactorizar RpgCommand.cs con menú principal
-4. ✅ Implementar menús: Aventura, Personaje, Ciudad, Ayuda
-5. ✅ Testing de navegación
+**🟡 Sprint 2 — Social + PvP (18-26h)**
+1. 🛡️ Fase 10: `GuildService` + `GuildCommand` + ranking de gremios
+2. ⚔️ Fase 11: `PvpService` + `ArenaCommand` + sistema ELO
 
-**Semana 2: Single Message Interaction (3-4h)** ✅ **COMPLETADO**
-1. ✅ Modificar RpgPlayer con ActiveCombatMessageId
-2. ✅ Implementar GenerateCombatView() con barras de progreso
-3. ✅ Actualizar acciones principales de combate (attack, defend, flee)
-4. ✅ Vista unificada con log de combate visible
-5. ⏳ Actualizar acciones secundarias (magic, skills, items) - 90%
-
-**Semana 3: Transición a InlineKeyboard (3h)** ⏳ **PENDIENTE**
-1. ⏳ Reemplazar ReplyKeyboardMarkup por InlineKeyboardMarkup
-2. ⏳ Actualizar todos los comandos con InlineKeyboard
-3. ⏳ Agregar barras de progreso animadas
-4. ⏳ Testing general
+**🟢 Sprint 3 — Mundo + Eventos (21-28h)**
+1. 🌍 Fase 12: `WorldDatabase` expandido + facciones + NPCs con diálogo
+2. 🎉 Fase 13: `EventService` + eventos estacionales automáticos
 
 ---
 
 ## 🏁 CONCLUSIÓN
 
-El bot tiene un **potencial enorme**. La base con Dapper, integración IA y sistema de combate ya te ponen por delante del 90% de los bots amateurs.
+El bot tiene una **base sólida production-ready** con 7 fases completadas. El teclado de combate táctico (6 acciones directas accesibles), el inventario completo con drops funcionales y los menús contextuales posicionan al bot como un RPG competitivo en Telegram.
 
-El siguiente paso lógico es la **limpieza de la interfaz (Fase 5)** y la **dinamicidad de los mensajes**. Esto hará que todas las features existentes se sientan mucho mejor y facilita la implementación de las fases futuras.
+**La siguiente gran mejora** es el **Sistema de Crafteo (Fase 8)** que completará el ciclo de gameplay: explorar → recolectar materiales → craftear → equipar → combatir.
+
 
 ---
 

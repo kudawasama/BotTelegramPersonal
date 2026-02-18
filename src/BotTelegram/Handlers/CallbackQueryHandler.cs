@@ -947,21 +947,26 @@ Si quieres que olvide el contexto anterior:
                 
                 await bot.AnswerCallbackQuery(callbackQuery.Id, "⚔️ Aventura", cancellationToken: ct);
                 
-                var text = $@"⚔️ **AVENTURA**
-
-{player.Name}, ¿qué deseas explorar?
-
-🗺️ **Explorar:** Encuentra enemigos, tesoros y nuevas zonas
-🏰 **Mazmorras:** Desafía dungeons peligrosos
-🎲 **Aventura Aleatoria:** ¿Te sientes con suerte?
-😴 **Descansar:** Recupera HP, Mana y Energía
-💼 **Trabajar:** Gana oro (cuesta energía)
-🗺️ **Mapa:** Viaja entre zonas";
+                var hpPct  = (double)player.HP / player.MaxHP * 100;
+                var engPct = (double)player.Stamina / player.MaxStamina * 100;
+                var hpEmoji  = hpPct  > 70 ? "💚" : hpPct  > 30 ? "💛" : "❤️";
+                var engEmoji = engPct > 70 ? "⚡" : engPct > 30 ? "🔋" : "🪫";
+                var dungeonStatus = player.CurrentDungeon != null && player.CurrentDungeon.IsActive
+                    ? $"\n🏰 Mazmorra activa: **{player.CurrentDungeon.Name}** (Piso {player.CurrentDungeon.CurrentFloor}/{player.CurrentDungeon.TotalFloors})"
+                    : "";
                 
-                await bot.EditMessageText(
-                    chatId,
-                    messageId,
-                    text,
+                var text = $"⚔️ **AVENTURA**\n\n" +
+                           $"{hpEmoji} HP: {player.HP}/{player.MaxHP} | {engEmoji} Energía: {player.Stamina}/{player.MaxStamina}\n" +
+                           $"📍 _{player.CurrentLocation}_{dungeonStatus}\n\n" +
+                           $"**¿A dónde quieres ir?**\n\n" +
+                           $"🗺️ **Explorar** — Combate, recursos, tesoros, bestias\n" +
+                           $"🏰 **Mazmorras** — Desafía dungeons y obtén llaves\n" +
+                           $"🎲 **Aventura Rápida** — Evento aleatorio inmediato\n" +
+                           $"😴 **Descansar** — Recupera HP y energía\n" +
+                           $"💼 **Trabajar** — Gana oro con trabajos\n" +
+                           $"🗺️ **Mapa** — Viaja entre regiones";
+                
+                await bot.EditMessageText(chatId, messageId, text,
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: rpgCommand.GetAdventureMenu(),
                     cancellationToken: ct);
@@ -1859,111 +1864,320 @@ Bienvenido a {player.CurrentLocation}
             }
             
             // Inventory (legacy)
-            if (data == "rpg_inventory" || data.StartsWith("rpg_inventory:"))
+            // ═══════════════════════════════════════════════════════════════
+            // INVENTARIO UNIFICADO - Consumibles + Equipamiento + Equipar/Usar/Vender
+            // ═══════════════════════════════════════════════════════════════
+            if (data == "rpg_inventory" || data.StartsWith("rpg_inventory:") ||
+                data == "rpg_equipment"  || data.StartsWith("rpg_equipment:"))
             {
+                // Parsear tab y página: "rpg_inventory:tab:page"
+                // tab: "consumables" | "equipment" | "equipped"
+                var parts = data.Split(':');
+                string tab  = (parts.Length >= 2) ? parts[1] : "consumables";
                 int page = 1;
-                if (data.Contains(":"))
-                    int.TryParse(data.Split(':')[1], out page);
+                if (parts.Length >= 3) int.TryParse(parts[2], out page);
+                if (page < 1) page = 1;
+                if (data == "rpg_equipment") { tab = "equipment"; page = 1; }
                 
-                var inventoryText = "🎒 **INVENTARIO**\n\n";
+                var invService = new BotTelegram.RPG.Services.InventoryService(rpgService);
                 
-                if (currentPlayer.Inventory.Count == 0)
+                // ─── Vista: EQUIPO EQUIPADO ───────────────────────────────
+                if (tab == "equipped")
                 {
-                    inventoryText += "❌ Tu inventario está vacío\n\n";
-                    inventoryText += "💎 _Explora dungeons para encontrar objetos valiosos_\n";
-                    inventoryText += $"\n📊 Espacios: {currentPlayer.Inventory.Count}/20";
-                    
-                    await bot.EditMessageText(
-                        chatId,
-                        messageId,
-                        inventoryText,
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    var eqText = BotTelegram.RPG.Services.InventoryService.GetEquippedSummary(currentPlayer);
+                    var equippedBtns = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>
+                    {
+                        new[]
                         {
-                            new[]
-                            {
-                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏪 Ir a la Tienda", "rpg_shop"),
-                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗺️ Explorar", "rpg_explore")
-                            },
-                            new[]
-                            {
-                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
-                            }
-                        }),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Arma",    "rpg_unequip:weapon"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🛡️ Armadura","rpg_unequip:armor"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💍 Acc.",    "rpg_unequip:accessory")
+                        },
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎒 Consumibles",  "rpg_inventory:consumables:1"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Equipamiento", "rpg_inventory:equipment:1")
+                        },
+                        new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_menu_character") }
+                    };
+                    await bot.EditMessageText(chatId, messageId, eqText,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(equippedBtns),
                         cancellationToken: ct);
                     return;
                 }
                 
-                // Agrupar ítems por tipo
-                var consumables = currentPlayer.Inventory.Where(i => i.Name.Contains("Poción") || i.Name.Contains("Elixir") || i.Name.Contains("Tónico")).ToList();
-                var materials = currentPlayer.Inventory.Where(i => i.Name.Contains("Gema") || i.Name.Contains("Fragmento") || i.Name.Contains("Esencia")).ToList();
-                var treasures = currentPlayer.Inventory.Where(i => !consumables.Contains(i) && !materials.Contains(i)).ToList();
-                
-                var allItems = new List<(string category, RpgItem item)>();
-                foreach (var item in consumables) allItems.Add(("🧉 Consumibles", item));
-                foreach (var item in materials) allItems.Add(("🔩 Materiales", item));
-                foreach (var item in treasures) allItems.Add(("💎 Tesoros", item));
-                
-                // Paginación
-                const int perPage = 6;
-                var totalPages = (int)Math.Ceiling(allItems.Count / (double)perPage);
-                page = Math.Max(1, Math.Min(page, totalPages));
-                
-                var pageItems = allItems
-                    .Skip((page - 1) * perPage)
-                    .Take(perPage)
-                    .ToList();
-                
-                string lastCategory = "";
-                foreach (var (category, item) in pageItems)
+                // ─── Vista: CONSUMIBLES / MATERIALES ─────────────────────
+                if (tab == "consumables")
                 {
-                    if (category != lastCategory)
+                    var allItems = currentPlayer.Inventory
+                        .OrderBy(i => i.Type)
+                        .ThenBy(i => i.Rarity)
+                        .ToList();
+                    
+                    const int perPage = 5;
+                    var totalPages = Math.Max(1, (int)Math.Ceiling(allItems.Count / (double)perPage));
+                    page = Math.Min(page, totalPages);
+                    var pageItems = allItems.Skip((page - 1) * perPage).Take(perPage).ToList();
+                    
+                    var invText = $"🎒 **INVENTARIO** — Consumibles & Materiales\n";
+                    invText += $"📦 {allItems.Count}/40 slots | Pág {page}/{totalPages}\n\n";
+                    
+                    if (allItems.Count == 0)
                     {
-                        if (lastCategory != "") inventoryText += "\n";
-                        inventoryText += $"**{category}**\n";
-                        lastCategory = category;
+                        invText += "❌ _Sin ítems consumibles o materiales._\n\n";
+                        invText += "💡 Explora y combate para obtener pociones y materiales.\n";
                     }
-                    inventoryText += $"{item.Emoji} {item.Name}\n";
-                    inventoryText += $"   _{item.Description}_\n";
-                    inventoryText += $"   💰 Valor: {item.Value} oro\n";
+                    else
+                    {
+                        int idx = (page - 1) * perPage + 1;
+                        foreach (var item in pageItems)
+                        {
+                            var rarityColor = item.Rarity switch
+                            {
+                                BotTelegram.RPG.Models.ItemRarity.Common    => "⚪",
+                                BotTelegram.RPG.Models.ItemRarity.Uncommon  => "🟢",
+                                BotTelegram.RPG.Models.ItemRarity.Rare      => "🔵",
+                                BotTelegram.RPG.Models.ItemRarity.Epic      => "🟣",
+                                BotTelegram.RPG.Models.ItemRarity.Legendary => "🟡",
+                                _ => "⚪"
+                            };
+                            invText += $"**{idx}.** {item.Emoji} {rarityColor} **{item.Name}**\n";
+                            invText += $"   _{item.Description}_\n";
+                            if (item.HPRestore > 0)   invText += $"   ❤️ +{item.HPRestore} HP  ";
+                            if (item.ManaRestore > 0)  invText += $"   💙 +{item.ManaRestore} Maná  ";
+                            invText += $"   💰 {item.Value / 2}oro venta\n\n";
+                            idx++;
+                        }
+                    }
+                    
+                    var consumBtns = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                    
+                    // Botones por ítem (usar / vender)
+                    int btnIdx = (page - 1) * perPage;
+                    foreach (var item in pageItems)
+                    {
+                        var row = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
+                        if (item.Type == BotTelegram.RPG.Models.ItemType.Consumable)
+                            row.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"✅ Usar {item.Emoji}", $"inv_use:{item.Id}"));
+                        row.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"💰 Vender ({item.Value/2})", $"inv_sell_item:{item.Id}"));
+                        consumBtns.Add(row.ToArray());
+                    }
+                    
+                    // Navegación
+                    if (totalPages > 1)
+                    {
+                        var navRow = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
+                        if (page > 1) navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⬅️", $"rpg_inventory:consumables:{page-1}"));
+                        if (page < totalPages) navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("➡️", $"rpg_inventory:consumables:{page+1}"));
+                        if (navRow.Any()) consumBtns.Add(navRow.ToArray());
+                    }
+                    
+                    consumBtns.Add(new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Equipamiento", "rpg_inventory:equipment:1"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗡️ Equipado",     "rpg_inventory:equipped:1")
+                    });
+                    consumBtns.Add(new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_menu_character") });
+                    
+                    await bot.EditMessageText(chatId, messageId, invText,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(consumBtns),
+                        cancellationToken: ct);
+                    return;
                 }
                 
-                inventoryText += $"\n━━━━━━━━━━━━━━━━━━━━━━\n";
-                inventoryText += $"📊 Espacios: **{currentPlayer.Inventory.Count}/20** | Página **{page}/{totalPages}**";
-                
-                // Construir teclado
-                var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
-                
-                // Navegación
-                if (totalPages > 1)
+                // ─── Vista: EQUIPAMIENTO (armas/armaduras/accesorios) ─────
+                if (tab == "equipment")
                 {
-                    var navRow = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
-                    if (page > 1)
-                        navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⬅️ Anterior", $"rpg_inventory:{page - 1}"));
-                    if (page < totalPages)
-                        navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("➡️ Siguiente", $"rpg_inventory:{page + 1}"));
-                    if (navRow.Any())
-                        buttons.Add(navRow.ToArray());
+                    var allEq = currentPlayer.EquipmentInventory
+                        .OrderByDescending(e => e.Rarity)
+                        .ThenBy(e => e.Type)
+                        .ToList();
+                    
+                    const int perPage = 4;
+                    var totalPages = Math.Max(1, (int)Math.Ceiling(allEq.Count / (double)perPage));
+                    page = Math.Min(page, totalPages);
+                    var pageEq = allEq.Skip((page - 1) * perPage).Take(perPage).ToList();
+                    
+                    var eqText = $"⚔️ **EQUIPAMIENTO** — Inventario de Equipo\n";
+                    eqText += $"📦 {allEq.Count}/30 slots | Pág {page}/{totalPages}\n\n";
+                    
+                    if (allEq.Count == 0)
+                    {
+                        eqText += "❌ _Sin equipamiento en el inventario._\n\n";
+                        eqText += "💡 El equipo se obtiene al vencer enemigos (8% chance).\n";
+                    }
+                    else
+                    {
+                        int idx = (page - 1) * perPage + 1;
+                        foreach (var eq in pageEq)
+                        {
+                            eqText += $"**{idx}.** {eq.TypeEmoji} {eq.RarityEmoji} **{eq.Name}**\n";
+                            eqText += $"   Nivel req: {eq.RequiredLevel} | Tipo: {eq.Type}\n";
+                            var bonuses = new List<string>();
+                            if (eq.BonusAttack > 0)      bonuses.Add($"⚔️+{eq.BonusAttack}");
+                            if (eq.BonusDefense > 0)     bonuses.Add($"🛡️+{eq.BonusDefense}");
+                            if (eq.BonusMagicPower > 0)  bonuses.Add($"🔮+{eq.BonusMagicPower}");
+                            if (eq.BonusHP > 0)          bonuses.Add($"❤️+{eq.BonusHP}");
+                            if (eq.BonusMana > 0)        bonuses.Add($"💙+{eq.BonusMana}");
+                            if (bonuses.Any()) eqText += $"   {string.Join(" | ", bonuses)}\n";
+                            eqText += $"   💰 Valor venta: {eq.Price / 2} oro\n\n";
+                            idx++;
+                        }
+                    }
+                    
+                    var eqBtns = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                    
+                    // Botones por ítem (equipar / vender)
+                    foreach (var eq in pageEq)
+                    {
+                        var canEquip = eq.RequiredLevel <= currentPlayer.Level;
+                        var row = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
+                        if (canEquip)
+                            row.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"✅ Equipar {eq.TypeEmoji}", $"inv_equip:{eq.Id}"));
+                        row.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"💰 Vender ({eq.Price/2})", $"inv_sell_eq:{eq.Id}"));
+                        eqBtns.Add(row.ToArray());
+                    }
+                    
+                    if (totalPages > 1)
+                    {
+                        var navRow = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
+                        if (page > 1) navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⬅️", $"rpg_inventory:equipment:{page-1}"));
+                        if (page < totalPages) navRow.Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("➡️", $"rpg_inventory:equipment:{page+1}"));
+                        if (navRow.Any()) eqBtns.Add(navRow.ToArray());
+                    }
+                    
+                    eqBtns.Add(new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧪 Consumibles", "rpg_inventory:consumables:1"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗡️ Equipado",    "rpg_inventory:equipped:1")
+                    });
+                    eqBtns.Add(new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_menu_character") });
+                    
+                    await bot.EditMessageText(chatId, messageId, eqText,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(eqBtns),
+                        cancellationToken: ct);
+                    return;
                 }
                 
-                buttons.Add(new[]
+                // Fallback: redirigir a consumibles
+                goto inventoryConsumables;
+                inventoryConsumables:
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🎒 Abriendo inventario...", cancellationToken: ct);
+                // Reenviar como consumables tab via EditMessage simple
                 {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏪 Tienda", "rpg_shop"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🚫 Equipar", "rpg_equipment")
-                });
-                buttons.Add(new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔄 Actualizar", "rpg_inventory"),
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
-                });
-                
-                await bot.EditMessageText(
-                    chatId,
-                    messageId,
-                    inventoryText,
+                    var allItemsFb = currentPlayer.Inventory.OrderBy(i => i.Type).ToList();
+                    var fbText = $"🎒 **INVENTARIO** — Consumibles & Materiales\n📦 {allItemsFb.Count}/40 slots\n\n";
+                    fbText += allItemsFb.Count == 0 ? "❌ _Sin ítems._\n\n💡 Explora y combate para obtener pociones." : "";
+                    var fbBtns = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧪 Consumibles",  "rpg_inventory:consumables:1"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Equipamiento", "rpg_inventory:equipment:1"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗡️ Equipado",     "rpg_inventory:equipped:1")
+                        },
+                        new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_menu_character") }
+                    });
+                    await bot.EditMessageText(chatId, messageId, fbText, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: fbBtns, cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // ─── USAR ÍTEM ────────────────────────────────────────────────
+            if (data.StartsWith("inv_use:"))
+            {
+                var itemId = data[8..];
+                var invSvc = new BotTelegram.RPG.Services.InventoryService(rpgService);
+                var (ok, msg) = invSvc.UseItem(currentPlayer, itemId);
+                await bot.AnswerCallbackQuery(callbackQuery.Id, ok ? "✅ Ítem usado" : "❌ Error", cancellationToken: ct);
+                await bot.EditMessageText(chatId, messageId,
+                    $"{msg}\n\n❤️ HP: {currentPlayer.HP}/{currentPlayer.MaxHP} | 💙 Maná: {currentPlayer.Mana}/{currentPlayer.MaxMana}",
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
-                    cancellationToken: ct);
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎒 Volver al Inventario", "rpg_inventory:consumables:1") }
+                    }), cancellationToken: ct);
+                return;
+            }
+            
+            // ─── VENDER ÍTEM CONSUMIBLE ───────────────────────────────────
+            if (data.StartsWith("inv_sell_item:"))
+            {
+                var itemId = data[14..];
+                var invSvc = new BotTelegram.RPG.Services.InventoryService(rpgService);
+                var (ok, msg) = invSvc.SellItem(currentPlayer, itemId);
+                await bot.AnswerCallbackQuery(callbackQuery.Id, ok ? $"💰 Vendido" : "❌ Error", cancellationToken: ct);
+                await bot.EditMessageText(chatId, messageId,
+                    $"{msg}\n\n💰 Oro total: **{currentPlayer.Gold}**",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎒 Volver al Inventario", "rpg_inventory:consumables:1") }
+                    }), cancellationToken: ct);
+                return;
+            }
+            
+            // ─── EQUIPAR ITEM ─────────────────────────────────────────────
+            if (data.StartsWith("inv_equip:"))
+            {
+                var equipId = data[10..];
+                var invSvc = new BotTelegram.RPG.Services.InventoryService(rpgService);
+                var (ok, msg, displaced) = invSvc.EquipItem(currentPlayer, equipId);
+                var answer = ok ? "✅ Equipado" : "❌ Error";
+                await bot.AnswerCallbackQuery(callbackQuery.Id, answer, cancellationToken: ct);
+                var dispMsg = displaced != null ? $"\n🔄 {displaced.Name} movido al inventario." : "";
+                await bot.EditMessageText(chatId, messageId,
+                    $"{msg}{dispMsg}",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Ver Equipo",       "rpg_inventory:equipped:1") },
+                        new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎒 Ver Equipamiento", "rpg_inventory:equipment:1") }
+                    }), cancellationToken: ct);
+                return;
+            }
+            
+            // ─── VENDER EQUIPO ────────────────────────────────────────────
+            if (data.StartsWith("inv_sell_eq:"))
+            {
+                var equipId = data[12..];
+                var invSvc = new BotTelegram.RPG.Services.InventoryService(rpgService);
+                var (ok, msg) = invSvc.SellEquipment(currentPlayer, equipId);
+                await bot.AnswerCallbackQuery(callbackQuery.Id, ok ? "💰 Vendido" : "❌ Error", cancellationToken: ct);
+                await bot.EditMessageText(chatId, messageId,
+                    $"{msg}\n\n💰 Oro total: **{currentPlayer.Gold}**",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎒 Volver al Inventario", "rpg_inventory:equipment:1") }
+                    }), cancellationToken: ct);
+                return;
+            }
+            
+            // ─── DESEQUIPAR ───────────────────────────────────────────────
+            if (data.StartsWith("rpg_unequip:"))
+            {
+                var slotStr = data[12..];
+                var slot = slotStr switch
+                {
+                    "weapon"    => BotTelegram.RPG.Models.EquipmentType.Weapon,
+                    "armor"     => BotTelegram.RPG.Models.EquipmentType.Armor,
+                    "accessory" => BotTelegram.RPG.Models.EquipmentType.Accessory,
+                    _ => BotTelegram.RPG.Models.EquipmentType.Weapon
+                };
+                var invSvc = new BotTelegram.RPG.Services.InventoryService(rpgService);
+                var (ok, msg) = invSvc.UnequipItem(currentPlayer, slot);
+                await bot.AnswerCallbackQuery(callbackQuery.Id, ok ? "🔓 Desequipado" : "❌ " + msg, cancellationToken: ct);
+                if (ok)
+                    await bot.EditMessageText(chatId, messageId, msg,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗡️ Ver Equipo Activo", "rpg_inventory:equipped:1") }
+                        }), cancellationToken: ct);
                 return;
             }
             
@@ -2470,38 +2684,44 @@ Bienvenido a {player.CurrentLocation}
             // Explore Menu
             if (data == "rpg_explore_menu")
             {
+                var energyBar = currentPlayer.Stamina >= 80 ? "⚡⚡⚡⚡⚡" :
+                                currentPlayer.Stamina >= 60 ? "⚡⚡⚡⚡░" :
+                                currentPlayer.Stamina >= 40 ? "⚡⚡⚡░░" :
+                                currentPlayer.Stamina >= 20 ? "⚡⚡░░░" :
+                                currentPlayer.Stamina >= 10 ? "⚡░░░░" : "░░░░░";
+                
                 await bot.EditMessageText(
-                    chatId,
-                    messageId,
-                    "🗺️ **EXPLORACIÓN**\n\n" +
-                    "¿Qué quieres hacer?\n\n" +
-                    "⚔️ **Buscar Combate:** Encuentra enemigos (15 energía)\n" +
-                    "🗺️ **Aventura:** Evento aleatorio (20 energía)\n" +
-                    "🏞️ **Recursos:** Buscar materiales (10 energía)\n" +
-                    "💎 **Tesoro:** Buscar cofres (25 energía)\n" +
-                    "🐾 **Mascotas:** Buscar bestias (30 energía)\n" +
-                    "🎲 **Evento:** Sorpresa aleatoria (15 energía)",
+                    chatId, messageId,
+                    $"🗺️ **EXPLORACIÓN**\n\n" +
+                    $"⚡ Energía: **{currentPlayer.Stamina}/{currentPlayer.MaxStamina}** {energyBar}\n" +
+                    $"📍 Zona: _{currentPlayer.CurrentLocation}_\n\n" +
+                    $"**¿Qué deseas hacer?**\n\n" +
+                    $"⚔️ **Buscar Combate** — Encuentra enemigos _(15 energía)_\n" +
+                    $"🏞️ **Recolectar** — Obtén materiales e ítems _(10 energía)_\n" +
+                    $"💎 **Buscar Tesoro** — Cofres ocultos _(25 energía)_\n" +
+                    $"🐾 **Bestias** — Busca mascotas domables _(30 energía)_\n" +
+                    $"🎲 **Evento** — Sorpresa aleatoria _(15 energía)_",
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
                     {
                         new[]
                         {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Combate", "rpg_explore"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗺️ Aventura", "rpg_adventure")
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Combate",    "rpg_explore"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏞️ Recursos",   "rpg_gather")
                         },
                         new[]
                         {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏞️ Recursos", "rpg_gather"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💎 Tesoro", "rpg_treasure")
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💎 Tesoro",     "rpg_treasure"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Bestias",    "rpg_search_beast")
                         },
                         new[]
                         {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🐾 Mascotas", "rpg_search_beast"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎲 Evento", "rpg_random_event")
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎲 Evento",     "rpg_random_event"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("😴 Descansar",  "rpg_rest")
                         },
                         new[]
                         {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_menu_adventure")
                         }
                     }),
                     cancellationToken: ct);
@@ -2847,7 +3067,6 @@ Bienvenido a {player.CurrentLocation}
                     return;
                 }
                 
-                // Responder al callback INMEDIATAMENTE
                 await bot.AnswerCallbackQuery(callbackQuery.Id, "🏞️ Buscando recursos...", cancellationToken: ct);
                 
                 rpgService.ConsumeEnergy(currentPlayer, 10);
@@ -2857,54 +3076,62 @@ Bienvenido a {player.CurrentLocation}
                 var roll = rand.Next(100);
                 
                 string message = "🏞️ **BUSCAR RECURSOS**\n\n";
+                string itemMsg = "";
                 
-                if (roll < 30) // 30% - Hierbas
+                if (roll < 30) // 30% - Poción menor
                 {
-                    var herbsFound = rand.Next(1, 4);
-                    message += $"🌿 **¡Hierbas encontradas!**\n\n" +
-                              $"Recolectas {herbsFound} hierbas medicinales.\n\n" +
-                              $"💡 Pueden ser útiles para pociones.";
+                    var item = new BotTelegram.RPG.Models.RpgItem
+                    {
+                        Name = "Hierba Medicinal",
+                        Emoji = "🌿",
+                        Description = "Hierba con propiedades curativas",
+                        Type = BotTelegram.RPG.Models.ItemType.Material,
+                        Value = 10,
+                        Rarity = BotTelegram.RPG.Models.ItemRarity.Common
+                    };
+                    if (currentPlayer.Inventory.Count < 40) { currentPlayer.Inventory.Add(item); itemMsg = $"\n\n**{item.Emoji} {item.Name}** añadida al inventario."; }
+                    message += $"🌿 **¡Hierbas encontradas!**\n\nRecolectas hierbas medicinales útiles para pociones.{itemMsg}";
                     actionTracker.TrackAction(currentPlayer, "gather_herbs");
                 }
-                else if (roll < 50) // 20% - Minerales
+                else if (roll < 50) // 20% - Fragmento de cristal
                 {
-                    var oreFound = rand.Next(1, 3);
-                    message += $"⛏️ **¡Mineral encontrado!**\n\n" +
-                              $"Minas {oreFound} fragmentos de mineral.\n\n" +
-                              $"💡 Útil para forjar equipo.";
+                    var item = new BotTelegram.RPG.Models.RpgItem
+                    {
+                        Name = "Fragmento de Cristal",
+                        Emoji = "🔷",
+                        Description = "Material de crafteo básico",
+                        Type = BotTelegram.RPG.Models.ItemType.Material,
+                        Value = 30,
+                        Rarity = BotTelegram.RPG.Models.ItemRarity.Common
+                    };
+                    if (currentPlayer.Inventory.Count < 40) { currentPlayer.Inventory.Add(item); itemMsg = $"\n\n**{item.Emoji} {item.Name}** añadido al inventario."; }
+                    message += $"⛏️ **¡Mineral encontrado!**\n\nEncuentras un fragmento de cristal útil para herrero.{itemMsg}";
                     actionTracker.TrackAction(currentPlayer, "mine_ore");
                 }
-                else if (roll < 75) // 25% - Materiales variados
+                else if (roll < 75) // 25% - Oro
                 {
                     var goldFound = rand.Next(10, 31);
                     currentPlayer.Gold += goldFound;
-                    rpgService.SavePlayer(currentPlayer);
-                    
-                    message += $"🪵 **¡Materiales encontrados!**\n\n" +
-                              $"Recoges algunos materiales básicos.\n" +
-                              $"Los vendes por **{goldFound} oro**.\n\n" +
-                              $"💰 Oro total: {currentPlayer.Gold}";
+                    message += $"🪵 **¡Materiales encontrados!**\n\nEncuentras materiales básicos y los vendes por **+{goldFound} oro**.\n💰 Oro total: {currentPlayer.Gold}";
                 }
                 else // 25% - Nada
                 {
-                    message += $"❌ **No encontraste nada**\n\n" +
-                              $"Buscas durante un rato pero no encuentras recursos útiles.\n\n" +
-                              $"Tal vez tengas mejor suerte la próxima vez.";
+                    message += "❌ **No encontraste nada**\n\nBuscas durante un rato pero no encuentras recursos útiles.";
                 }
                 
-                await bot.EditMessageText(
-                    chatId,
-                    messageId,
-                    message,
+                rpgService.SavePlayer(currentPlayer);
+                
+                await bot.EditMessageText(chatId, messageId, message,
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
                     {
                         new[]
                         {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
-                        }
-                    }),
-                    cancellationToken: ct);
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏞️ Buscar más", "rpg_gather"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎒 Inventario", "rpg_inventory:consumables:1")
+                        },
+                        new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_explore_menu") }
+                    }), cancellationToken: ct);
                 return;
             }
             

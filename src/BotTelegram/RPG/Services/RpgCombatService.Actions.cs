@@ -1073,13 +1073,22 @@ namespace BotTelegram.RPG.Services
                 result.UnlockedSkills = newSkills;
             }
             
-            // Loot
+            // Loot de equipo (armas/armaduras)
             var loot = EquipmentDatabase.GenerateLoot(player.Level);
             if (loot != null)
             {
                 player.EquipmentInventory.Add(loot);
                 result.LootDrop = loot;
                 AddCombatLog(player, "Loot", $"💎 {loot.Name} {loot.RarityEmoji}");
+            }
+            
+            // Loot de consumibles/materiales (25% chance)
+            var consumableDrop = InventoryService.GenerateConsumableDrop(player.Level);
+            if (consumableDrop != null && player.Inventory.Count < 40)
+            {
+                player.Inventory.Add(consumableDrop);
+                result.ConsumableDrop = consumableDrop;
+                AddCombatLog(player, "ConsumableDrop", $"{consumableDrop.Emoji} {consumableDrop.Name}");
             }
             
             player.Gold += result.GoldGained;

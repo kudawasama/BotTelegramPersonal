@@ -897,8 +897,14 @@ namespace BotTelegram.RPG.Services
                 
                 if (result.LootDrop != null)
                 {
-                    narrative += $"💎 Loot: **{result.LootDrop.Name}** {result.LootDrop.RarityEmoji}\n\n";
+                    narrative += $"💎 Equipo: **{result.LootDrop.Name}** {result.LootDrop.RarityEmoji}\n";
                 }
+                if (result.ConsumableDrop != null)
+                {
+                    narrative += $"{result.ConsumableDrop.Emoji} +**{result.ConsumableDrop.Name}** al inventario\n";
+                }
+                if (result.LootDrop != null || result.ConsumableDrop != null)
+                    narrative += "\n";
                 
                 // Mostrar resumen de combate
                 if (player.CombatLog.Count > 0)
@@ -1514,6 +1520,7 @@ namespace BotTelegram.RPG.Services
         public int XPGained { get; set; }
         public int GoldGained { get; set; }
         public RpgEquipment? LootDrop { get; set; }
+        public RpgItem? ConsumableDrop { get; set; } // Drop de consumibles/materiales
         
         // Sistema de combos
         public int ComboBonus { get; set; }

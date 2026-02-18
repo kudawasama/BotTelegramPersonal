@@ -45,7 +45,8 @@ namespace BotTelegram.Commands
                       "• Chat con IA avanzada\n" +
                       "• Sistema de mascotas y habilidades\n" +
                       "• Rankings globales y competencia\n\n" +
-                      "🎯 *Selecciona una categoría:*",
+                      "🎯 *Selecciona una categoría:*\n\n" +
+                      $"━━━━━━━━━━━━━━━\n{BuildInfo.GetVersionBlock()}",
                 parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                 replyMarkup: keyboard,
                 cancellationToken: ct
