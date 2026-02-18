@@ -74,6 +74,13 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/clases") || message.Text.StartsWith("/classes") || message.Text.StartsWith("/clase"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando ClassesCommand (Sistema de Clases)");
+                await new ClassesCommand().Execute(bot, message, ct);
+                return;
+            }
+
             if (message.Text.StartsWith("/rpgstats") || message.Text.StartsWith("/stats"))
             {
                 Console.WriteLine("   [CommandRouter] → Ejecutando RpgStatsCommand (Estadísticas Detalladas)");

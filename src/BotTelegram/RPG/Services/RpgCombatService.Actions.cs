@@ -590,11 +590,26 @@ namespace BotTelegram.RPG.Services
             result.SkillName = skill.Name;
             TrackSkillUsed(player, skillId);
             
+            // ═══ FASE 4: Tracking para desbloqueo de clases ═══
+            if (skill.Category == SkillCategory.Magic || skill.ManaCost > 0)
+            {
+                if (!player.ActionCounters.ContainsKey("magic_cast"))
+                    player.ActionCounters["magic_cast"] = 0;
+                player.ActionCounters["magic_cast"]++;
+            }
+            
             if (skill.HealAmount > 0)
             {
                 var heal = Math.Min(skill.HealAmount, player.MaxHP - player.HP);
                 player.HP += heal;
                 result.SkillHealed = heal;
+                // Fase 4: trackear HP curado
+                if (heal > 0)
+                {
+                    if (!player.ActionCounters.ContainsKey("hp_healed"))
+                        player.ActionCounters["hp_healed"] = 0;
+                    player.ActionCounters["hp_healed"] += heal;
+                }
             }
             
             var baseDamage = skill.Category == SkillCategory.Magic ? player.MagicalAttack : player.PhysicalAttack;
@@ -1071,6 +1086,15 @@ namespace BotTelegram.RPG.Services
             player.TotalGoldEarned += result.GoldGained;
             _rpgService.AddXP(player, result.XPGained);
             
+            // ═══ FASE 4: Tracking de kills para desbloqueo de clases ═══
+            TrackEnemyDefeated(player);
+            if (enemy.Difficulty == EnemyDifficulty.Boss || enemy.Difficulty == EnemyDifficulty.WorldBoss)
+            {
+                if (!player.ActionCounters.ContainsKey("boss_kill"))
+                    player.ActionCounters["boss_kill"] = 0;
+                player.ActionCounters["boss_kill"]++;
+            }
+            
             // ═══ FASE 3.5: XP para Mascotas ═══
             if (player.ActivePets != null && player.ActivePets.Any())
             {
@@ -1231,6 +1255,15 @@ namespace BotTelegram.RPG.Services
             }
             
             player.ActionCounters[actionType] += count;
+            
+            // ═══ FASE 4: Mapeo a contadores de clase ═══
+            // Ataques físicos: charge, precise, heavy, counter, advance
+            if (actionType is "charge_attack" or "precise_attack" or "heavy_attack" or "counter_attack" or "counter")
+            {
+                if (!player.ActionCounters.ContainsKey("physical_attack"))
+                    player.ActionCounters["physical_attack"] = 0;
+                player.ActionCounters["physical_attack"] += count;
+            }
         }
         
         /// <summary>
@@ -1263,6 +1296,10 @@ namespace BotTelegram.RPG.Services
         private void TrackPerfectDodge(RpgPlayer player)
         {
             TrackAction(player, "perfect_dodge");
+            // Fase 4: también cuenta para evasion_success
+            if (!player.ActionCounters.ContainsKey("evasion_success"))
+                player.ActionCounters["evasion_success"] = 0;
+            player.ActionCounters["evasion_success"]++;
         }
         
         /// <summary>
@@ -1285,6 +1322,10 @@ namespace BotTelegram.RPG.Services
         private void TrackEnemyDefeated(RpgPlayer player)
         {
             TrackAction(player, "enemy_defeated");
+            // Fase 4: trackear enemy_kill y boss_kill
+            if (!player.ActionCounters.ContainsKey("enemy_kill"))
+                player.ActionCounters["enemy_kill"] = 0;
+            player.ActionCounters["enemy_kill"]++;
         }
         
         /// <summary>

@@ -114,6 +114,15 @@ namespace BotTelegram.RPG.Models
         public List<string> UnlockedZones { get; set; } = new() { "puerto_esperanza" }; // Zonas desbloqueadas
         
         // ═══════════════════════════════════════
+        // CLASS SYSTEM (FASE 4: Clases Desbloqueables)
+        // ═══════════════════════════════════════
+        /// <summary>IDs de clases desbloqueadas (ej: "warrior", "mage", etc.)</summary>
+        public List<string> UnlockedClasses { get; set; } = new();
+        
+        /// <summary>ID de la clase actualmente equipada (clase activa)</summary>
+        public string ActiveClassId { get; set; } = "adventurer";
+        
+        // ═══════════════════════════════════════
         // DUNGEON SYSTEM (FASE 3)
         // ═══════════════════════════════════════
         public Dungeon? CurrentDungeon { get; set; } // Mazmorra activa (null si no está en mazmorra)
@@ -283,6 +292,7 @@ namespace BotTelegram.RPG.Models
         [JsonIgnore]
         public string ClassEmoji => Class switch
         {
+            CharacterClass.Adventurer => "👤",
             CharacterClass.Warrior => "⚔️",
             CharacterClass.Mage => "🔮",
             CharacterClass.Rogue => "🗡️",
@@ -462,6 +472,9 @@ namespace BotTelegram.RPG.Models
     
     public enum CharacterClass
     {
+        // Clase de inicio (sin especialización)
+        Adventurer,   // Clase base, stats balanceados
+        
         // Básicas (Tier 1)
         Warrior,      // Combate físico, tanque
         Mage,         // Magia elemental

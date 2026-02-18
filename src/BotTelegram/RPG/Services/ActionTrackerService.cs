@@ -57,11 +57,65 @@ namespace BotTelegram.RPG.Services
             // Verificar clases ocultas
             CheckHiddenClassUnlocks(player);
             
+            // ═══ FASE 4: Verificar clases desbloqueables ═══
+            CheckClassUnlocks(player);
+            
             // Verificar pasivas individuales (TODO: agregar sistema de requisitos por pasiva)
             CheckPassiveUnlocks(player);
             
             // Verificar skills combinadas
             CheckComboSkillUnlocks(player);
+        }
+        
+        /// <summary>
+        /// FASE 4: Verifica y desbloquea clases si se cumplen todos los requisitos
+        /// </summary>
+        private void CheckClassUnlocks(RpgPlayer player)
+        {
+            var available = ClassUnlockDatabase.GetAvailableToUnlock(player);
+            
+            foreach (var def in available)
+            {
+                if (ClassUnlockDatabase.CanUnlock(player, def))
+                {
+                    if (!player.UnlockedClasses.Contains(def.ClassId))
+                    {
+                        player.UnlockedClasses.Add(def.ClassId);
+                        Console.WriteLine($"[ClassUnlock] 🎉 {player.Name} desbloqueó clase: {def.Emoji} {def.Name}!");
+                        _rpgService.SavePlayer(player);
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// FASE 4: Verifica si el jugador puede cambiar a una clase dada
+        /// </summary>
+        public bool CanEquipClass(RpgPlayer player, string classId)
+        {
+            if (classId == "adventurer") return true;
+            return player.UnlockedClasses.Contains(classId);
+        }
+        
+        /// <summary>
+        /// FASE 4: Cambia la clase activa del jugador
+        /// </summary>
+        public bool EquipClass(RpgPlayer player, string classId)
+        {
+            if (!CanEquipClass(player, classId)) return false;
+            
+            var def = ClassUnlockDatabase.GetAllClassDefinitions()
+                .FirstOrDefault(d => d.ClassId == classId);
+            
+            player.ActiveClassId = classId;
+            
+            if (def != null)
+                player.Class = def.TargetClass;
+            else if (classId == "adventurer")
+                player.Class = CharacterClass.Adventurer;
+            
+            _rpgService.SavePlayer(player);
+            return true;
         }
         
         /// <summary>

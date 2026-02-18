@@ -84,6 +84,11 @@ namespace BotTelegram.Handlers
                 {
                     await HandleDungeonCallback(bot, callbackQuery, data, ct);
                 }
+                // Class System Callbacks (FASE 4)
+                else if (data.StartsWith("class_") || data == "classes_menu" || data == "class_progress")
+                {
+                    await HandleClassCallback(bot, callbackQuery, data, ct);
+                }
                 // Leaderboard Callbacks
                 else if (data.StartsWith("leaderboard_"))
                 {
@@ -2447,6 +2452,14 @@ Bienvenido a {player.CurrentLocation}
                 var dungeonCommand = new DungeonCommand();
                 await dungeonCommand.Execute(bot, callbackQuery.Message, ct);
                 await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                return;
+            }
+            
+            // Classes redirect desde menú RPG (legacy rpg_hidden_classes también)
+            if (data == "rpg_classes" || data == "rpg_hidden_classes")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                await ClassesCommand.ShowClassMenu(bot, chatId, currentPlayer, ct, messageId);
                 return;
             }
             
@@ -6703,6 +6716,75 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
                 return;
             }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // FASE 4: CLASS SYSTEM CALLBACKS
+        // ═══════════════════════════════════════════════════════════════
+        
+        private static async Task HandleClassCallback(ITelegramBotClient bot, CallbackQuery callbackQuery, string data, CancellationToken ct)
+        {
+            var chatId = callbackQuery.Message!.Chat.Id;
+            var messageId = callbackQuery.Message.MessageId;
+            var rpgService = new RpgService();
+            var player = rpgService.GetPlayer(chatId);
+            
+            if (player == null)
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Necesitas crear un personaje primero.", cancellationToken: ct);
+                return;
+            }
+            
+            var tracker = new ActionTrackerService(rpgService);
+            
+            // classes_menu: Mostrar menú principal de clases
+            if (data == "classes_menu")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                await ClassesCommand.ShowClassMenu(bot, chatId, player, ct, messageId);
+                return;
+            }
+            
+            // class_progress: Ver progreso detallado de desbloqueo
+            if (data == "class_progress")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                await ClassesCommand.ShowClassProgress(bot, chatId, player, ct, messageId);
+                return;
+            }
+            
+            // class_equip_{classId}: Equipar una clase desbloqueada
+            if (data.StartsWith("class_equip_"))
+            {
+                var classId = data.Replace("class_equip_", "");
+                
+                if (player.ActiveClassId == classId)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "✅ Ya tienes esta clase activa.", cancellationToken: ct);
+                    return;
+                }
+                
+                bool success = tracker.EquipClass(player, classId);
+                
+                if (success)
+                {
+                    var def = ClassUnlockDatabase.GetAllClassDefinitions()
+                        .FirstOrDefault(d => d.ClassId == classId);
+                    
+                    var className = def?.Name ?? classId;
+                    var classEmoji = def?.Emoji ?? "🎭";
+                    
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, $"{classEmoji} ¡Clase {className} equipada!", cancellationToken: ct);
+                    await ClassesCommand.ShowClassMenu(bot, chatId, player, ct, messageId);
+                }
+                else
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes equipar esta clase (no desbloqueada).", cancellationToken: ct);
+                }
+                return;
+            }
+            
+            await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
         }
     }
 }

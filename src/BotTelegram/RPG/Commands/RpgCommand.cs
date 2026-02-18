@@ -198,7 +198,7 @@ Solo los más valientes pueden enfrentar este destino...
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("🐾 Mascotas", "rpg_pets_menu"),
-                    InlineKeyboardButton.WithCallbackData("🎭 Clases", "rpg_hidden_classes"),
+                    InlineKeyboardButton.WithCallbackData("🎭 Clases", "classes_menu"),
                     InlineKeyboardButton.WithCallbackData("💎 Pasivas", "rpg_passives")
                 },
                 new[]
