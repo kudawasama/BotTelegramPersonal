@@ -1150,6 +1150,9 @@ Bienvenido a {player.CurrentLocation}
                 return;
             }
             
+            // FASE 6: Sincronizar estado FSM con la realidad del jugador
+            StateManager.SyncState(currentPlayer);
+            
             // Stats (detailed)
             if (data == "rpg_stats")
             {
@@ -2536,6 +2539,7 @@ Bienvenido a {player.CurrentLocation}
                     
                     currentPlayer.IsInCombat = true;
                     currentPlayer.CurrentEnemy = enemy;
+                    StateManager.TransitionTo(currentPlayer, GameState.InCombat, enemy.Name); // FSM
                     
                     // Fase 5.2: Enviar mensaje inicial y guardar MessageId
                     await bot.DeleteMessage(chatId, messageId, ct);
@@ -2730,6 +2734,7 @@ Bienvenido a {player.CurrentLocation}
                     var enemy = rpgService.GenerateEnemy(currentPlayer.Level, EnemyDifficulty.Easy);
                     currentPlayer.IsInCombat = true;
                     currentPlayer.CurrentEnemy = enemy;
+                    StateManager.TransitionTo(currentPlayer, GameState.InCombat, enemy.Name); // FSM
                     rpgService.SavePlayer(currentPlayer);
                     
                     await bot.DeleteMessage(chatId, messageId, ct);
@@ -2750,6 +2755,7 @@ Bienvenido a {player.CurrentLocation}
                     var enemy = rpgService.GenerateEnemy(currentPlayer.Level, EnemyDifficulty.Medium);
                     currentPlayer.IsInCombat = true;
                     currentPlayer.CurrentEnemy = enemy;
+                    StateManager.TransitionTo(currentPlayer, GameState.InCombat, enemy.Name); // FSM
                     rpgService.SavePlayer(currentPlayer);
                     
                     await bot.DeleteMessage(chatId, messageId, ct);
@@ -2770,6 +2776,7 @@ Bienvenido a {player.CurrentLocation}
                     var enemy = rpgService.GenerateEnemy(currentPlayer.Level, EnemyDifficulty.Hard);
                     currentPlayer.IsInCombat = true;
                     currentPlayer.CurrentEnemy = enemy;
+                    StateManager.TransitionTo(currentPlayer, GameState.InCombat, enemy.Name); // FSM
                     rpgService.SavePlayer(currentPlayer);
                     
                     await bot.DeleteMessage(chatId, messageId, ct);
@@ -3703,6 +3710,7 @@ Bienvenido a {player.CurrentLocation}
                     // Salir del combate
                     currentPlayer.IsInCombat = false;
                     currentPlayer.CurrentEnemy = null;
+                    StateManager.ForceState(currentPlayer, GameState.Idle, "pet_tamed"); // FSM
                     rpgService.SavePlayer(currentPlayer);
                     
                     await bot.EditMessageText(
@@ -6456,6 +6464,7 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 player.ComboCount = 0;
                 player.CombatTurnCount = 0;
                 player.ActiveCombatMessageId = messageId;
+                StateManager.TransitionTo(player, GameState.InDungeonCombat, currentFloor.Enemy.Name); // FSM
                 
                 rpgService.SavePlayer(player);
                 

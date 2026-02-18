@@ -356,6 +356,7 @@ namespace BotTelegram.RPG.Services
             dungeon.Floors[0].IsCurrentFloor = true;
             
             player.CurrentDungeon = dungeon;
+            StateManager.ForceState(player, GameState.InDungeon, dungeonTemplateId); // FSM
             _rpgService.SavePlayer(player);
             
             return true;
@@ -432,6 +433,7 @@ namespace BotTelegram.RPG.Services
             
             // Limpiar mazmorra actual
             player.CurrentDungeon = null;
+            StateManager.ForceState(player, GameState.Idle, "dungeon_completed"); // FSM
             
             _rpgService.SavePlayer(player);
         }
@@ -446,6 +448,7 @@ namespace BotTelegram.RPG.Services
             player.CurrentDungeon = null;
             player.IsInCombat = false;
             player.CurrentEnemy = null;
+            StateManager.ForceState(player, GameState.Idle, "dungeon_abandoned"); // FSM
             
             _rpgService.SavePlayer(player);
         }

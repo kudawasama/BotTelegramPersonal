@@ -1046,6 +1046,7 @@ namespace BotTelegram.RPG.Services
                 player.CombatTurnCount = 0;
                 player.TotalDeaths++;
                 player.StatusEffects.Clear();
+                StateManager.ForceState(player, GameState.Idle, "defeated"); // FSM
                 
                 AddCombatLog(player, "Derrota", "💀 Has sido derrotado");
             }
@@ -1235,6 +1236,7 @@ namespace BotTelegram.RPG.Services
             player.ComboCount = 0;
             player.CombatTurnCount = 0;
             player.StatusEffects.Clear();
+            StateManager.ForceState(player, GameState.Idle, "victory"); // FSM
             
             AddCombatLog(player, "Victoria", $"✅ ¡{enemy.Name} derrotado!");
             Console.WriteLine($"[Combat] ✅ ¡{enemy.Name} derrotado! +{result.XPGained} XP, +{result.GoldGained} oro");

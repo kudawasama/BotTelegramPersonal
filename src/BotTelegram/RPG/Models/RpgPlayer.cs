@@ -123,6 +123,12 @@ namespace BotTelegram.RPG.Models
         public string ActiveClassId { get; set; } = "adventurer";
         
         // ═══════════════════════════════════════
+        // FSM STATE MACHINE (FASE 6)
+        // ═══════════════════════════════════════
+        /// <summary>Estado actual del jugador en la Máquina de Estados Finita (FSM)</summary>
+        public PlayerStateData? PlayerState { get; set; } = new();
+        
+        // ═══════════════════════════════════════
         // DUNGEON SYSTEM (FASE 3)
         // ═══════════════════════════════════════
         public Dungeon? CurrentDungeon { get; set; } // Mazmorra activa (null si no está en mazmorra)

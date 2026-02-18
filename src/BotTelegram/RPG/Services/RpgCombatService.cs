@@ -198,6 +198,7 @@ namespace BotTelegram.RPG.Services
                 player.CombatTurnCount = 0;
                 player.TotalDeaths++;
                 player.StatusEffects.Clear();
+                StateManager.ForceState(player, GameState.Idle, "defeated"); // FSM
                 
                 AddCombatLog(player, "Derrota", "💀 Has sido derrotado");
                 
@@ -508,10 +509,11 @@ namespace BotTelegram.RPG.Services
                 player.CombatTurnCount = 0;
                 player.TotalDeaths++;
                 player.StatusEffects.Clear();
+                StateManager.ForceState(player, GameState.Idle, "defeated"); // FSM
                 
                 AddCombatLog(player, "Derrota", "💀 Has sido derrotado");
             }
-            
+
             return result;
         }
         
@@ -548,6 +550,7 @@ namespace BotTelegram.RPG.Services
                 player.ComboCount = 0;
                 player.CombatTurnCount = 0;
                 player.StatusEffects.Clear();
+                StateManager.ForceState(player, GameState.Idle, "fled"); // FSM
                 
                 AddCombatLog(player, "Huir", $"✅ Escapaste (chance: {fleeChance:F1}%, roll: {fleeRoll:F1}%)");
                 Console.WriteLine($"[Combat] 🏃 {player.Name} huyó exitosamente (chance={fleeChance:F1}%, roll={fleeRoll:F1}%)");
@@ -573,6 +576,7 @@ namespace BotTelegram.RPG.Services
                     player.CombatTurnCount = 0;
                     player.TotalDeaths++;
                     player.StatusEffects.Clear();
+                    StateManager.ForceState(player, GameState.Idle, "defeated_flee"); // FSM
                 }
             }
             
