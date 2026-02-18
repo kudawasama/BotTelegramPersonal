@@ -2441,6 +2441,15 @@ Bienvenido a {player.CurrentLocation}
                 return;
             }
             
+            // Dungeon redirect desde menú RPG
+            if (data == "rpg_dungeon")
+            {
+                var dungeonCommand = new DungeonCommand();
+                await dungeonCommand.Execute(bot, callbackQuery.Message, ct);
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                return;
+            }
+            
             // Explore
             // Explore Menu
             if (data == "rpg_explore_menu")
