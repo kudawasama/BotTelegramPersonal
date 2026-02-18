@@ -70,14 +70,14 @@ namespace BotTelegram.RPG.Commands
   • Crit Chance: **{player.CriticalChance:F1}%**
 
 ❤️ **Recursos**
-  • HP: {player.HP}/{player.MaxHP}
-  • Mana: {player.Mana}/{player.MaxMana}
-  • Stamina: {player.Stamina}/{player.MaxStamina}
-  • Energía: {player.Energy}/{player.MaxEnergy}
+  • HP:      {BotTelegram.RPG.Services.RpgCombatService.GenerateProgressBar(player.HP, player.MaxHP)} {player.HP}/{player.MaxHP}
+  • Mana:    {BotTelegram.RPG.Services.RpgCombatService.GenerateProgressBar(player.Mana, player.MaxMana)} {player.Mana}/{player.MaxMana}
+  • Stamina: {BotTelegram.RPG.Services.RpgCombatService.GenerateProgressBar(player.Stamina, player.MaxStamina)} {player.Stamina}/{player.MaxStamina}
+  • Energía: {BotTelegram.RPG.Services.RpgCombatService.GenerateProgressBar(player.Energy, player.MaxEnergy)} {player.Energy}/{player.MaxEnergy}
 
 💰 **Progreso**
   • Oro: {player.Gold}
-  • XP: {player.XP}/{player.XPNeeded}
+  • XP:    {BotTelegram.RPG.Services.RpgCombatService.GenerateProgressBar(player.XP, player.XPNeeded)} {player.XP}/{player.XPNeeded}
   • Kills: {player.TotalKills}
   • Muertes: {player.TotalDeaths}
   • Oro Total: {player.TotalGoldEarned}

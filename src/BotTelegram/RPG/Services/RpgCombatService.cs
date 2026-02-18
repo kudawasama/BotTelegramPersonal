@@ -1426,7 +1426,7 @@ namespace BotTelegram.RPG.Services
         /// <summary>
         /// Genera una barra de progreso visual
         /// </summary>
-        private static string GenerateProgressBar(int current, int max, int length = 10)
+        public static string GenerateProgressBar(int current, int max, int length = 10)
         {
             if (max <= 0) return new string('░', length);
             

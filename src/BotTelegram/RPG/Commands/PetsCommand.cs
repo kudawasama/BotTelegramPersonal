@@ -66,9 +66,9 @@ namespace BotTelegram.RPG.Commands
                 foreach (var pet in player.ActivePets!)
                 {
                     var emoji = GetPetEmoji(pet.Species);
-                    var hpPercent = (double)pet.HP / pet.MaxHP * 100;
+                    var hpBar = BotTelegram.RPG.Services.RpgCombatService.GenerateProgressBar(pet.HP, pet.MaxHP);
                     text += $"{emoji} **{pet.Name}** {pet.RarityEmoji}\n";
-                    text += $"   Lv.{pet.Level} | HP: {pet.HP}/{pet.MaxHP} ({hpPercent:F0}%)\n";
+                    text += $"   Lv.{pet.Level} | HP: {hpBar} {pet.HP}/{pet.MaxHP}\n";
                     text += $"   {pet.LoyaltyEmoji} {pet.Loyalty} | Bond: {pet.Bond}/1000\n\n";
                 }
             }
