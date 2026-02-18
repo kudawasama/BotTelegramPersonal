@@ -34,9 +34,10 @@ namespace BotTelegram.Handlers
 
             try
             {
-                // Responder al callback genérico SOLO si NO es RPG/Pets
-                // Los handlers RPG/Pets tienen sus propios mensajes específicos
-                if (!data.StartsWith("rpg_") && !data.StartsWith("pets_"))
+                // Responder al callback genérico SOLO si NO es RPG/Pets/Guild/PvP
+                // Esos handlers tienen sus propios AnswerCallbackQuery internos
+                if (!data.StartsWith("rpg_") && !data.StartsWith("pets_") &&
+                    !data.StartsWith("guild_") && !data.StartsWith("pvp_"))
                 {
                     await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
                 }
@@ -263,7 +264,7 @@ namespace BotTelegram.Handlers
             await bot.EditMessageText(
                 chatId,
                 messageId,
-                "🤖 *JUEGO RPG CON IA*\n\n" +
+                "🤖 *COTANO RPG*\n\n" +
                 "Potenciado por Groq (Llama 3.1 8B):\n\n" +
                 "💬 *Chat con IA*\n" +
                 "   Conversaciones naturales e inteligentes\n" +
