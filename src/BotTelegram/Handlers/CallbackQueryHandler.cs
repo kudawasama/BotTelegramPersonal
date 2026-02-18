@@ -96,7 +96,8 @@ namespace BotTelegram.Handlers
                 }
                 // RPG Callbacks
                 else if (data == "rpg_main" || data.StartsWith("rpg_") ||
-                         data.StartsWith("shop_") || data == "shop_buy" || data == "shop_sell")
+                         data.StartsWith("shop_") || data == "shop_buy" || data == "shop_sell" ||
+                         data == "shop_buy_equip_menu")
                 {
                     await HandleRpgCallback(bot, callbackQuery, data, ct);
                 }
@@ -1840,6 +1841,21 @@ Bienvenido a {player.CurrentLocation}
                 var shopItemId = data["shop_buy_item:".Length..];
                 var invSvc = new BotTelegram.RPG.Services.InventoryService(rpgService);
                 await BotTelegram.RPG.Commands.ShopCommand.BuyItem(bot, chatId, currentPlayer, shopItemId, invSvc, ct, messageId, callbackQuery.Id);
+                return;
+            }
+
+            if (data == "shop_buy_equip_menu")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                await BotTelegram.RPG.Commands.ShopCommand.ShowBuyEquipMenu(bot, chatId, currentPlayer, ct, messageId);
+                return;
+            }
+
+            if (data.StartsWith("shop_buy_equip:"))
+            {
+                var equipId = data["shop_buy_equip:".Length..];
+                var invSvc = new BotTelegram.RPG.Services.InventoryService(rpgService);
+                await BotTelegram.RPG.Commands.ShopCommand.BuyEquip(bot, chatId, currentPlayer, equipId, invSvc, ct, messageId, callbackQuery.Id);
                 return;
             }
 

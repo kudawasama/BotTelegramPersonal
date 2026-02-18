@@ -66,13 +66,15 @@ namespace BotTelegram.RPG.Commands
             text.AppendLine();
             text.AppendLine("¿Qué deseas hacer hoy?");
             text.AppendLine();
-            text.AppendLine("🛒 **Comprar** — Consumibles y materiales");
+            text.AppendLine("🧪 **Consumibles** — Pociones y materiales");
+            text.AppendLine("⚔️ **Equipos** — Armas, armaduras y accesorios");
             text.AppendLine("💰 **Vender** — Ítems y equipos de tu inventario");
 
             var markup = new InlineKeyboardMarkup(new[]
             {
-                new[] { InlineKeyboardButton.WithCallbackData("🛒 Comprar", "shop_buy"),
-                        InlineKeyboardButton.WithCallbackData("💰 Vender",  "shop_sell") },
+                new[] { InlineKeyboardButton.WithCallbackData("🧪 Consumibles", "shop_buy"),
+                        InlineKeyboardButton.WithCallbackData("⚔️ Equipos",     "shop_buy_equip_menu") },
+                new[] { InlineKeyboardButton.WithCallbackData("💰 Vender", "shop_sell") },
                 new[] { InlineKeyboardButton.WithCallbackData("🔙 Volver RPG", "rpg_main") }
             });
 
@@ -80,13 +82,13 @@ namespace BotTelegram.RPG.Commands
         }
 
         // ═══════════════════════════════════════
-        // TAB COMPRAR
+        // TAB COMPRAR — CONSUMIBLES
         // ═══════════════════════════════════════
         public static async Task ShowBuyMenu(ITelegramBotClient bot, long chatId, RpgPlayer player,
             CancellationToken ct, int? editMessageId = null)
         {
             var text = new StringBuilder();
-            text.AppendLine("🛒 **CATÁLOGO DE LA TIENDA**");
+            text.AppendLine("🧪 **CONSUMIBLES Y MATERIALES**");
             text.AppendLine("━━━━━━━━━━━━━━━━━━━━");
             text.AppendLine($"💰 Tu oro: **{player.Gold}** monedas");
             text.AppendLine();
@@ -95,13 +97,12 @@ namespace BotTelegram.RPG.Commands
             {
                 var affordIcon = player.Gold >= entry.Price ? "✅" : "❌";
                 text.AppendLine($"{affordIcon} {entry.Name} — **{entry.Price}g**");
-                text.AppendLine($"    _{entry.Description}_");
+                text.AppendLine($"   _{entry.Description}_");
             }
 
             text.AppendLine();
             text.AppendLine("Pulsa un ítem para comprarlo:");
 
-            // Botones de compra (2 por fila, solo los que puede pagar o todos visibles)
             var buttons = _catalog
                 .Select(e => InlineKeyboardButton.WithCallbackData(
                     $"{e.Name} ({e.Price}g)",
@@ -110,11 +111,106 @@ namespace BotTelegram.RPG.Commands
                 .Select(r => r.ToArray())
                 .ToList();
 
-            buttons.Add(new[] {
-                InlineKeyboardButton.WithCallbackData("🔙 Volver Tienda", "rpg_shop")
-            });
+            buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("🔙 Volver Tienda", "rpg_shop") });
 
             await SendOrEdit(bot, chatId, text.ToString(), new InlineKeyboardMarkup(buttons), ct, editMessageId);
+        }
+
+        // ═══════════════════════════════════════
+        // TAB COMPRAR — EQUIPOS
+        // ═══════════════════════════════════════
+        public static async Task ShowBuyEquipMenu(ITelegramBotClient bot, long chatId, RpgPlayer player,
+            CancellationToken ct, int? editMessageId = null)
+        {
+            // Rotación de tienda: 8 equipos basados en el nivel del jugador
+            var shopItems = EquipmentDatabase.GetShopItems(player.Level, 8);
+
+            var text = new StringBuilder();
+            text.AppendLine("⚔️ **EQUIPOS A LA VENTA**");
+            text.AppendLine("━━━━━━━━━━━━━━━━━━━━");
+            text.AppendLine($"💰 Tu oro: **{player.Gold}** monedas | Nivel {player.Level}");
+            text.AppendLine();
+
+            foreach (var eq in shopItems)
+            {
+                var affordIcon = player.Gold >= eq.Price ? "✅" : "❌";
+                var levelIcon  = player.Level >= eq.RequiredLevel ? "" : $" *(Nv.{eq.RequiredLevel})*";
+                var statSummary = BuildEquipStatSummary(eq);
+                text.AppendLine($"{affordIcon} {eq.TypeEmoji} **{eq.Name}** {eq.RarityEmoji}{levelIcon}");
+                text.AppendLine($"   {statSummary} — **{eq.Price}g**");
+            }
+
+            text.AppendLine();
+            text.AppendLine("_Los equipos rotan según tu nivel._");
+
+            var buttons = shopItems
+                .Select(e => InlineKeyboardButton.WithCallbackData(
+                    $"{e.TypeEmoji}{e.RarityEmoji} {e.Name} ({e.Price}g)",
+                    $"shop_buy_equip:{e.Id}"))
+                .Select(b => new[] { b })
+                .ToList();
+
+            buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("🔙 Volver Tienda", "rpg_shop") });
+
+            await SendOrEdit(bot, chatId, text.ToString(), new InlineKeyboardMarkup(buttons), ct, editMessageId);
+        }
+
+        // ═══════════════════════════════════════
+        // COMPRAR EQUIPO
+        // ═══════════════════════════════════════
+        public static async Task BuyEquip(ITelegramBotClient bot, long chatId, RpgPlayer player,
+            string equipId, InventoryService invSvc, CancellationToken ct,
+            int? editMessageId = null, string? callbackId = null)
+        {
+            var eq = EquipmentDatabase.GetById(equipId);
+            if (eq == null)
+            {
+                if (callbackId != null)
+                    await bot.AnswerCallbackQuery(callbackId, "❌ Equipo no encontrado.", cancellationToken: ct);
+                return;
+            }
+            if (player.Level < eq.RequiredLevel)
+            {
+                if (callbackId != null)
+                    await bot.AnswerCallbackQuery(callbackId, $"❌ Requieres nivel {eq.RequiredLevel}.", cancellationToken: ct);
+                return;
+            }
+            if (player.Gold < eq.Price)
+            {
+                if (callbackId != null)
+                    await bot.AnswerCallbackQuery(callbackId, $"❌ Oro insuficiente ({player.Gold}/{eq.Price}g).", cancellationToken: ct);
+                return;
+            }
+            if (player.EquipmentInventory.Count >= 30)
+            {
+                if (callbackId != null)
+                    await bot.AnswerCallbackQuery(callbackId, "❌ Inventario de equipo lleno (máx 30).", cancellationToken: ct);
+                return;
+            }
+
+            player.Gold -= eq.Price;
+            var added = invSvc.AddEquipment(player, eq.Clone()); // guarda jugador (gold + equipo)
+
+            if (callbackId != null)
+                await bot.AnswerCallbackQuery(callbackId, $"✅ {eq.Name} comprado por {eq.Price}g", cancellationToken: ct);
+
+            await ShowBuyEquipMenu(bot, chatId, player, ct, editMessageId);
+        }
+
+        // Helper: genera resumen compacto de stats del equipo
+        private static string BuildEquipStatSummary(RpgEquipment eq)
+        {
+            var parts = new List<string>();
+            if (eq.BonusAttack      > 0) parts.Add($"+{eq.BonusAttack}⚔️");
+            if (eq.BonusMagicPower  > 0) parts.Add($"+{eq.BonusMagicPower}🔮");
+            if (eq.BonusDefense     > 0) parts.Add($"+{eq.BonusDefense}🛡️");
+            if (eq.BonusHP          > 0) parts.Add($"+{eq.BonusHP}❤️");
+            if (eq.BonusMana        > 0) parts.Add($"+{eq.BonusMana}💧");
+            if (eq.BonusStrength    > 0) parts.Add($"+{eq.BonusStrength}💪");
+            if (eq.BonusIntelligence> 0) parts.Add($"+{eq.BonusIntelligence}🔮");
+            if (eq.BonusDexterity   > 0) parts.Add($"+{eq.BonusDexterity}🏃");
+            if (eq.BonusCritChance  > 0) parts.Add($"+{eq.BonusCritChance}%🎯");
+            return parts.Count > 0 ? string.Join(" ", parts) : "sin stats";
         }
 
         // ═══════════════════════════════════════
