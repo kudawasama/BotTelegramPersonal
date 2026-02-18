@@ -133,6 +133,14 @@ namespace BotTelegram.RPG.Models
         public int ClassBonusCha { get; set; } = 0;
         
         // ═══════════════════════════════════════
+        // QUESTS / MISIONES (FASE 9)
+        // ═══════════════════════════════════════
+        /// <summary>Misiones activas del jugador</summary>
+        public List<PlayerQuest> ActiveQuests { get; set; } = new();
+        /// <summary>IDs de misiones ya completadas</summary>
+        public List<string> CompletedQuestIds { get; set; } = new();
+
+        // ═══════════════════════════════════════
         // FSM STATE MACHINE (FASE 6)
         // ═══════════════════════════════════════
         /// <summary>Estado actual del jugador en la Máquina de Estados Finita (FSM)</summary>

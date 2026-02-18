@@ -97,7 +97,9 @@ namespace BotTelegram.Handlers
                 // RPG Callbacks
                 else if (data == "rpg_main" || data.StartsWith("rpg_") ||
                          data.StartsWith("shop_") || data == "shop_buy" || data == "shop_sell" ||
-                         data == "shop_buy_equip_menu")
+                         data == "shop_buy_equip_menu" ||
+                         data.StartsWith("craft_") ||
+                         data.StartsWith("quest_"))
                 {
                     await HandleRpgCallback(bot, callbackQuery, data, ct);
                 }
@@ -1026,8 +1028,8 @@ Si quieres que olvide el contexto anterior:
 Bienvenido a {player.CurrentLocation}
 
 🏪 **Tienda:** Compra equipamiento y consumibles
-⚒️ **Herrería:** Mejora tu equipo (próximamente)
-🏛️ **Gremio:** Misiones y recompensas (próximamente)
+⚒️ **Herrería:** Craftea objetos y equipos
+🏛️ **Misiones:** Acepta quests y gana recompensas
 🏆 **Rankings:** Tabla de líderes globales
 🛡️ **Entrenar:** Mejora tus estadísticas
 🌟 **Progreso:** Consulta tus logros";
@@ -1920,6 +1922,63 @@ Bienvenido a {player.CurrentLocation}
             }
             
             // Inventory (legacy)
+            // ═══════════════════════════════════════════════════════════════
+            // CRAFTEO — CraftingCommand (Fase 8)
+            // craft_menu, craft_view:{id}, craft_do:{id}
+            // ═══════════════════════════════════════════════════════════════
+            if (data == "craft_menu")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⚒️ Herrería", cancellationToken: ct);
+                await BotTelegram.RPG.Commands.CraftingCommand.ShowCraftMenu(bot, chatId, currentPlayer, ct, messageId);
+                return;
+            }
+            if (data.StartsWith("craft_view:"))
+            {
+                var recipeId = data["craft_view:".Length..];
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                await BotTelegram.RPG.Commands.CraftingCommand.ShowRecipeDetail(bot, chatId, currentPlayer, recipeId, ct, messageId);
+                return;
+            }
+            if (data.StartsWith("craft_do:"))
+            {
+                var recipeId = data["craft_do:".Length..];
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⚒️ Crafteando...", cancellationToken: ct);
+                await BotTelegram.RPG.Commands.CraftingCommand.DoCraft(bot, chatId, currentPlayer, recipeId, ct, messageId);
+                return;
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // MISIONES — QuestCommand (Fase 9)
+            // quest_menu, quest_view:{id}, quest_accept:{id}, quest_complete:{id}
+            // ═══════════════════════════════════════════════════════════════
+            if (data == "quest_menu")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🏛️ Misiones", cancellationToken: ct);
+                await BotTelegram.RPG.Commands.QuestCommand.ShowQuestMenu(bot, chatId, currentPlayer, ct, messageId);
+                return;
+            }
+            if (data.StartsWith("quest_view:"))
+            {
+                var questId = data["quest_view:".Length..];
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                await BotTelegram.RPG.Commands.QuestCommand.ShowQuestDetail(bot, chatId, currentPlayer, questId, ct, messageId);
+                return;
+            }
+            if (data.StartsWith("quest_accept:"))
+            {
+                var questId = data["quest_accept:".Length..];
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "✅ Aceptando misión...", cancellationToken: ct);
+                await BotTelegram.RPG.Commands.QuestCommand.AcceptQuest(bot, chatId, currentPlayer, questId, ct, messageId);
+                return;
+            }
+            if (data.StartsWith("quest_complete:"))
+            {
+                var questId = data["quest_complete:".Length..];
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🏆 Entregando misión...", cancellationToken: ct);
+                await BotTelegram.RPG.Commands.QuestCommand.CompleteQuest(bot, chatId, currentPlayer, questId, ct, messageId);
+                return;
+            }
+
             // ═══════════════════════════════════════════════════════════════
             // INVENTARIO UNIFICADO - Consumibles + Equipamiento + Equipar/Usar/Vender
             // ═══════════════════════════════════════════════════════════════

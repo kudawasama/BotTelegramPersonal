@@ -223,8 +223,8 @@ Solo los más valientes pueden enfrentar este destino...
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("🏪 Tienda", "rpg_shop"),
-                    InlineKeyboardButton.WithCallbackData("⚒️ Herrería", "rpg_blacksmith"),
-                    InlineKeyboardButton.WithCallbackData("🏛️ Gremio", "rpg_guild")
+                    InlineKeyboardButton.WithCallbackData("⚒️ Herrería", "craft_menu"),
+                    InlineKeyboardButton.WithCallbackData("🏛️ Misiones", "quest_menu")
                 },
                 new[]
                 {

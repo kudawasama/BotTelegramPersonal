@@ -111,6 +111,20 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/herreria") || message.Text.StartsWith("/craft") || message.Text.StartsWith("/forge"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando CraftingCommand (Sistema de Crafteo)");
+                await new CraftingCommand().Execute(bot, message, ct);
+                return;
+            }
+
+            if (message.Text.StartsWith("/misiones") || message.Text.StartsWith("/quests") || message.Text.StartsWith("/gremio"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando QuestCommand (Sistema de Misiones)");
+                await new QuestCommand().Execute(bot, message, ct);
+                return;
+            }
+
             Console.WriteLine("   [CommandRouter] → Ejecutando UnknownCommand");
             await new UnknownCommand().Execute(bot, message, ct);
         }
