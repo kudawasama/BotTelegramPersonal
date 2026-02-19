@@ -1318,6 +1318,214 @@ namespace BotTelegram.RPG.Services
         // ═══════════════════════════════════════════════════════════════
         
         /// <summary>
+        /// Vista de combate con narrativa del último turno.
+        /// Si result es null muestra solo HP bars (inicio de combate).
+        /// Reemplaza GenerateCombatView en turnos activos.
+        /// </summary>
+        public string GenerateCombatMessage(CombatResult? result, RpgPlayer player, RpgEnemy enemy)
+        {
+            var sb = new System.Text.StringBuilder();
+
+            var classEmoji = player.Class switch
+            {
+                CharacterClass.Warrior => "⚔️",
+                CharacterClass.Mage    => "🔮",
+                CharacterClass.Rogue   => "🗡️",
+                CharacterClass.Cleric  => "✨",
+                _ => "👤"
+            };
+
+            // ─── HEADER ────────────────────────────────────────────────
+            sb.AppendLine("⚔️ **COMBATE EN CURSO**");
+            sb.AppendLine("━━━━━━━━━━━━━━━━━━━━━━\n");
+
+            // Player
+            sb.AppendLine($"{classEmoji} **{player.Name}** Lv.{player.Level}");
+            sb.AppendLine($"   ❤️ {GenerateProgressBar(player.HP, player.MaxHP)} {player.HP}/{player.MaxHP} HP");
+            if (player.MaxMana > 0)
+                sb.AppendLine($"   🔮 {GenerateProgressBar(player.Mana, player.MaxMana)} {player.Mana}/{player.MaxMana} Mana");
+            if (player.MaxStamina > 0)
+                sb.AppendLine($"   ⚡ {GenerateProgressBar(player.Stamina, player.MaxStamina)} {player.Stamina}/{player.MaxStamina} Stamina");
+
+            if (player.StatusEffects.Any())
+            {
+                sb.Append("   ");
+                foreach (var e in player.StatusEffects)
+                {
+                    var emoji = e.Type switch
+                    {
+                        StatusEffectType.Bleeding     => "🩸",
+                        StatusEffectType.Burning      => "🔥",
+                        StatusEffectType.Poisoned     => "☠️",
+                        StatusEffectType.Stunned      => "💫",
+                        StatusEffectType.Empowered    => "💪",
+                        StatusEffectType.Shielded     => "🛡️",
+                        _ => "📋"
+                    };
+                    sb.Append($"{emoji}{e.Duration} ");
+                }
+                sb.AppendLine();
+            }
+
+            sb.AppendLine("\n        🆚\n");
+
+            // Enemy
+            sb.AppendLine($"{enemy.Emoji} **{enemy.Name}** Lv.{enemy.Level}");
+            sb.AppendLine($"   ❤️ {GenerateProgressBar(enemy.HP, enemy.MaxHP)} {enemy.HP}/{enemy.MaxHP} HP");
+            if (enemy.StatusEffects.Any())
+            {
+                sb.Append("   ");
+                foreach (var e in enemy.StatusEffects)
+                {
+                    var emoji = e.Type switch
+                    {
+                        StatusEffectType.Bleeding => "🩸",
+                        StatusEffectType.Burning  => "🔥",
+                        StatusEffectType.Poisoned => "☠️",
+                        StatusEffectType.Stunned  => "💫",
+                        _ => "📋"
+                    };
+                    sb.Append($"{emoji}{e.Duration} ");
+                }
+                sb.AppendLine();
+            }
+
+            sb.AppendLine("\n━━━━━━━━━━━━━━━━━━━━━━");
+
+            // ─── NARRATIVA DEL TURNO ───────────────────────────────────
+            if (result != null)
+            {
+                sb.AppendLine($"\n📋 **TURNO {player.CombatTurnCount}:**\n");
+
+                // Acción del jugador
+                if (result.PlayerStunned)
+                {
+                    sb.AppendLine("💫 *Aturdido* — no puedes actuar");
+                }
+                else if (!string.IsNullOrEmpty(result.SkillFailureReason))
+                {
+                    sb.AppendLine($"❌ {result.SkillFailureReason}");
+                }
+                else if (result.SkillUsed)
+                {
+                    sb.AppendLine($"✨ **{result.SkillName}**");
+                    if (!string.IsNullOrEmpty(result.SkillDetails))
+                        sb.AppendLine($"   {result.SkillDetails}");
+                    if (result.SkillDamage > 0)
+                        sb.AppendLine($"   💥 Daño: **{result.SkillDamage}**{(result.SkillHits > 1 ? $" ({result.SkillHits} golpes)" : "")}");
+                    if (result.SkillHealed > 0)
+                        sb.AppendLine($"   💚 Cura: **+{result.SkillHealed} HP**");
+                    if (result.InflictedEffect != null)
+                        sb.AppendLine($"   🩸 Infligiste: *{GetEffectName(result.InflictedEffect.Value)}*");
+                }
+                else if (result.Dodged)
+                {
+                    sb.AppendLine("💨 **Esquivaste** el ataque del enemigo");
+                }
+                else if (result.Countered)
+                {
+                    sb.AppendLine($"🔄 **Contraataque exitoso** — {result.PlayerDamage} daño");
+                }
+                else if (result.PlayerDefended)
+                {
+                    var red = result.DamageReduction > 0 ? $" (absorbe: {result.DamageReduction})" : "";
+                    sb.AppendLine($"🛡️ **Postura defensiva**{red}");
+                }
+                else if (result.PlayerHit)
+                {
+                    var atkEmoji = result.AttackType == AttackType.Magical ? "🔮" : "⚔️";
+                    var critText = result.PlayerCritical ? " ✨ **CRÍTICO**" : "";
+                    sb.AppendLine($"{atkEmoji} Tu ataque: **{result.PlayerDamage} daño**{critText}");
+                    if (result.DamageReduction > 0)
+                        sb.AppendLine($"   🛡️ Armadura absorbió: {result.DamageReduction}");
+                    if (result.ComboBonus > 0)
+                        sb.AppendLine($"   🔥 Combo x{player.ComboCount} (+{result.ComboBonus} bonus)");
+                    if (result.InflictedEffect != null)
+                        sb.AppendLine($"   🩸 Infligiste: *{GetEffectName(result.InflictedEffect.Value)}*");
+                }
+                else
+                {
+                    sb.AppendLine("❌ Tu ataque **falló**");
+                    if (result.ComboBroken) sb.AppendLine("   💔 Combo roto");
+                }
+
+                // Turnos de mascotas
+                if (result.PetTurns?.Any() == true)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("🐾 **Mascotas atacan:**");
+                    foreach (var pt in result.PetTurns)
+                    {
+                        if (pt.Hit)
+                        {
+                            var crit = pt.Critical ? " ✨" : "";
+                            sb.AppendLine($"   {pt.Emoji} {pt.PetName}: **{pt.Damage} daño**{crit}");
+                            if (pt.InflictedEffect != null)
+                                sb.AppendLine($"      🩸 {GetEffectName(pt.InflictedEffect.Value)}");
+                        }
+                        else
+                        {
+                            sb.AppendLine($"   {pt.Emoji} {pt.PetName}: 💨 falla");
+                        }
+                    }
+                    if (result.TotalPetDamage > 0)
+                        sb.AppendLine($"   💥 Total mascotas: **{result.TotalPetDamage}**");
+                }
+
+                // Efectos de estado
+                if (result.StatusDamage > 0)
+                    sb.AppendLine($"\n🩸 Efectos de estado: **-{result.StatusDamage} HP**");
+
+                // Contraataque del enemigo
+                sb.AppendLine();
+                if (result.EnemyHit)
+                {
+                    var critText = result.EnemyCritical ? " ✨ CRÍTICO" : "";
+                    sb.AppendLine($"{enemy.Emoji} {enemy.Name} contraataca: **{result.EnemyDamage} daño**{critText}");
+                }
+                else if (result.EnemyHitChancePercent > 0)
+                {
+                    sb.AppendLine($"{enemy.Emoji} {enemy.Name}: 💨 ataque falla");
+                }
+
+                // Combo activo
+                if (player.ComboCount > 1)
+                    sb.AppendLine($"\n🔥 **COMBO x{player.ComboCount}** (+{(player.ComboCount - 1) * 5}% daño próximo ataque)");
+            }
+
+            // ─── COMPAÑEROS Y ESBIRROS ACTIVOS ────────────────────────
+            bool hasPets    = player.ActivePets?.Any(p => p.HP > 0) == true;
+            bool hasMinions = player.ActiveMinions?.Any() == true;
+
+            if (hasPets || hasMinions)
+            {
+                sb.AppendLine("\n━━━━━━━━━━━━━━━━━━━━━━");
+                if (hasPets)
+                {
+                    sb.AppendLine("🐾 **Compañeros activos:**");
+                    foreach (var pet in player.ActivePets!.Where(p => p.HP > 0).Take(3))
+                    {
+                        var pct = (double)pet.HP / pet.MaxHP;
+                        var hpEmoji = pct > 0.7 ? "💚" : pct > 0.3 ? "💛" : "❤️";
+                        sb.AppendLine($"   • {pet.Name} Lv.{pet.Level} {hpEmoji} {pet.HP}/{pet.MaxHP} HP");
+                    }
+                }
+                if (hasMinions)
+                {
+                    sb.AppendLine("💀 **Esbirros activos:**");
+                    foreach (var m in player.ActiveMinions!.Take(3))
+                    {
+                        var ctrl = m.IsControlled ? "✅" : "⚠️";
+                        sb.AppendLine($"   • {m.Emoji} {m.Name} {ctrl} {m.HP}/{m.MaxHP} HP");
+                    }
+                }
+            }
+
+            sb.AppendLine("\n*¿Qué haces?*");
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// Genera la vista completa del combate (Fase 5.2 - UI/UX mejorada)
         /// </summary>
         public string GenerateCombatView(RpgPlayer player)

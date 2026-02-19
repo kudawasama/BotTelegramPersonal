@@ -1,4 +1,4 @@
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 using BotTelegram.Services;
 using BotTelegram.RPG.Services;
@@ -2896,7 +2896,7 @@ Bienvenido a {player.CurrentLocation}
                 await bot.DeleteMessage(chatId, messageId, ct);
                 var combatMessage = await bot.SendMessage(
                     chatId,
-                    combatService.GenerateCombatView(currentPlayer),
+                    combatService.GenerateCombatMessage(null, currentPlayer, enemy),
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: GetCombatKeyboard(),
                     cancellationToken: ct);
@@ -3487,7 +3487,7 @@ Bienvenido a {player.CurrentLocation}
                     await bot.EditMessageText(
                         chatId,
                         combatMessageId,
-                        combatService.GenerateCombatView(currentPlayer),
+                        combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                         replyMarkup: GetCombatKeyboard(),
                         cancellationToken: ct);
@@ -3855,7 +3855,7 @@ Bienvenido a {player.CurrentLocation}
                     await bot.EditMessageText(
                         chatId,
                         combatMessageId,
-                        combatService.GenerateCombatView(currentPlayer),
+                        combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                         replyMarkup: GetCombatKeyboard(),
                         cancellationToken: ct);
@@ -4193,7 +4193,7 @@ Bienvenido a {player.CurrentLocation}
                 }
                 else
                 {
-                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatView(currentPlayer),
+                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
@@ -4249,7 +4249,7 @@ Bienvenido a {player.CurrentLocation}
                 }
                 else
                 {
-                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatView(currentPlayer),
+                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
@@ -4298,7 +4298,7 @@ Bienvenido a {player.CurrentLocation}
                 }
                 else
                 {
-                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatView(currentPlayer),
+                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
@@ -4347,7 +4347,7 @@ Bienvenido a {player.CurrentLocation}
                 }
                 else
                 {
-                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatView(currentPlayer),
+                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
@@ -4396,7 +4396,7 @@ Bienvenido a {player.CurrentLocation}
                 }
                 else
                 {
-                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatView(currentPlayer),
+                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
@@ -4438,7 +4438,7 @@ Bienvenido a {player.CurrentLocation}
                 }
                 else
                 {
-                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatView(currentPlayer),
+                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
@@ -4476,7 +4476,7 @@ Bienvenido a {player.CurrentLocation}
                 }
                 else
                 {
-                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatView(currentPlayer),
+                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
@@ -4525,7 +4525,7 @@ Bienvenido a {player.CurrentLocation}
                 }
                 else
                 {
-                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatView(currentPlayer),
+                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
@@ -4639,7 +4639,7 @@ Bienvenido a {player.CurrentLocation}
                 }
                 else
                 {
-                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatView(currentPlayer),
+                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
@@ -4681,7 +4681,7 @@ Bienvenido a {player.CurrentLocation}
                 }
                 else
                 {
-                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatView(currentPlayer),
+                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
@@ -4762,7 +4762,7 @@ Bienvenido a {player.CurrentLocation}
                 }
                 else
                 {
-                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatView(currentPlayer),
+                    await bot.EditMessageText(chatId, combatMessageId, combatService.GenerateCombatMessage(result, currentPlayer, enemy),
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown, replyMarkup: GetCombatKeyboard(), cancellationToken: ct);
                 }
                 return;
