@@ -1,7 +1,7 @@
 # 🎮 HOJA DE RUTA - EXPANSIÓN DEL SISTEMA RPG
 
 **Última actualización:** 19 de febrero de 2025  
-**Versión:** 6.3 - Fase 12 v3.2.0 (Sistema de Facciones base)
+**Versión:** 6.4 - Fase 12.2 v3.2.1 (NPCs + Diálogos completos)
 
 ## 📊 PROGRESO GENERAL
 ```
@@ -19,7 +19,7 @@
 ✅ Fase 9: Sistema de Misiones/Quests    [██████████] 100% ← COMPLETADA (commit 59a8fa4)
 ✅ Fase 10: Sistema de Gremio (Guild)    [██████████] 100% ← COMPLETADA (commit 08a8ed7)
 ✅ Fase 11: PvP Arena                    [██████████] 100% ← COMPLETADA (commit 2322a12)
-✅ Fase 12: Mundo Abierto Expandido      [████░░░░░░]  40% ← PARCIAL (commit cbf4af1)
+✅ Fase 12: Mundo Abierto Expandido      [████████░░]  80% (commit 78a7cb9)
 ⏸️ Fase 13: Eventos Temporales           [░░░░░░░░░░]   0%
 ⏸️ Fase 14: Generación de Imágenes       [░░░░░░░░░░]   0%
 ⏸️ Fase 15: Telegram Mini App            [░░░░░░░░░░]   0%
@@ -1577,3 +1577,4 @@ El bot tiene una **base sólida production-ready** con 11 fases completadas (+ F
 | `05bff72` | Fix v3.1.9: Fase 4 - creación como Adventurer, clases se desbloquean jugando | feb 2025 |
 | `f1b0eda` | Docs v3.1.10: Sistema de clases completo (51 clases) + migración personajes | feb 2025 |
 | `cbf4af1` | Fase 12 v3.2.0: Sistema de facciones base (10 facciones, /facciones) | feb 2025 |
+| `78a7cb9` | Fase 12.2 v3.2.1: NPCs + Diálogos completos (12 NPCs, botón NPCs en explore) | feb 2025 |
