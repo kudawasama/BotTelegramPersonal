@@ -10,7 +10,7 @@ namespace BotTelegram.Services
     public class PlayerMigrationService
     {
         private readonly RpgService _rpgService;
-        private const string CURRENT_SCHEMA_VERSION = "3.2.0"; // Actualizar con cada migración mayor
+        private const string CURRENT_SCHEMA_VERSION = "3.2.1"; // Actualizar con cada migración mayor
         
         public PlayerMigrationService()
         {

@@ -16,7 +16,7 @@ namespace BotTelegram.Services
         // Fallback: se actualiza manualmente al hacer deploy
         private const string FallbackCommit = "cbf4af1";
         private const string FallbackDate   = "2025-02-19";
-        private const string BotVersion     = "3.2.0";
+        private const string BotVersion     = "3.2.1";
 
         /// <summary>
         /// Obtiene el hash corto del último commit git (7 chars).

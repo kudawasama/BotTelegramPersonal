@@ -2796,6 +2796,7 @@ Bienvenido a {player.CurrentLocation}
                     $"🏞️ **Recolectar** — Obtén materiales e ítems _(10 energía)_\n" +
                     $"💎 **Buscar Tesoro** — Cofres ocultos _(25 energía)_\n" +
                     $"🐾 **Bestias** — Busca mascotas domables _(30 energía)_\n" +
+                    $"👥 **NPCs** — Habla con personajes\n" +
                     $"🎲 **Evento** — Sorpresa aleatoria _(15 energía)_",
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
@@ -2812,11 +2813,12 @@ Bienvenido a {player.CurrentLocation}
                         },
                         new[]
                         {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎲 Evento",     "rpg_random_event"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("😴 Descansar",  "rpg_rest")
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("👥 NPCs",       "rpg_show_npcs"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎲 Evento",     "rpg_random_event")
                         },
                         new[]
                         {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("😴 Descansar",  "rpg_rest"),
                             Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_menu_adventure")
                         }
                     }),
@@ -2863,6 +2865,144 @@ Bienvenido a {player.CurrentLocation}
                 
                 currentPlayer.ActiveCombatMessageId = combatMessage.MessageId;
                 rpgService.SavePlayer(currentPlayer);
+                return;
+            }
+            
+            // Show NPCs in current zone
+            if (data == "rpg_show_npcs")
+            {
+                var npcs = BotTelegram.RPG.Services.NPCDatabase.GetNPCsInZone(currentPlayer.CurrentZone);
+                
+                if (!npcs.Any())
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "No hay NPCs en esta zona.", cancellationToken: ct);
+                    return;
+                }
+                
+                var text = "👥 **NPCs EN LA ZONA**\n\n";
+                text += $"📍 {currentPlayer.CurrentLocation}\n\n";
+                
+                var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
+                
+                foreach (var npc in npcs)
+                {
+                    text += $"{npc.Emoji} **{npc.Name}**\n";
+                    text += $"_{npc.Description}_\n\n";
+                    
+                    buttons.Add(new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData(
+                            $"{npc.Emoji} {npc.Name}", 
+                            $"rpg_talk_{npc.Id}")
+                    });
+                }
+                
+                buttons.Add(new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_explore_menu")
+                });
+                
+                await bot.EditMessageText(
+                    chatId, messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Talk to NPC
+            if (data.StartsWith("rpg_talk_"))
+            {
+                var npcId = data.Replace("rpg_talk_", "");
+                var npcService = new BotTelegram.RPG.Services.NPCInteractionService();
+                var result = npcService.StartConversation(currentPlayer, npcId);
+                
+                if (!result.Success)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, result.Message, cancellationToken: ct);
+                    return;
+                }
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
+                
+                if (result.CurrentDialogue != null)
+                {
+                    for (int i = 0; i < result.CurrentDialogue.Options.Count; i++)
+                    {
+                        var option = result.CurrentDialogue.Options[i];
+                        buttons.Add(new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData(
+                                option.Text,
+                                $"rpg_dialogue_{npcId}:{result.CurrentDialogue.Id}:{option.Id}")
+                        });
+                    }
+                }
+                else
+                {
+                    buttons.Add(new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_show_npcs")
+                    });
+                }
+                
+                await bot.EditMessageText(
+                    chatId, messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Process dialogue option
+            if (data.StartsWith("rpg_dialogue_"))
+            {
+                var parts = data.Replace("rpg_dialogue_", "").Split(':');
+                if (parts.Length != 3) return;
+                
+                var npcId = parts[0];
+                var dialogueId = parts[1];
+                var optionId = parts[2];
+                
+                var npcService = new BotTelegram.RPG.Services.NPCInteractionService();
+                var result = npcService.ProcessDialogueOption(currentPlayer, npcId, dialogueId, optionId);
+                
+                rpgService.SavePlayer(currentPlayer);
+                
+                var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
+                
+                if (result.CurrentDialogue != null)
+                {
+                    for (int i = 0; i < result.CurrentDialogue.Options.Count; i++)
+                    {
+                        var option = result.CurrentDialogue.Options[i];
+                        buttons.Add(new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData(
+                                option.Text,
+                                $"rpg_dialogue_{npcId}:{result.CurrentDialogue.Id}:{option.Id}")
+                        });
+                    }
+                }
+                else
+                {
+                    buttons.Add(new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver NPCs", "rpg_show_npcs"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú", "rpg_menu")
+                    });
+                }
+                
+                await bot.EditMessageText(
+                    chatId, messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
+                    cancellationToken: ct);
                 return;
             }
             
