@@ -173,13 +173,15 @@ namespace BotTelegram.RPG.Services
             }
         }
         
-        public RpgPlayer CreateNewPlayer(long chatId, string name, CharacterClass characterClass)
+        public RpgPlayer CreateNewPlayer(long chatId, string name, CharacterClass characterClass = CharacterClass.Adventurer)
         {
+            // FASE 4: Todos los jugadores inician como Adventurer (clase base)
+            // Las clases se desbloquean jugando según acciones realizadas
             var player = new RpgPlayer
             {
                 ChatId = chatId,
                 Name = name,
-                Class = characterClass,
+                Class = CharacterClass.Adventurer,
                 Level = 1,
                 XP = 0,
                 HP = 100,
@@ -208,271 +210,17 @@ namespace BotTelegram.RPG.Services
                         Rarity = ItemRarity.Common
                     }
                 },
-                CurrentLocation = "Taberna de Puerto Esperanza"
+                CurrentLocation = "Taberna de Puerto Esperanza",
+                ActiveClassId = "adventurer",
+                UnlockedClasses = new List<string> { "adventurer" }
             };
             
-            // Stats iniciales según clase (Tier 1)
-            switch (characterClass)
-            {
-                case CharacterClass.Warrior:
-                    player.Strength = 14;
-                    player.Constitution = 12;
-                    player.MaxHP = 120;
-                    player.HP = 120;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Espada de Hierro",
-                        Emoji = "🗡️",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 5,
-                        Value = 30,
-                        Rarity = ItemRarity.Common
-                    };
-                    break;
-                    
-                case CharacterClass.Mage:
-                    player.Intelligence = 14;
-                    player.Wisdom = 12;
-                    player.MaxEnergy = 70;
-                    player.Energy = 70;
-                    player.MaxMana = 100;
-                    player.Mana = 100;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Bastón de Roble",
-                        Emoji = "🪄",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 3,
-                        Value = 25,
-                        Rarity = ItemRarity.Common
-                    };
-                    break;
-                    
-                case CharacterClass.Rogue:
-                    player.Dexterity = 14;
-                    player.Intelligence = 11;
-                    player.MaxEnergy = 60;
-                    player.Energy = 60;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Daga de Acero",
-                        Emoji = "🔪",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 4,
-                        Value = 28,
-                        Rarity = ItemRarity.Common
-                    };
-                    break;
-                    
-                case CharacterClass.Cleric:
-                    player.Wisdom = 13;
-                    player.Strength = 11;
-                    player.Constitution = 11;
-                    player.MaxHP = 110;
-                    player.HP = 110;
-                    player.MaxMana = 80;
-                    player.Mana = 80;
-                    player.Inventory.Add(new RpgItem
-                    {
-                        Name = "Poción de Vida",
-                        Emoji = "🧪",
-                        Type = ItemType.Consumable,
-                        HPRestore = 30,
-                        Value = 15,
-                        Rarity = ItemRarity.Common
-                    });
-                    break;
-                    
-                // Tier 2 (Lv.10+)
-                case CharacterClass.Paladin:
-                    player.Strength = 15;
-                    player.Charisma = 13;
-                    player.Constitution = 13;
-                    player.MaxHP = 130;
-                    player.HP = 130;
-                    player.MaxMana = 60;
-                    player.Mana = 60;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Espada Sagrada",
-                        Emoji = "⚔️",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 6,
-                        Value = 50,
-                        Rarity = ItemRarity.Uncommon
-                    };
-                    break;
-                    
-                case CharacterClass.Ranger:
-                    player.Dexterity = 15;
-                    player.Wisdom = 12;
-                    player.Strength = 11;
-                    player.MaxEnergy = 70;
-                    player.Energy = 70;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Arco Largo",
-                        Emoji = "🏹",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 5,
-                        Value = 45,
-                        Rarity = ItemRarity.Uncommon
-                    };
-                    break;
-                    
-                case CharacterClass.Warlock:
-                    player.Charisma = 14;
-                    player.Intelligence = 13;
-                    player.MaxMana = 120;
-                    player.Mana = 120;
-                    player.MaxEnergy = 60;
-                    player.Energy = 60;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Grimorio Oscuro",
-                        Emoji = "📖",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 4,
-                        Value = 55,
-                        Rarity = ItemRarity.Uncommon
-                    };
-                    break;
-                    
-                case CharacterClass.Monk:
-                    player.Dexterity = 14;
-                    player.Wisdom = 13;
-                    player.Constitution = 12;
-                    player.MaxHP = 115;
-                    player.HP = 115;
-                    player.MaxEnergy = 80;
-                    player.Energy = 80;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Guantes de Combate",
-                        Emoji = "🥋",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 4,
-                        Value = 40,
-                        Rarity = ItemRarity.Uncommon
-                    };
-                    break;
-                    
-                // Tier 3 (Lv.20+)
-                case CharacterClass.Berserker:
-                    player.Strength = 16;
-                    player.Constitution = 14;
-                    player.Dexterity = 11;
-                    player.MaxHP = 150;
-                    player.HP = 150;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Hacha de Guerra",
-                        Emoji = "🪓",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 8,
-                        Value = 80,
-                        Rarity = ItemRarity.Rare
-                    };
-                    break;
-                    
-                case CharacterClass.Assassin:
-                    player.Dexterity = 16;
-                    player.Intelligence = 13;
-                    player.Charisma = 11;
-                    player.MaxEnergy = 80;
-                    player.Energy = 80;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Dagas Gemelas",
-                        Emoji = "⚔️",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 7,
-                        Value = 85,
-                        Rarity = ItemRarity.Rare
-                    };
-                    break;
-                    
-                case CharacterClass.Sorcerer:
-                    player.Charisma = 16;
-                    player.Intelligence = 13;
-                    player.MaxMana = 140;
-                    player.Mana = 140;
-                    player.MaxEnergy = 70;
-                    player.Energy = 70;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Cetro Arcano",
-                        Emoji = "🔮",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 6,
-                        Value = 90,
-                        Rarity = ItemRarity.Rare
-                    };
-                    break;
-                    
-                case CharacterClass.Druid:
-                    player.Wisdom = 15;
-                    player.Constitution = 13;
-                    player.Intelligence = 12;
-                    player.MaxHP = 125;
-                    player.HP = 125;
-                    player.MaxMana = 100;
-                    player.Mana = 100;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Bastón Natural",
-                        Emoji = "🌿",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 5,
-                        Value = 75,
-                        Rarity = ItemRarity.Rare
-                    };
-                    break;
-                    
-                // Tier 4 (Lv.30+)
-                case CharacterClass.Necromancer:
-                    player.Intelligence = 17;
-                    player.Charisma = 13;
-                    player.Wisdom = 12;
-                    player.MaxMana = 160;
-                    player.Mana = 160;
-                    player.MaxEnergy = 75;
-                    player.Energy = 75;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Báculo de Almas",
-                        Emoji = "💀",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 7,
-                        Value = 120,
-                        Rarity = ItemRarity.Epic
-                    };
-                    break;
-                    
-                case CharacterClass.Bard:
-                    player.Charisma = 17;
-                    player.Dexterity = 13;
-                    player.Intelligence = 12;
-                    player.MaxHP = 120;
-                    player.HP = 120;
-                    player.MaxMana = 120;
-                    player.Mana = 120;
-                    player.MaxEnergy = 90;
-                    player.Energy = 90;
-                    player.EquippedWeapon = new RpgItem
-                    {
-                        Name = "Laúd Encantado",
-                        Emoji = "🎵",
-                        Type = ItemType.Weapon,
-                        AttackBonus = 5,
-                        Value = 110,
-                        Rarity = ItemRarity.Epic
-                    };
-                    break;
-            }
+            // Stats de Adventurer (balanceados, sin especialización)
+            // Las clases Tier 1+ se desbloquean con el sistema de ActionTracker
+            // No hay equipo inicial, el jugador debe conseguir items explorando
             
             SavePlayer(player);
-            Console.WriteLine($"[RpgService] ✨ Nuevo jugador creado: {name} ({characterClass})");
+            Console.WriteLine($"[RpgService] ✨ Nuevo jugador creado: {name} (Adventurer)");
             return player;
         }
         

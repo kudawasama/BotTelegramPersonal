@@ -1129,49 +1129,9 @@ Bienvenido a {player.CurrentLocation}
                 return;
             }
             
-            // Class selection
-            if (data.StartsWith("rpg_class_"))
-            {
-                var parts = data.Split(':');
-                if (parts.Length == 2)
-                {
-                    var className = parts[0].Replace("rpg_class_", "");
-                    var playerName = parts[1];
-                    
-                    var characterClass = className switch
-                    {
-                        "warrior" => CharacterClass.Warrior,
-                        "mage" => CharacterClass.Mage,
-                        "rogue" => CharacterClass.Rogue,
-                        "cleric" => CharacterClass.Cleric,
-                        _ => CharacterClass.Warrior
-                    };
-                    
-                    var player = rpgService.CreateNewPlayer(chatId, playerName, characterClass);
-                    
-                    TelegramLogger.LogUserAction(
-                        chatId,
-                        callbackQuery.From.Username ?? "Unknown",
-                        "character_created",
-                        $"Created {player.Class} named {player.Name}");
-                    
-                    await bot.EditMessageText(
-                        chatId,
-                        messageId,
-                        $"🎉 **¡Personaje creado!**\n\n" +
-                        $"Bienvenido, **{player.Name}**!\n" +
-                        $"Has elegido la clase: **{player.Class}**\n\n" +
-                        $"Tu aventura comienza ahora...",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        cancellationToken: ct);
-                    
-                    await Task.Delay(2000, ct); // Dramatic pause
-                    
-                    await bot.DeleteMessage(chatId, messageId, ct);
-                    await rpgCommand.ShowMainMenu(bot, chatId, player, ct);
-                }
-                return;
-            }
+            // FASE 4: Handler rpg_class_ ELIMINADO
+            // Los jugadores ya no eligen clase inicial, todos inician como Adventurer
+            // Las clases se desbloquean jugando (ver ClassUnlockDatabase + ActionTrackerService)
             
             var currentPlayer = rpgService.GetPlayer(chatId);
             if (currentPlayer == null)

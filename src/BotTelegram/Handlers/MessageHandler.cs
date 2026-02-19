@@ -146,15 +146,32 @@ namespace BotTelegram.Handlers
                 // Desactivar estado de espera
                 RpgService.SetAwaitingName(message.Chat.Id, false);
                 
+                // FASE 4: Crear directamente como Adventurer (sin selección de clase)
+                // Las clases se desbloquean jugando según acciones realizadas
+                var rpgService = new RpgService();
+                var player = rpgService.CreateNewPlayer(message.Chat.Id, name);
+                
                 TelegramLogger.LogUserAction(
                     message.Chat.Id,
                     message.Chat.Username ?? "Unknown",
-                    "character_name_selected",
-                    $"Created new character with name '{name}'");
+                    "character_created",
+                    $"Created Adventurer named '{name}'");
                 
-                // Mostrar selección de clase
+                await bot.SendMessage(
+                    message.Chat.Id,
+                    $"🎉 **¡Bienvenido, {player.Name}!**\n\n" +
+                    $"👤 Clase: **Aventurero**\n" +
+                    $"📍 Ubicación: *{player.CurrentLocation}*\n\n" +
+                    $"Tu aventura comienza ahora...\n\n" +
+                    $"💡 *Desbloquea nuevas clases realizando acciones específicas.*\n" +
+                    $"Usa `/clases` para ver tu progreso.",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    cancellationToken: ct);
+                
+                await Task.Delay(2000, ct);
+                
                 var rpgCommand = new RpgCommand();
-                await rpgCommand.ShowClassSelection(bot, message.Chat.Id, name, ct);
+                await rpgCommand.ShowMainMenu(bot, message.Chat.Id, player, ct);
                 return;
             }
 
