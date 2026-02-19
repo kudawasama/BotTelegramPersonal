@@ -4,7 +4,7 @@
 
 ---
 
-## 📊 Estado actual (v2.0 — Feb 2026)
+## 📊 Estado actual (v3.1.10 — Feb 2025)
 
 ✅ **Completado (Bot base):**
 - Bot de Telegram con comandos básicos
@@ -24,9 +24,11 @@
 - ⭐ **Fase 10**: Sistema de Gremio — crear/unirse, banco gremio, oficiales, ranking, `/gremio`
 - ⭐ **Fase 11**: Arena PvP — combate simulado, ELO rating, tiers, retos, apuestas, `/arena`
 - 🔧 **v3.1.5-3.1.8**: Patches UX — emojis, menús duplicados, rpg_explore, log de combate enriquecido
+- 🔧 **v3.1.9**: Fix Fase 4 — creación como Adventurer, clases se desbloquean jugando
+- 📚 **v3.1.10**: Documentación sistema de clases (51 clases) + migración automática de personajes
 
 🔜 **Siguiente (RPG):**
-- Fase 12: Mundo Abierto Expandido
+- Fase 12: Mundo Abierto Expandido (regiones, NPCs, viajes)
 - Fase 13: Eventos Temporales
 
 ---

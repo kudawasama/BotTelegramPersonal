@@ -1,7 +1,7 @@
 # 🎮 HOJA DE RUTA - EXPANSIÓN DEL SISTEMA RPG
 
-**Última actualización:** 19 de febrero de 2026  
-**Versión:** 6.1 - Patches UX v3.1.5-v3.1.8 (menús, combate, log enriquecido)
+**Última actualización:** 19 de febrero de 2025  
+**Versión:** 6.2 - Docs + Migración v3.1.10 (sistema de clases, auto-actualización personajes)
 
 ## 📊 PROGRESO GENERAL
 ```
@@ -24,6 +24,9 @@
 ⏸️ Fase 14: Generación de Imágenes       [░░░░░░░░░░]   0%
 ⏸️ Fase 15: Telegram Mini App            [░░░░░░░░░░]   0%
 ⏸️ Fase 16: IA Narrativa (Dungeon Master)[░░░░░░░░░░]   0%
+⏸️ Fase 17: Implementacion de más clases desbloqueables[░░░░░░░░░░]   0%
+⏸️ Fase 18.0: Implementar Clases de Profesion [░░░░░░░░░░]   0%
+⏸️ Fase 18.1: Implementar acciones de las profesion [░░░░░░░░░░]   0%
 ```
 
 ## 📋 ÍNDICE
@@ -1561,13 +1564,15 @@ El bot tiene una **base sólida production-ready** con 11 fases completadas (+ F
 | `1f35c48` | Fase 4: Sistema de clases desbloqueables | ene 2025 |
 | `188a539` | Fase 5-6: UI/UX refactor + FSM | ene 2025 |
 | `6fe3412` | Fase 7: Inventario + menús + combate táctico | ene 2025 |
-| `9ca8761` | Fase 7.5a: ClassBonusService + ShopCommand | feb 2026 |
-| `301ae92` | Fix: Router shop callbacks | feb 2026 |
-| `9287d49` | Fase 7.5b: Equipos en tienda con EquipmentDatabase | feb 2026 |
-| `59a8fa4` | Fase 8+9: Crafteo + Misiones/Quests completos | feb 2026 |
-| `08a8ed7` | Fase 10: Sistema de Gremio (Guild) | feb 2026 |
-| `2322a12` | Fase 11: Arena PvP + sistema ELO | feb 2026 |
-| `add057e` | Fix v3.1.5: UX menus - emojis, Guild/PvP duplicados, acceso a Tacticas | feb 2026 |
-| `81404b7` | Fix v3.1.6: Eliminar opciones duplicadas combate vs sub-menu Tacticas | feb 2026 |
-| `3d48052` | Fix v3.1.7: rpg_explore fuerza combate garantizado (no random) | feb 2026 |
-| `2690459` | Fix v3.1.8: Log de combate enriquecido con GenerateCombatMessage | feb 2026 |
+| `9ca8761` | Fase 7.5a: ClassBonusService + ShopCommand | feb 2025 |
+| `301ae92` | Fix: Router shop callbacks | feb 2025 |
+| `9287d49` | Fase 7.5b: Equipos en tienda con EquipmentDatabase | feb 2025 |
+| `59a8fa4` | Fase 8+9: Crafteo + Misiones/Quests completos | feb 2025 |
+| `08a8ed7` | Fase 10: Sistema de Gremio (Guild) | feb 2025 |
+| `2322a12` | Fase 11: Arena PvP + sistema ELO | feb 2025 |
+| `add057e` | Fix v3.1.5: UX menus - emojis, Guild/PvP duplicados, acceso a Tacticas | feb 2025 |
+| `81404b7` | Fix v3.1.6: Eliminar opciones duplicadas combate vs sub-menu Tacticas | feb 2025 |
+| `3d48052` | Fix v3.1.7: rpg_explore fuerza combate garantizado (no random) | feb 2025 |
+| `2690459` | Fix v3.1.8: Log de combate enriquecido con GenerateCombatMessage | feb 2025 |
+| `05bff72` | Fix v3.1.9: Fase 4 - creación como Adventurer, clases se desbloquean jugando | feb 2025 |
+| `f1b0eda` | Docs v3.1.10: Sistema de clases completo (51 clases) + migración personajes | feb 2025 |
