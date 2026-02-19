@@ -34,11 +34,11 @@ namespace BotTelegram.Handlers
 
             try
             {
-                // Responder al callback genérico SOLO si NO es RPG/Pets/Guild/PvP/Train
+                // Responder al callback genérico SOLO si NO es RPG/Pets/Guild/PvP/Train/Quest
                 // Esos handlers tienen sus propios AnswerCallbackQuery internos
                 if (!data.StartsWith("rpg_") && !data.StartsWith("pets_") &&
                     !data.StartsWith("guild_") && !data.StartsWith("pvp_") &&
-                    !data.StartsWith("train_"))
+                    !data.StartsWith("train_") && !data.StartsWith("quest_"))
                 {
                     await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
                 }
@@ -1956,7 +1956,17 @@ Bienvenido a {player.CurrentLocation}
             if (data.StartsWith("quest_complete:"))
             {
                 var questId = data["quest_complete:".Length..];
-                await bot.AnswerCallbackQuery(callbackQuery.Id, "🏆 Entregando misión...", cancellationToken: ct);
+                
+                // Responder inmediatamente antes de procesar
+                try
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "🏆 Entregando misión...", cancellationToken: ct);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[CallbackQueryHandler] ⚠️ No se pudo responder callback (probablemente expirado): {ex.Message}");
+                }
+                
                 await BotTelegram.RPG.Commands.QuestCommand.CompleteQuest(bot, chatId, currentPlayer, questId, ct, messageId);
                 return;
             }
