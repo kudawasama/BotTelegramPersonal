@@ -165,13 +165,32 @@ namespace BotTelegram.RPG.Services
         public static (bool Success, string Message) CompleteQuest(RpgPlayer player, string questId)
         {
             var pq = player.ActiveQuests.FirstOrDefault(q => q.QuestId == questId);
-            if (pq is null) return (false, "❌ No tienes esa misión activa.");
+            if (pq is null)
+            {
+                Console.WriteLine($"[QuestService] ❌ Quest {questId} no encontrada en ActiveQuests");
+                return (false, "❌ No tienes esa misión activa.");
+            }
 
-            if (!pq.Objectives.All(o => o.IsCompleted))
+            var allCompleted = pq.Objectives.All(o => o.IsCompleted);
+            if (!allCompleted)
+            {
+                var incomplete = pq.Objectives.Where(o => !o.IsCompleted).ToList();
+                Console.WriteLine($"[QuestService] ⚠️ Quest {questId} tiene {incomplete.Count} objetivos sin completar:");
+                foreach (var obj in incomplete)
+                {
+                    Console.WriteLine($"   - {obj.Description}: {obj.Current}/{obj.Required}");
+                }
                 return (false, "⚠️ Aún no has completado todos los objetivos.");
+            }
 
             var def = QuestDatabase.GetById(questId);
-            if (def is null) return (false, "❌ Misión no encontrada.");
+            if (def is null)
+            {
+                Console.WriteLine($"[QuestService] ❌ Quest definition {questId} no encontrada");
+                return (false, "❌ Misión no encontrada.");
+            }
+
+            Console.WriteLine($"[QuestService] ✅ Completando quest {questId}: {def.Name}");
 
             // Dar recompensas
             player.Gold += def.Reward.GoldReward;
@@ -239,6 +258,8 @@ namespace BotTelegram.RPG.Services
             player.ActiveQuests.Remove(pq);
             if (!player.CompletedQuestIds.Contains(questId))
                 player.CompletedQuestIds.Add(questId);
+
+            Console.WriteLine($"[QuestService] ✅ Quest {questId} movida a completadas. Total completadas: {player.CompletedQuestIds.Count}, Activas: {player.ActiveQuests.Count}");
 
             return (true,
                 $"🏆 **¡Misión completada: {def.Emoji} {def.Name}!**\n\n"
