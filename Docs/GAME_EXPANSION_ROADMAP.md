@@ -1,7 +1,7 @@
 # 🎮 HOJA DE RUTA - EXPANSIÓN DEL SISTEMA RPG
 
-**Última actualización:** 18 de febrero de 2026  
-**Versión:** 6.0 - Sistema de Gremio + Arena PvP
+**Última actualización:** 19 de febrero de 2026  
+**Versión:** 6.1 - Patches UX v3.1.5-v3.1.8 (menús, combate, log enriquecido)
 
 ## 📊 PROGRESO GENERAL
 ```
@@ -1567,3 +1567,7 @@ El bot tiene una **base sólida production-ready** con 11 fases completadas (+ F
 | `59a8fa4` | Fase 8+9: Crafteo + Misiones/Quests completos | feb 2026 |
 | `08a8ed7` | Fase 10: Sistema de Gremio (Guild) | feb 2026 |
 | `2322a12` | Fase 11: Arena PvP + sistema ELO | feb 2026 |
+| `add057e` | Fix v3.1.5: UX menus - emojis, Guild/PvP duplicados, acceso a Tacticas | feb 2026 |
+| `81404b7` | Fix v3.1.6: Eliminar opciones duplicadas combate vs sub-menu Tacticas | feb 2026 |
+| `3d48052` | Fix v3.1.7: rpg_explore fuerza combate garantizado (no random) | feb 2026 |
+| `2690459` | Fix v3.1.8: Log de combate enriquecido con GenerateCombatMessage | feb 2026 |

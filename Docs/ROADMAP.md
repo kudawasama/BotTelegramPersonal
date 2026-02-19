@@ -23,6 +23,7 @@
 - ⭐ **Fase 9**: Sistema de Misiones/Quests — 8 misiones Kill/Collect/Craft/Explore, `/misiones`
 - ⭐ **Fase 10**: Sistema de Gremio — crear/unirse, banco gremio, oficiales, ranking, `/gremio`
 - ⭐ **Fase 11**: Arena PvP — combate simulado, ELO rating, tiers, retos, apuestas, `/arena`
+- 🔧 **v3.1.5-3.1.8**: Patches UX — emojis, menús duplicados, rpg_explore, log de combate enriquecido
 
 🔜 **Siguiente (RPG):**
 - Fase 12: Mundo Abierto Expandido
@@ -246,4 +247,4 @@ Se buscan colaboradores en:
 
 ---
 
-**Última actualización:** 18 de febrero de 2026 — Fases 10 y 11 completadas
+**Última actualización:** 19 de febrero de 2026 — Patches UX v3.1.5-v3.1.8 (menús, combate, log enriquecido)
