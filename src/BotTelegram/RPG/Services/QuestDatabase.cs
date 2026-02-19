@@ -28,7 +28,8 @@ namespace BotTelegram.RPG.Services
                         Current     = 0
                     }
                 },
-                Reward = new QuestReward { GoldReward = 200, XPReward = 150 }
+                Reward = new QuestReward { GoldReward = 200, XPReward = 150, ReputationReward = 25, FactionId = "guardianes_amanecer" },
+                FactionId = "guardianes_amanecer"
             },
             new QuestDefinition
             {
@@ -50,7 +51,8 @@ namespace BotTelegram.RPG.Services
                         Current     = 0
                     }
                 },
-                Reward = new QuestReward { GoldReward = 350, XPReward = 300 }
+                Reward = new QuestReward { GoldReward = 350, XPReward = 300, ReputationReward = 50, FactionId = "guardianes_amanecer" },
+                FactionId = "guardianes_amanecer"
             },
             new QuestDefinition
             {
@@ -72,7 +74,9 @@ namespace BotTelegram.RPG.Services
                         Current     = 0
                     }
                 },
-                Reward = new QuestReward { GoldReward = 800, XPReward = 700, EquipId = "weapon_runic_blade" }
+                Reward = new QuestReward { GoldReward = 800, XPReward = 700, EquipId = "weapon_runic_blade", ReputationReward = 150, FactionId = "orden_llama" },
+                FactionId = "orden_llama",
+                RequiredReputation = 1000
             },
             new QuestDefinition
             {
@@ -94,7 +98,8 @@ namespace BotTelegram.RPG.Services
                         Current     = 0
                     }
                 },
-                Reward = new QuestReward { GoldReward = 1000, XPReward = 900, EquipId = "armor_shadow_cloak" }
+                Reward = new QuestReward { GoldReward = 1000, XPReward = 900, EquipId = "armor_shadow_cloak", ReputationReward = 100, FactionId = "culto_abismo" },
+                FactionId = "culto_abismo"  // Fase 12: Combate contra el mal
             },
 
             // ── Misiones de Recolección ─────────────────────────────────────
@@ -118,7 +123,8 @@ namespace BotTelegram.RPG.Services
                         Current     = 0
                     }
                 },
-                Reward = new QuestReward { GoldReward = 150, XPReward = 100, ItemRewardName = "Poción de Vida" }
+                Reward = new QuestReward { GoldReward = 150, XPReward = 100, ItemRewardName = "Poción de Vida", ReputationReward = 15, FactionId = "druidas_eternos" },
+                FactionId = "druidas_eternos"  // Fase 12: Recolección de naturaleza
             },
             new QuestDefinition
             {
@@ -140,7 +146,8 @@ namespace BotTelegram.RPG.Services
                         Current     = 0
                     }
                 },
-                Reward = new QuestReward { GoldReward = 180, XPReward = 120 }
+                Reward = new QuestReward { GoldReward = 180, XPReward = 120, ReputationReward = 20, FactionId = "viajeros_salvajes" },
+                FactionId = "viajeros_salvajes"  // Fase 12: Exploradores recolectores
             },
             new QuestDefinition
             {
@@ -162,7 +169,8 @@ namespace BotTelegram.RPG.Services
                         Current     = 0
                     }
                 },
-                Reward = new QuestReward { GoldReward = 300, XPReward = 250, ItemRewardName = "Elixir de Maná" }
+                Reward = new QuestReward { GoldReward = 300, XPReward = 250, ItemRewardName = "Elixir de Maná", ReputationReward = 40, FactionId = "custodios_desierto" },
+                FactionId = "custodios_desierto"  // Fase 12: Guardianes del conocimiento antiguo
             },
 
             // ── Misiones de Crafteo ─────────────────────────────────────────
@@ -186,7 +194,8 @@ namespace BotTelegram.RPG.Services
                         Current     = 0
                     }
                 },
-                Reward = new QuestReward { GoldReward = 250, XPReward = 200 }
+                Reward = new QuestReward { GoldReward = 250, XPReward = 200, ReputationReward = 30, FactionId = "guardianes_amanecer" },
+                FactionId = "guardianes_amanecer"  // Fase 12: Protectores que ayudan
             },
 
             // ── Misiones de Mazmorra ────────────────────────────────────────
@@ -210,7 +219,8 @@ namespace BotTelegram.RPG.Services
                         Current     = 0
                     }
                 },
-                Reward = new QuestReward { GoldReward = 600, XPReward = 500, EquipId = "armor_reinforced" }
+                Reward = new QuestReward { GoldReward = 600, XPReward = 500, EquipId = "armor_reinforced", ReputationReward = 80, FactionId = "legion_hielo" },
+                FactionId = "legion_hielo"  // Fase 12: Guerreros valientes
             },
         };
 

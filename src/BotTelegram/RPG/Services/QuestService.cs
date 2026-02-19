@@ -208,6 +208,15 @@ namespace BotTelegram.RPG.Services
                     rewardLines.Add($"+1 ⚔️ {equip.Name}");
                 }
             }
+            
+            // Reputación con facción (Fase 12)
+            if (def.Reward.ReputationReward > 0 && !string.IsNullOrEmpty(def.Reward.FactionId))
+            {
+                var factionService = new FactionService();
+                factionService.GainReputation(player, def.Reward.FactionId, def.Reward.ReputationReward);
+                var faction = FactionDatabase.GetFaction(def.Reward.FactionId);
+                rewardLines.Add($"+{def.Reward.ReputationReward} 🏛️ rep. con {faction?.Name ?? "facción"}");
+            }
 
             // Level up check
             int xpNeeded = player.Level * 100;

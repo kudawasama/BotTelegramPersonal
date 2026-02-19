@@ -79,6 +79,21 @@ namespace BotTelegram.RPG.Services
             if (player.Level < zone.LevelRequirement)
                 return (false, $"Nivel {zone.LevelRequirement} requerido (tu nivel: {player.Level})");
             
+            // Verificar reputación con facción (Fase 12)
+            if (!string.IsNullOrEmpty(zone.RequiredFactionId) && zone.RequiredReputation > 0)
+            {
+                var factionService = new FactionService();
+                var playerRep = factionService.GetReputation(player, zone.RequiredFactionId);
+                var currentRep = playerRep?.Reputation ?? 0;
+                
+                if (currentRep < zone.RequiredReputation)
+                {
+                    var faction = FactionDatabase.GetFaction(zone.RequiredFactionId);
+                    var factionName = faction?.Name ?? "facción desconocida";
+                    return (false, $"Reputación insuficiente con {factionName} (necesitas {zone.RequiredReputation}, tienes {currentRep})");
+                }
+            }
+            
             // Verificar si está desbloqueada
             if (!zone.IsStartingZone && !player.UnlockedZones.Contains(zoneId))
                 return (false, "Zona no desbloqueada. Descubre nuevas zonas explorando.");
@@ -431,6 +446,73 @@ namespace BotTelegram.RPG.Services
                 IsStartingZone = false,
                 IsSafeZone = false,
                 Type = ZoneType.Normal
+            });
+            
+            // ═══════════════════════════════════════════════════════════════
+            // ZONAS ESPECIALES - REQUIEREN REPUTACIÓN CON FACCIONES (FASE 12)
+            // ═══════════════════════════════════════════════════════════════
+            
+            // Fortaleza de los Guardianes del Amanecer
+            AddZone(new GameZone
+            {
+                Id = "fortaleza_amanecer",
+                Name = "Fortaleza del Amanecer",
+                Emoji = "🏰",
+                Description = "Ciudadela sagrada de los Guardianes del Amanecer. Solo los héroes probados pueden entrar.",
+                RegionId = "costa_esperanza",
+                MinEnemyLevel = 30,
+                MaxEnemyLevel = 35,
+                EncounterRate = 0.40,
+                EnemyPool = new() { "elite_guardian", "holy_knight", "dawn_sentinel" },
+                ConnectedZones = new() { "puerto_esperanza", "playa_coral" },
+                LevelRequirement = 30,
+                IsStartingZone = false,
+                IsSafeZone = true,    // Zona de entrenamiento segura
+                Type = ZoneType.Town,
+                RequiredFactionId = "guardianes_amanecer",
+                RequiredReputation = 3000
+            });
+            
+            // Forja del Dragón - Orden de la Llama Eterna
+            AddZone(new GameZone
+            {
+                Id = "forja_dragon",
+                Name = "Forja del Dragón",
+                Emoji = "🔥",
+                Description = "Volcán interior donde la Orden de la Llama forja armas legendarias. Acceso solo para maestros de fuego.",
+                RegionId = "montanas_ceniza",
+                MinEnemyLevel = 35,
+                MaxEnemyLevel = 40,
+                EncounterRate = 0.70,
+                EnemyPool = new() { "lava_elemental", "fire_dragon", "flame_titan", "magma_lord" },
+                ConnectedZones = new() { "crater_volcanico", "sendero_montana" },
+                LevelRequirement = 35,
+                IsStartingZone = false,
+                IsSafeZone = false,
+                Type = ZoneType.Dungeon,
+                RequiredFactionId = "orden_llama",
+                RequiredReputation = 6000
+            });
+            
+            // Árbol Ancestral - Druidas Eternos del Bosque
+            AddZone(new GameZone
+            {
+                Id = "arbol_ancestral",
+                Name = "Árbol Ancestral",
+                Emoji = "🌳",
+                Description = "Corazón místico del bosque milenario. Los druidas guardan aquí los secretos de la vida eterna.",
+                RegionId = "bosque_eterno",
+                MinEnemyLevel = 35,
+                MaxEnemyLevel = 40,
+                EncounterRate = 0.50,
+                EnemyPool = new() { "ancient_treant", "forest_guardian", "wild_spirit", "nature_avatar" },
+                ConnectedZones = new() { "corazon_bosque", "lago_espejo" },
+                LevelRequirement = 35,
+                IsStartingZone = false,
+                IsSafeZone = true,    // Zona sagrada de los druidas
+                Type = ZoneType.Town,
+                RequiredFactionId = "druidas_eternos",
+                RequiredReputation = 6000
             });
             
             // Placeholder para otras zonas (se agregarían todas aquí)

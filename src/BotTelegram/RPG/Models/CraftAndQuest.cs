@@ -68,6 +68,8 @@ namespace BotTelegram.RPG.Models
         public int XPReward    { get; set; }
         public string? ItemRewardName { get; set; }   // Nombre descriptivo
         public string? EquipId       { get; set; }   // ID en EquipmentDatabase
+        public int ReputationReward { get; set; }     // Reputación ganada (Fase 12)
+        public string? FactionId { get; set; }        // Facción que da reputación (Fase 12)
     }
 
     /// <summary>Definición estática de una misión (template).</summary>
@@ -82,6 +84,8 @@ namespace BotTelegram.RPG.Models
         public List<QuestObjective> Objectives { get; set; } = new();
         public QuestReward Reward { get; set; } = new();
         public bool IsRepeatable  { get; set; } = false;
+        public string? FactionId  { get; set; }            // Facción que ofrece la quest (Fase 12)
+        public int RequiredReputation { get; set; } = 0;   // Reputación mínima (Fase 12)
     }
 
     /// <summary>Estado de una misión activa/completada del jugador.</summary>

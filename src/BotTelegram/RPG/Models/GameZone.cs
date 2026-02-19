@@ -57,6 +57,16 @@ namespace BotTelegram.RPG.Models
         public bool IsSafeZone { get; set; } = false;
         
         /// <summary>
+        /// Facción requerida para acceder (Fase 12)
+        /// </summary>
+        public string? RequiredFactionId { get; set; }
+        
+        /// <summary>
+        /// Reputación mínima con la facción para acceder (Fase 12)
+        /// </summary>
+        public int RequiredReputation { get; set; } = 0;
+        
+        /// <summary>
         /// Tipo de zona (para mecánicas especiales)
         /// </summary>
         public ZoneType Type { get; set; } = ZoneType.Normal;
