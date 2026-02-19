@@ -151,11 +151,6 @@ Solo los más valientes pueden enfrentar este destino...
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("🛡️ Gremio", "guild_menu"),
-                    InlineKeyboardButton.WithCallbackData("⚔️ Arena PvP", "pvp_menu")
-                },
-                new[]
-                {
                     InlineKeyboardButton.WithCallbackData("🏠 Salir", "start")
                 }
             });
@@ -172,13 +167,13 @@ Solo los más valientes pueden enfrentar este destino...
                 {
                     InlineKeyboardButton.WithCallbackData("🗺️ Explorar", "rpg_explore_menu"),
                     InlineKeyboardButton.WithCallbackData("🏰 Mazmorra", "rpg_dungeon"),
-                    InlineKeyboardButton.WithCallbackData("🎲 Aventura", "rpg_adventure")
+                    InlineKeyboardButton.WithCallbackData("🎲 Evento", "rpg_adventure")
                 },
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("😴 Descansar", "rpg_rest"),
                     InlineKeyboardButton.WithCallbackData("💼 Trabajar", "rpg_work"),
-                    InlineKeyboardButton.WithCallbackData("🗺️ Mapa", "rpg_map")
+                    InlineKeyboardButton.WithCallbackData("🧭 Mapa", "rpg_map")
                 },
                 new[]
                 {
@@ -234,17 +229,17 @@ Solo los más valientes pueden enfrentar este destino...
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("🏆 Rankings", "leaderboard_main"),
-                    InlineKeyboardButton.WithCallbackData("🛡️ Entrenar", "rpg_train"),
+                    InlineKeyboardButton.WithCallbackData("📚 Entrenar", "rpg_train"),
                     InlineKeyboardButton.WithCallbackData("🌟 Progreso", "rpg_progress")
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("�️ Gremio", "guild_menu"),
+                    InlineKeyboardButton.WithCallbackData("🛡️ Gremio", "guild_menu"),
                     InlineKeyboardButton.WithCallbackData("⚔️ Arena PvP", "pvp_menu")
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("�🔙 Volver", "rpg_main")
+                    InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
                 }
             });
         }
@@ -284,7 +279,7 @@ Solo los más valientes pueden enfrentar este destino...
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("⚔️ Atacar",   "rpg_combat_attack"),
-                    InlineKeyboardButton.WithCallbackData("💥 Carga",     "rpg_combat_charge"),
+                    InlineKeyboardButton.WithCallbackData("🗒️ Tacticas", "rpg_combat_tactics"),
                     InlineKeyboardButton.WithCallbackData("🔮 Magia",     "rpg_combat_magic")
                 },
                 // Fila 2: Ataques tácticos
