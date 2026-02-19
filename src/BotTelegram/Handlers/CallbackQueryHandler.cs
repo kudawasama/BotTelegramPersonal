@@ -2864,7 +2864,7 @@ Bienvenido a {player.CurrentLocation}
                 return;
             }
             
-            // Explore - original combat search
+            // Explore - FORZAR combate (el jugador eligió ⚔️ Combate explícitamente)
             if (data == "rpg_explore")
             {
                 if (!rpgService.CanPerformAction(currentPlayer, 15))
@@ -2873,128 +2873,36 @@ Bienvenido a {player.CurrentLocation}
                     return;
                 }
                 
-                // Responder al callback INMEDIATAMENTE
-                await bot.AnswerCallbackQuery(callbackQuery.Id, "🗺️ Explorando...", cancellationToken: ct);
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "⚔️ Buscando enemigo...", cancellationToken: ct);
                 
                 rpgService.ConsumeEnergy(currentPlayer, 15);
                 
-                // Use new ExplorationService
-                var explorationResult = explorationService.Explore(currentPlayer);
+                // Generar enemigo proporcional al nivel del jugador
+                var rand = new Random();
+                var diffRoll = rand.Next(100);
+                var difficulty = diffRoll < 50 ? EnemyDifficulty.Easy
+                               : diffRoll < 85 ? EnemyDifficulty.Medium
+                               : EnemyDifficulty.Hard;
                 
-                TelegramLogger.LogRpgEvent(
+                var enemy = rpgService.GenerateEnemy(currentPlayer.Level, difficulty);
+                
+                currentPlayer.IsInCombat = true;
+                currentPlayer.CurrentEnemy = enemy;
+                StateManager.TransitionTo(currentPlayer, GameState.InCombat, enemy.Name);
+                
+                TelegramLogger.LogRpgEvent(chatId, currentPlayer.Name, "combat_search",
+                    $"Enemy: {enemy.Name} (Lv.{enemy.Level}, {difficulty}). Energy left: {currentPlayer.Energy}");
+                
+                await bot.DeleteMessage(chatId, messageId, ct);
+                var combatMessage = await bot.SendMessage(
                     chatId,
-                    currentPlayer.Name,
-                    "explore",
-                    $"Result: {explorationResult.Type}. Energy left: {currentPlayer.Energy}");
+                    combatService.GenerateCombatView(currentPlayer),
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: GetCombatKeyboard(),
+                    cancellationToken: ct);
                 
-                // Handle different exploration results
-                if (explorationResult.Type == BotTelegram.RPG.Services.ExplorationResultType.Combat && explorationResult.Enemy != null)
-                {
-                    // Combat encounter
-                    var enemy = explorationResult.Enemy;
-                    
-                    currentPlayer.IsInCombat = true;
-                    currentPlayer.CurrentEnemy = enemy;
-                    StateManager.TransitionTo(currentPlayer, GameState.InCombat, enemy.Name); // FSM
-                    
-                    // Fase 5.2: Enviar mensaje inicial y guardar MessageId
-                    await bot.DeleteMessage(chatId, messageId, ct);
-                    var combatMessage = await bot.SendMessage(
-                        chatId,
-                        combatService.GenerateCombatView(currentPlayer),
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: GetCombatKeyboard(),
-                        cancellationToken: ct);
-                    
-                    // Guardar MessageId del combate
-                    currentPlayer.ActiveCombatMessageId = combatMessage.MessageId;
-                    rpgService.SavePlayer(currentPlayer);
-                }
-                else if (explorationResult.Type == BotTelegram.RPG.Services.ExplorationResultType.Treasure)
-                {
-                    // Resource found
-                    await bot.DeleteMessage(chatId, messageId, ct);
-                    
-                    var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>
-                    {
-                        new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔍 Explorar otra vez", "rpg_explore"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗺️ Ver mapa", "rpg_map")
-                        },
-                        new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú RPG", "rpg_main")
-                        }
-                    };
-                    
-                    await bot.SendMessage(
-                        chatId,
-                        explorationResult.Message,
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
-                        cancellationToken: ct);
-                }
-                else if (explorationResult.Type == BotTelegram.RPG.Services.ExplorationResultType.ZoneDiscovered)
-                {
-                    // New zone unlocked
-                    await bot.DeleteMessage(chatId, messageId, ct);
-                    
-                    var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>
-                    {
-                        new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗺️ Ver mapa", "rpg_map"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔍 Seguir explorando", "rpg_explore")
-                        },
-                        new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú RPG", "rpg_main")
-                        }
-                    };
-                    
-                    await bot.SendMessage(
-                        chatId,
-                        explorationResult.Message,
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
-                        cancellationToken: ct);
-                }
-                else if (explorationResult.Type == BotTelegram.RPG.Services.ExplorationResultType.Nothing)
-                {
-                    // Nothing found
-                    await bot.DeleteMessage(chatId, messageId, ct);
-                    
-                    var buttons = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>
-                    {
-                        new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔍 Explorar otra vez", "rpg_explore"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🗺️ Ver mapa", "rpg_map")
-                        },
-                        new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🏠 Menú RPG", "rpg_main")
-                        }
-                    };
-                    
-                    await bot.SendMessage(
-                        chatId,
-                        explorationResult.Message,
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons),
-                        cancellationToken: ct);
-                }
-                else
-                {
-                    // Error
-                    await bot.DeleteMessage(chatId, messageId, ct);
-                    await bot.SendMessage(
-                        chatId,
-                        explorationResult.Message ?? "❌ Error en la exploración.",
-                        cancellationToken: ct);
-                }
-                
+                currentPlayer.ActiveCombatMessageId = combatMessage.MessageId;
+                rpgService.SavePlayer(currentPlayer);
                 return;
             }
             
