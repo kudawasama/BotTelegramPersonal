@@ -175,6 +175,14 @@ namespace BotTelegram.RPG.Services
                         return $"\n\n✅ +{action.Value} reputación";
                     }
                     return "";
+                
+                case DialogueActionType.OpenShop:
+                    // Interfaz simplificada de tienda del NPC
+                    return "\n\n🏪 **Tienda abierta**\nUsa /tienda para ver el inventario completo.";
+                
+                case DialogueActionType.StartTraining:
+                    // Sistema de entrenamiento básico
+                    return "\n\n🎯 **Entrenamiento disponible**\nUsa /entrenar para mejorar tus atributos.";
                     
                 default:
                     return "";

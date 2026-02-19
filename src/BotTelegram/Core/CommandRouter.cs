@@ -159,6 +159,13 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/entrenar") || message.Text.StartsWith("/train"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando TrainingCommand (Entrenamiento)");
+                await new BotTelegram.RPG.Commands.TrainingCommand().Execute(bot, message, ct);
+                return;
+            }
+
             Console.WriteLine("   [CommandRouter] → Ejecutando UnknownCommand");
             await new UnknownCommand().Execute(bot, message, ct);
         }

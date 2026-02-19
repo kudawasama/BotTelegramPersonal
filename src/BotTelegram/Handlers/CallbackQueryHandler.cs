@@ -34,10 +34,11 @@ namespace BotTelegram.Handlers
 
             try
             {
-                // Responder al callback genérico SOLO si NO es RPG/Pets/Guild/PvP
+                // Responder al callback genérico SOLO si NO es RPG/Pets/Guild/PvP/Train
                 // Esos handlers tienen sus propios AnswerCallbackQuery internos
                 if (!data.StartsWith("rpg_") && !data.StartsWith("pets_") &&
-                    !data.StartsWith("guild_") && !data.StartsWith("pvp_"))
+                    !data.StartsWith("guild_") && !data.StartsWith("pvp_") &&
+                    !data.StartsWith("train_"))
                 {
                     await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
                 }
@@ -5701,6 +5702,13 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                         new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💬 Abrir Chat IA", "rpg_ai_chat") },
                         new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_menu_help") }
                     }), cancellationToken: ct);
+                return;
+            }
+
+            // ─── ENTRENAMIENTO (train_*) ─────────────────────
+            if (data.StartsWith("train_"))
+            {
+                await BotTelegram.RPG.Commands.TrainingCommand.HandleCallback(bot, callbackQuery, data, ct);
                 return;
             }
 
