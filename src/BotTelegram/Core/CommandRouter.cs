@@ -152,6 +152,13 @@ namespace BotTelegram.Core
                 return;
             }
 
+            if (message.Text.StartsWith("/facciones") || message.Text.StartsWith("/faction"))
+            {
+                Console.WriteLine("   [CommandRouter] → Ejecutando FactionCommand (Sistema de Facciones)");
+                await new BotTelegram.RPG.Commands.FactionCommand().Execute(bot, message, ct);
+                return;
+            }
+
             Console.WriteLine("   [CommandRouter] → Ejecutando UnknownCommand");
             await new UnknownCommand().Execute(bot, message, ct);
         }

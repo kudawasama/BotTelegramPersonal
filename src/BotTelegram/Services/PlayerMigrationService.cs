@@ -10,7 +10,7 @@ namespace BotTelegram.Services
     public class PlayerMigrationService
     {
         private readonly RpgService _rpgService;
-        private const string CURRENT_SCHEMA_VERSION = "3.1.9"; // Actualizar con cada migración mayor
+        private const string CURRENT_SCHEMA_VERSION = "3.2.0"; // Actualizar con cada migración mayor
         
         public PlayerMigrationService()
         {
@@ -63,6 +63,18 @@ namespace BotTelegram.Services
                 player.UnlockedSkills = new List<string>();
                 needsSave = true;
                 Console.WriteLine($"[Migration] {player.Name}: UnlockedSkills inicializado");
+            }
+            
+            // ═══════════════════════════════════════════════════════════════
+            // MIGRACIÓN v3.2.0: Sistema de Facciones Fase 12
+            // ═══════════════════════════════════════════════════════════════
+            
+            // Inicializar FactionReputations si no existe
+            if (player.FactionReputations == null)
+            {
+                player.FactionReputations = new List<PlayerFactionReputation>();
+                needsSave = true;
+                Console.WriteLine($"[Migration] {player.Name}: FactionReputations inicializado");
             }
             
             // ═══════════════════════════════════════════════════════════════

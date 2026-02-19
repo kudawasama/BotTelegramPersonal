@@ -165,6 +165,12 @@ namespace BotTelegram.RPG.Models
         public int GuildContribution { get; set; } = 0;
 
         // ═══════════════════════════════════════
+        // FACTION SYSTEM (FASE 12)
+        // ═══════════════════════════════════════
+        /// <summary>Reputaciones del jugador con las facciones del mundo</summary>
+        public List<PlayerFactionReputation> FactionReputations { get; set; } = new();
+
+        // ═══════════════════════════════════════
         // FSM STATE MACHINE (FASE 6)
         // ═══════════════════════════════════════
         /// <summary>Estado actual del jugador en la Máquina de Estados Finita (FSM)</summary>
