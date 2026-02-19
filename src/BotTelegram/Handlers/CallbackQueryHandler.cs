@@ -105,12 +105,13 @@ namespace BotTelegram.Handlers
                 {
                     await BotTelegram.RPG.Commands.PvpCommand.HandleCallback(bot, callbackQuery, data, ct);
                 }
-                // RPG Callbacks
+                // RPG Callbacks (incluye inv_ para inventario/equipamiento)
                 else if (data == "rpg_main" || data.StartsWith("rpg_") ||
                          data.StartsWith("shop_") || data == "shop_buy" || data == "shop_sell" ||
                          data == "shop_buy_equip_menu" ||
                          data.StartsWith("craft_") ||
-                         data.StartsWith("quest_"))
+                         data.StartsWith("quest_") ||
+                         data.StartsWith("inv_"))
                 {
                     await HandleRpgCallback(bot, callbackQuery, data, ct);
                 }
@@ -5621,7 +5622,86 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 
                 return;
             }
-            
+
+            // rpg_back_welcome — botón Volver en pantalla de creación de nombre
+            if (data == "rpg_back_welcome")
+            {
+                BotTelegram.RPG.Services.RpgService.SetAwaitingName(chatId, false);
+                await rpgCommand.Execute(bot, callbackQuery.Message!, ct);
+                return;
+            }
+
+            // rpg_guide — Guía del juego
+            if (data == "rpg_guide")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                var guideText = "📖 **GUÍA DEL JUEGO — Leyenda del Void**\n\n" +
+                    "**🎮 Empezar:**\n" +
+                    "Usa `/rpg` para abrir el menú principal.\n" +
+                    "Crea tu personaje y elige una clase base.\n\n" +
+                    "**⚔️ Clases base:**\n" +
+                    "• Guerrero — Físico, alto HP\n" +
+                    "• Mago — Mágico, alto daño\n" +
+                    "• Pícaro — Velocidad y críticos\n" +
+                    "• Clérigo — Soporte y curación\n\n" +
+                    "**🗺️ Explorar:**\nBusca enemigos, recursos y tesoros en tu zona actual.\n\n" +
+                    "**🏰 Mazmorras:**\nCompleta pisos para obtener llaves y equipamiento raro.\n\n" +
+                    "**🛡️ Gremio:**\nÚnete o crea un gremio para cooperar con otros.\n\n" +
+                    "**⚔️ Arena PvP:**\nDesafía otros jugadores y sube tu rating ELO.\n\n" +
+                    "**💡 Consejo:** Usa la Ciudad para craftear, comprar y aceptar misiones.";
+                await bot.EditMessageText(chatId, messageId, guideText,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_menu_help") }
+                    }), cancellationToken: ct);
+                return;
+            }
+
+            // rpg_commands — Lista de comandos
+            if (data == "rpg_commands")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                var cmdText = "📊 **COMANDOS DISPONIBLES**\n\n" +
+                    "`/rpg` — Menú principal RPG\n" +
+                    "`/map` — Mapa de zonas\n" +
+                    "`/stats` — Estadísticas del personaje\n" +
+                    "`/pets` — Gestionar mascotas\n" +
+                    "`/leaderboard` — Rankings globales\n" +
+                    "`/gremio` — Sistema de Gremio\n" +
+                    "`/arena` — Arena PvP\n" +
+                    "`/chat` — Chat con IA\n" +
+                    "`/start` — Menú principal del bot\n" +
+                    "`/help` — Ayuda rápida";
+                await bot.EditMessageText(chatId, messageId, cmdText,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_menu_help") }
+                    }), cancellationToken: ct);
+                return;
+            }
+
+            // rpg_bug_report — Reportar bug
+            if (data == "rpg_bug_report")
+            {
+                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                await bot.EditMessageText(chatId, messageId,
+                    "🐛 **REPORTAR BUG**\n\n" +
+                    "Para reportar un error, envía un mensaje describiendo:\n\n" +
+                    "1️⃣ ¿Qué acción realizaste?\n" +
+                    "2️⃣ ¿Qué esperabas que ocurriera?\n" +
+                    "3️⃣ ¿Qué ocurrió en realidad?\n\n" +
+                    "Puedes usar el chat `/chat` para describírselo directamente al asistente.",
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                    {
+                        new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💬 Abrir Chat IA", "rpg_ai_chat") },
+                        new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_menu_help") }
+                    }), cancellationToken: ct);
+                return;
+            }
+
             // Default
             await bot.AnswerCallbackQuery(callbackQuery.Id, "🚧 Función en desarrollo", cancellationToken: ct);
         }
@@ -7079,6 +7159,30 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 return;
             }
             
+            // dungeon_advance_{floor} — alias del botón "⏭️ Continuar" entre pisos
+            if (data.StartsWith("dungeon_advance_"))
+            {
+                if (player.CurrentDungeon == null || !player.CurrentDungeon.IsActive)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en una mazmorra.", cancellationToken: ct);
+                    return;
+                }
+
+                bool advanced = dungeonService.AdvanceToNextFloor(player);
+
+                if (advanced)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, $"➡️ Avanzaste al piso {player.CurrentDungeon.CurrentFloor}", cancellationToken: ct);
+                    var dungeonCmd = new DungeonCommand();
+                    await dungeonCmd.Execute(bot, callbackQuery.Message, ct);
+                }
+                else
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes avanzar (piso no completado o es el último).", cancellationToken: ct);
+                }
+                return;
+            }
+
             // dungeon_main o callbacks de navegación
             if (data == "dungeon_main" || data == "dungeon_keys" || data == "dungeon_rankings")
             {
