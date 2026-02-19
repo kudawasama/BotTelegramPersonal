@@ -4,7 +4,7 @@
 
 ---
 
-## 📊 Estado actual (v3.2.1 — Feb 2025)
+## 📊 Estado actual (v3.2.2 — Feb 2025)
 
 ✅ **Completado (Bot base):**
 - Bot de Telegram con comandos básicos
@@ -28,10 +28,12 @@
 - 📚 **v3.1.10**: Documentación sistema de clases (51 clases) + migración automática de personajes
 - 🏛️ **v3.2.0**: Sistema de Facciones base — 10 facciones, 7 tiers reputación, `/facciones`
 - 👥 **v3.2.1**: NPCs + Diálogos — 12 NPCs, conversaciones interactivas, integración con `/explore`
+- ⭐ **v3.2.2**: Quests vinculadas + Zonas desbloqueables — 9 quests con facciones, 3 zonas especiales con requisitos de rep
 
 🔜 **Siguiente (RPG):**
-- Fase 12.3: Quests de facciones + zonas especiales desbloqueables
 - Fase 13: Eventos Temporales
+- Fase 14: Generación de Imágenes (opcional)
+- Fase 16: IA Narrativa (Dungeon Master)
 
 ---
 
