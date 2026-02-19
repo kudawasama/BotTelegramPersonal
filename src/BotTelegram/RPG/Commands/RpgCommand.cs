@@ -275,39 +275,26 @@ Solo los más valientes pueden enfrentar este destino...
         {
             return new InlineKeyboardMarkup(new[]
             {
-                // Fila 1: Ataques primarios
+                // Fila 1: Ataques básicos
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("⚔️ Atacar",   "rpg_combat_attack"),
-                    InlineKeyboardButton.WithCallbackData("🗒️ Tacticas", "rpg_combat_tactics"),
-                    InlineKeyboardButton.WithCallbackData("🔮 Magia",     "rpg_combat_magic")
+                    InlineKeyboardButton.WithCallbackData("🔮 Magia",     "rpg_combat_magic"),
+                    InlineKeyboardButton.WithCallbackData("✨ Skills",    "rpg_combat_skills")
                 },
-                // Fila 2: Ataques tácticos
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("🎯 Preciso",   "rpg_combat_precise"),
-                    InlineKeyboardButton.WithCallbackData("🔨 Pesado",    "rpg_combat_heavy"),
-                    InlineKeyboardButton.WithCallbackData("⚡ Rápido",    "rpg_combat_physical")
-                },
-                // Fila 3: Defensas
+                // Fila 2: Defensas
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("🛡️ Bloquear",  "rpg_combat_block"),
                     InlineKeyboardButton.WithCallbackData("💨 Esquivar",  "rpg_combat_dodge"),
-                    InlineKeyboardButton.WithCallbackData("✨ Skills",    "rpg_combat_skills")
+                    InlineKeyboardButton.WithCallbackData("🗒️ Tácticas", "rpg_combat_tactics")
                 },
-                // Fila 4: Soporte
+                // Fila 3: Soporte y huida
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("🧪 Ítems",    "rpg_combat_item"),
-                    InlineKeyboardButton.WithCallbackData("🐾 Mascotas", "rpg_combat_pets"),
-                    InlineKeyboardButton.WithCallbackData("👁️ Observar", "rpg_combat_observe")
-                },
-                // Fila 5: Utilidades
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("💬 Consulta IA", "rpg_combat_ai"),
-                    InlineKeyboardButton.WithCallbackData("🏃 Huir",         "rpg_combat_flee")
+                    InlineKeyboardButton.WithCallbackData("🧪 Ítems",      "rpg_combat_item"),
+                    InlineKeyboardButton.WithCallbackData("🐾 Mascotas",  "rpg_combat_pets"),
+                    InlineKeyboardButton.WithCallbackData("🏃 Huir",       "rpg_combat_flee")
                 }
             });
         }

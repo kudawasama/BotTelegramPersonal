@@ -3655,19 +3655,13 @@ Bienvenido a {player.CurrentLocation}
                         new[]
                         {
                             Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔨 Pesado", "rpg_combat_heavy"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🌀 Mágico", "rpg_combat_magic")
-                        },
-                        new[]
-                        {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🛡️ Bloquear", "rpg_combat_block"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💨 Esquivar", "rpg_combat_dodge"),
                             Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔄 Contra", "rpg_combat_counter")
                         },
                         new[]
                         {
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("👁️ Observar", "rpg_combat_observe"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧘 Meditar", "rpg_combat_meditate"),
-                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⏸️ Esperar", "rpg_combat_wait")
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧪 Meditar", "rpg_combat_meditate"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⏸️ Esperar", "rpg_combat_wait"),
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("👁️ Observar", "rpg_combat_observe")
                         },
                         new[]
                         {
