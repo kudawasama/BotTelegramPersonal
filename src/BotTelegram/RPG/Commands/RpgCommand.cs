@@ -292,7 +292,7 @@ Solo los más valientes pueden enfrentar este destino...
                 // Fila 3: Soporte y huida
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("🧪 Ítems",      "rpg_combat_item"),
+                    InlineKeyboardButton.WithCallbackData("🧪 Ítems",      "combat_use_item"),
                     InlineKeyboardButton.WithCallbackData("🐾 Mascotas",  "rpg_combat_pets"),
                     InlineKeyboardButton.WithCallbackData("🏃 Huir",       "rpg_combat_flee")
                 }

@@ -5067,63 +5067,6 @@ Bienvenido a {player.CurrentLocation}
                 return;
             }
             
-            // Combat - Use Item
-            if (data == "rpg_combat_item")
-            {
-                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
-                {
-                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
-                    return;
-                }
-                
-                // Verificar si tiene ítems usables
-                var usableItems = currentPlayer.Inventory.Where(i => 
-                    i.Name.Contains("Poción") || i.Name.Contains("Potion") || 
-                    i.Name.Contains("Elixir") || i.Name.Contains("Tónico")).ToList();
-                
-                if (usableItems.Count == 0)
-                {
-                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes ítems usables (Pociones, Elixirs)", showAlert: true, cancellationToken: ct);
-                    return;
-                }
-                
-                // Agrupar ítems por nombre para mostrar cantidad
-                var itemGroups = usableItems.GroupBy(i => i.Name)
-                    .Select(g => new { Name = g.Key, Count = g.Count(), Item = g.First() })
-                    .Take(6)
-                    .ToList();
-                
-                // Mostrar lista de ítems
-                var text = "🧪 **USAR ÍTEM EN COMBATE**\n\n";
-                text += $"💚 **Tu HP:** {currentPlayer.HP}/{currentPlayer.MaxHP}\n";
-                text += $"💙 **Tu Mana:** {currentPlayer.Mana}/{currentPlayer.MaxMana}\n\n";
-                text += "Selecciona un ítem para usar:\n\n";
-                
-                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
-                
-                foreach (var itemGroup in itemGroups)
-                {
-                    rows.Add(new[]
-                    {
-                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData(
-                            $"🧪 {itemGroup.Name} ({itemGroup.Count}x)",
-                            $"rpg_use_item:{itemGroup.Name}"
-                        )
-                    });
-                }
-                
-                rows.Add(new[]
-                {
-                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_combat_back")
-                });
-                
-                await bot.EditMessageText(chatId, messageId, text,
-                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
-                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows),
-                    cancellationToken: ct);
-                return;
-            }
-            
             // Combat - AI Consultation
             if (data == "rpg_combat_ai")
             {
