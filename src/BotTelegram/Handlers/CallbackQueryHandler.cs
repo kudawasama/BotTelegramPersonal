@@ -1911,6 +1911,13 @@ Bienvenido a {player.CurrentLocation}
             // ═══════════════════════════════════════════════════════════════
             if (data == "craft_menu")
             {
+                // VALIDAR ESTADO: Solo permitido en Idle
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes craftear durante el combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+                
                 await bot.AnswerCallbackQuery(callbackQuery.Id, "⚒️ Herrería", cancellationToken: ct);
                 await BotTelegram.RPG.Commands.CraftingCommand.ShowCraftMenu(bot, chatId, currentPlayer, ct, messageId);
                 return;
@@ -1936,6 +1943,13 @@ Bienvenido a {player.CurrentLocation}
             // ═══════════════════════════════════════════════════════════════
             if (data == "quest_menu")
             {
+                // VALIDAR ESTADO: Solo permitido en Idle
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes ver misiones durante el combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+                
                 try
                 {
                     await bot.AnswerCallbackQuery(callbackQuery.Id, "🏛️ Misiones", cancellationToken: ct);
@@ -5025,6 +5039,13 @@ Responde en español en máximo 2-3 líneas con una estrategia concreta (¿ataca
             // Rest
             if (data == "rpg_rest")
             {
+                // VALIDAR ESTADO: Solo permitido en Idle
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes descansar durante el combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+                
                 // Responder al callback INMEDIATAMENTE
                 await bot.AnswerCallbackQuery(callbackQuery.Id, "😴 Descansando...", cancellationToken: ct);
                 
@@ -5134,6 +5155,13 @@ Responde en español en máximo 2-3 líneas con una estrategia concreta (¿ataca
             // Work
             if (data == "rpg_work")
             {
+                // VALIDAR ESTADO: Solo permitido en Idle
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes trabajar durante el combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+                
                 if (!rpgService.CanPerformAction(currentPlayer, 10))
                 {
                     await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes suficiente energía (necesitas 10)", cancellationToken: ct);

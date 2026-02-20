@@ -76,12 +76,23 @@ namespace BotTelegram.RPG.Services
         {
             [GameState.Idle] = new()
             {
+                // MENÚ PRINCIPAL Y ESTADÍSTICAS
                 "rpg_main", "rpg_menu_", "rpg_stats", "rpg_inventory", "rpg_skills",
-                "rpg_explore", "rpg_map", "rpg_travel_", "rpg_dungeon", "rpg_rest",
-                "rpg_work", "rpg_pets", "rpg_counters", "rpg_passives", "rpg_combo",
+                // MUNDO: Exploración y viajes
+                "rpg_explore", "rpg_map", "rpg_travel_", "rpg_dungeon", 
+                // MUNDO: Acciones cotidianas
+                "rpg_rest", "rpg_work", 
+                // MUNDO: Personaje y sistemas
+                "rpg_pets", "rpg_counters", "rpg_passives", "rpg_combo",
+                // MUNDO: Lore y tutoriales
                 "rpg_adventure", "rpg_lore", "rpg_tutorial", "rpg_hidden",
+                // SISTEMAS PRINCIPALES
                 "classes_menu", "class_", "dungeon_main", "dungeon_keys",
-                "leaderboard_", "pets_", "start"
+                "leaderboard_", "pets_", 
+                // SISTEMAS DE RECURSOS
+                "shop_", "craft_", "quest_", "inv_", "train_",
+                // OTROS
+                "start"
             },
             [GameState.InCombat] = new()
             {
