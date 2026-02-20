@@ -1935,21 +1935,42 @@ Bienvenido a {player.CurrentLocation}
             // ═══════════════════════════════════════════════════════════════
             if (data == "quest_menu")
             {
-                await bot.AnswerCallbackQuery(callbackQuery.Id, "🏛️ Misiones", cancellationToken: ct);
+                try
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "🏛️ Misiones", cancellationToken: ct);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[CallbackQueryHandler] ⚠️ No se pudo responder callback: {ex.Message}");
+                }
                 await BotTelegram.RPG.Commands.QuestCommand.ShowQuestMenu(bot, chatId, currentPlayer, ct, messageId);
                 return;
             }
             if (data.StartsWith("quest_view:"))
             {
                 var questId = data["quest_view:".Length..];
-                await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                try
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[CallbackQueryHandler] ⚠️ No se pudo responder callback: {ex.Message}");
+                }
                 await BotTelegram.RPG.Commands.QuestCommand.ShowQuestDetail(bot, chatId, currentPlayer, questId, ct, messageId);
                 return;
             }
             if (data.StartsWith("quest_accept:"))
             {
                 var questId = data["quest_accept:".Length..];
-                await bot.AnswerCallbackQuery(callbackQuery.Id, "✅ Aceptando misión...", cancellationToken: ct);
+                try
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "✅ Aceptando misión...", cancellationToken: ct);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[CallbackQueryHandler] ⚠️ No se pudo responder callback: {ex.Message}");
+                }
                 await BotTelegram.RPG.Commands.QuestCommand.AcceptQuest(bot, chatId, currentPlayer, questId, ct, messageId);
                 return;
             }
