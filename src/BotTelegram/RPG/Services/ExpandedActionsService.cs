@@ -352,6 +352,7 @@ namespace BotTelegram.RPG.Services
             };
 
             _trackerService.TrackAction(player, "deep_meditation");
+            _trackerService.TrackAction(player, "meditation");
             return result;
         }
 

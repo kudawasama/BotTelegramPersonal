@@ -1843,6 +1843,10 @@ namespace BotTelegram.RPG.Services
         // Notificaciones de misiones (Fase 9)
         public List<string> QuestNotifications { get; set; } = new();
         
+        // Maestría de clase
+        public int MasteryXPGained { get; set; }
+        public string? MasteryLevelUpMessage { get; set; }
+        
         // Sistema de items en combate (Fase 12.5)
         public string? ItemUsed { get; set; } // Nombre del item usado
         public int ItemHPRestored { get; set; } // HP restaurados por item

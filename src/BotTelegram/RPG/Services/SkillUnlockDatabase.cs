@@ -24,7 +24,8 @@ namespace BotTelegram.RPG.Services
                 RequiredActions = new Dictionary<string, int>
                 {
                     { "physical_attack", 100 },
-                    { "critical_hit", 50 }
+                    { "critical_hit", 50 },
+                    { "train_body", 30 }
                 }
             },
             new ComboSkillRequirement
@@ -83,7 +84,8 @@ namespace BotTelegram.RPG.Services
                 RequiredActions = new Dictionary<string, int>
                 {
                     { "magic_attack", 150 },
-                    { "mana_spent", 3000 }
+                    { "mana_spent", 3000 },
+                    { "train_mind", 40 }
                 }
             },
             new ComboSkillRequirement
@@ -92,7 +94,8 @@ namespace BotTelegram.RPG.Services
                 RequiredActions = new Dictionary<string, int>
                 {
                     { "magic_attack", 200 },
-                    { "mana_regen", 3000 }
+                    { "mana_regen", 3000 },
+                    { "deep_meditation", 60 }
                 }
             },
             new ComboSkillRequirement
@@ -172,7 +175,8 @@ namespace BotTelegram.RPG.Services
                 RequiredActions = new Dictionary<string, int>
                 {
                     { "critical_hit", 200 },
-                    { "dodge_success", 150 }
+                    { "dodge_success", 150 },
+                    { "adventure_stealth", 80 }
                 }
             },
             new ComboSkillRequirement
@@ -181,7 +185,8 @@ namespace BotTelegram.RPG.Services
                 RequiredActions = new Dictionary<string, int>
                 {
                     { "dodge_success", 200 },
-                    { "physical_attack", 200 }
+                    { "physical_attack", 200 },
+                    { "adventure_stealth", 120 }
                 }
             },
             new ComboSkillRequirement
@@ -221,7 +226,8 @@ namespace BotTelegram.RPG.Services
                 RequiredActions = new Dictionary<string, int>
                 {
                     { "heal_cast", 300 },
-                    { "meditation", 150 }
+                    { "meditation", 150 },
+                    { "adventure_social", 120 }
                 }
             },
             new ComboSkillRequirement
@@ -311,7 +317,9 @@ namespace BotTelegram.RPG.Services
                 {
                     { "meditation", 200 },
                     { "physical_attack", 200 },
-                    { "magic_attack", 200 }
+                    { "magic_attack", 200 },
+                    { "deep_meditation", 80 },
+                    { "study", 60 }
                 }
             },
             new ComboSkillRequirement
@@ -320,7 +328,9 @@ namespace BotTelegram.RPG.Services
                 RequiredActions = new Dictionary<string, int>
                 {
                     { "dodge_success", 300 },
-                    { "magic_attack", 250 }
+                    { "magic_attack", 250 },
+                    { "investigate", 120 },
+                    { "trade", 80 }
                 }
             }
         };

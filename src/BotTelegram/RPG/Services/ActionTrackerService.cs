@@ -229,7 +229,23 @@ namespace BotTelegram.RPG.Services
                 ("level_up", "fast_learner", 10),
                 
                 // Bloodlust - Desbloquea después de ganar 20 combates con <30% HP
-                ("low_hp_victory", "bloodlust", 20)
+                ("low_hp_victory", "bloodlust", 20),
+
+                // Shadow Step - progreso por aventuras furtivas (nuevo sistema)
+                ("adventure_stealth", "shadow_step", 120),
+
+                // Mana Font - progreso por meditación profunda
+                ("deep_meditation", "mana_font", 120),
+
+                // Arcane Power - progreso por entrenamiento mental
+                ("train_mind", "arcane_power", 150),
+
+                // Berserker Rage - progreso por entrenamiento físico
+                ("train_body", "berserker_rage", 150),
+
+                // Fast Learner - progreso por estudio/investigación
+                ("study", "fast_learner", 150),
+                ("investigate", "fast_learner", 120)
             };
             
             foreach (var (actionId, passiveId, requiredCount) in passiveUnlocks)

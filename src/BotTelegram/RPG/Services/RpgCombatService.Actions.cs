@@ -1106,6 +1106,24 @@ namespace BotTelegram.RPG.Services
                 player.ActionCounters["boss_kill"]++;
             }
             
+            // ═══ MAESTRÍA DE CLASE: XP por victoria ═══
+            var masteryXP = ClassMasteryService.CalculateCombatMasteryXP(enemy.Level, enemy.Difficulty);
+            var masteryResult = ClassMasteryService.GrantMasteryXP(player, masteryXP);
+            if (masteryResult.XPGained > 0)
+            {
+                result.MasteryXPGained = masteryResult.XPGained;
+                if (masteryResult.LeveledUp)
+                {
+                    var def = ClassUnlockDatabase.GetAllClassDefinitions()
+                        .FirstOrDefault(d => d.ClassId == masteryResult.ClassId);
+                    var className = def?.Name ?? masteryResult.ClassId;
+                    var classEmoji = def?.Emoji ?? "🎭";
+                    var bonusDesc = ClassMasteryService.GetBonusDescription(masteryResult.ClassId);
+                    result.MasteryLevelUpMessage = $"🏅 ¡Maestría {classEmoji} {className} Nv.{masteryResult.CurrentLevel}! Bono/nivel: {bonusDesc}";
+                    AddCombatLog(player, "Maestría", result.MasteryLevelUpMessage);
+                }
+            }
+            
             // ═══ FASE 3.5: XP para Mascotas ═══
             if (player.ActivePets != null && player.ActivePets.Any())
             {

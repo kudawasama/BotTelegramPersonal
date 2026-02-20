@@ -133,6 +133,19 @@ namespace BotTelegram.RPG.Models
         public int ClassBonusCha { get; set; } = 0;
         
         // ═══════════════════════════════════════
+        // CLASS MASTERY SYSTEM (Maestría de Clase)
+        // ═══════════════════════════════════════
+        /// <summary>XP de maestría acumulada por clase (classId → XP)</summary>
+        public Dictionary<string, int> ClassMasteryXP { get; set; } = new();
+        /// <summary>Bonos permanentes acumulados de TODAS las maestrías</summary>
+        public int MasteryBonusStr { get; set; } = 0;
+        public int MasteryBonusInt { get; set; } = 0;
+        public int MasteryBonusDex { get; set; } = 0;
+        public int MasteryBonusCon { get; set; } = 0;
+        public int MasteryBonusWis { get; set; } = 0;
+        public int MasteryBonusCha { get; set; } = 0;
+        
+        // ═══════════════════════════════════════
         // QUESTS / MISIONES (FASE 9)
         // ═══════════════════════════════════════
         /// <summary>Misiones activas del jugador</summary>
@@ -230,7 +243,7 @@ namespace BotTelegram.RPG.Models
         /// STR Activo = Base + Equipment + Class Bonus
         /// </summary>
         [JsonIgnore]
-        public int ActiveStrength => Strength + ClassBonusStr +
+        public int ActiveStrength => Strength + ClassBonusStr + MasteryBonusStr +
             (EquippedWeaponNew?.BonusStrength ?? 0) + 
             (EquippedArmorNew?.BonusStrength ?? 0) + 
             (EquippedAccessoryNew?.BonusStrength ?? 0);
@@ -239,7 +252,7 @@ namespace BotTelegram.RPG.Models
         /// INT Activo = Base + Equipment + Class Bonus
         /// </summary>
         [JsonIgnore]
-        public int ActiveIntelligence => Intelligence + ClassBonusInt +
+        public int ActiveIntelligence => Intelligence + ClassBonusInt + MasteryBonusInt +
             (EquippedWeaponNew?.BonusIntelligence ?? 0) + 
             (EquippedArmorNew?.BonusIntelligence ?? 0) + 
             (EquippedAccessoryNew?.BonusIntelligence ?? 0);
@@ -248,7 +261,7 @@ namespace BotTelegram.RPG.Models
         /// DEX Activo = Base + Equipment + Class Bonus
         /// </summary>
         [JsonIgnore]
-        public int ActiveDexterity => Dexterity + ClassBonusDex +
+        public int ActiveDexterity => Dexterity + ClassBonusDex + MasteryBonusDex +
             (EquippedWeaponNew?.BonusDexterity ?? 0) + 
             (EquippedArmorNew?.BonusDexterity ?? 0) + 
             (EquippedAccessoryNew?.BonusDexterity ?? 0);
@@ -257,7 +270,7 @@ namespace BotTelegram.RPG.Models
         /// CON Activo = Base + Equipment + Class Bonus
         /// </summary>
         [JsonIgnore]
-        public int ActiveConstitution => Constitution + ClassBonusCon +
+        public int ActiveConstitution => Constitution + ClassBonusCon + MasteryBonusCon +
             (EquippedWeaponNew?.BonusConstitution ?? 0) + 
             (EquippedArmorNew?.BonusConstitution ?? 0) + 
             (EquippedAccessoryNew?.BonusConstitution ?? 0);
@@ -266,7 +279,7 @@ namespace BotTelegram.RPG.Models
         /// WIS Activo = Base + Equipment + Class Bonus
         /// </summary>
         [JsonIgnore]
-        public int ActiveWisdom => Wisdom + ClassBonusWis +
+        public int ActiveWisdom => Wisdom + ClassBonusWis + MasteryBonusWis +
             (EquippedWeaponNew?.BonusWisdom ?? 0) + 
             (EquippedArmorNew?.BonusWisdom ?? 0) + 
             (EquippedAccessoryNew?.BonusWisdom ?? 0);
@@ -275,7 +288,7 @@ namespace BotTelegram.RPG.Models
         /// CHA Activo = Base + Equipment + Class Bonus
         /// </summary>
         [JsonIgnore]
-        public int ActiveCharisma => Charisma + ClassBonusCha +
+        public int ActiveCharisma => Charisma + ClassBonusCha + MasteryBonusCha +
             (EquippedWeaponNew?.BonusCharisma ?? 0) + 
             (EquippedArmorNew?.BonusCharisma ?? 0) + 
             (EquippedAccessoryNew?.BonusCharisma ?? 0);

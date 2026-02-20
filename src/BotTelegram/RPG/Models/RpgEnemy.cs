@@ -142,9 +142,12 @@ namespace BotTelegram.RPG.Models
     
     public enum EnemyDifficulty
     {
-        Easy,
-        Medium,
-        Hard,
+        Easy,       // Legacy: facil
+        Medium,     // Legacy: medio
+        Hard,       // Legacy: dificil
+        Common,     // Nuevo: comun
+        Uncommon,   // Nuevo: poco comun
+        Rare,       // Nuevo: raro
         Elite,
         Boss,
         WorldBoss
