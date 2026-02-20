@@ -4,38 +4,42 @@
 
 ---
 
-## 📊 Estado actual (v3.2.4 — Feb 2025)
+## 📊 Estado actual (v3.2.6 — Feb 2026)
 
 ✅ **Completado (Bot base):**
 - Bot de Telegram con comandos básicos
 - Sistema de recordatorios con parsing natural
 - Persistencia en JSON
 - API REST completa
-- Deploy en Replit 24/7
+- Deploy en Fly.io 24/7
 - Recordatorios recurrentes
 - ⭐ **Botones inline interactivos** (InlineKeyboardMarkup)
 - ⭐ **FAQ/Manual completo** integrado en el bot
 
-✅ **Completado (RPG — 11 fases + extra):**
+✅ **Completado (RPG — 12 fases + extras):**
 - ⭐ **Fases 0-7**: Combate táctico, mapas, mazmorras, mascotas, clases, UI/UX, FSM, inventario
 - ⭐ **Fase 7.5**: Bonos de clase activa + Tienda completa (consumibles, equipos, vender)
 - ⭐ **Fase 8**: Sistema de Crafteo — 9 recetas Tier 1-3, `/herreria`
 - ⭐ **Fase 9**: Sistema de Misiones/Quests — 8 misiones Kill/Collect/Craft/Explore, `/misiones`
 - ⭐ **Fase 10**: Sistema de Gremio — crear/unirse, banco gremio, oficiales, ranking, `/gremio`
 - ⭐ **Fase 11**: Arena PvP — combate simulado, ELO rating, tiers, retos, apuestas, `/arena`
-- 🔧 **v3.1.5-3.1.8**: Patches UX — emojis, menús duplicados, rpg_explore, log de combate enriquecido
-- 🔧 **v3.1.9**: Fix Fase 4 — creación como Adventurer, clases se desbloquean jugando
-- 📚 **v3.1.10**: Documentación sistema de clases (51 clases) + migración automática de personajes
-- 🏛️ **v3.2.0**: Sistema de Facciones base — 10 facciones, 7 tiers reputación, `/facciones`
-- 👥 **v3.2.1**: NPCs + Diálogos — 12 NPCs, conversaciones interactivas, integración con `/explore`
-- ⭐ **v3.2.2**: Quests vinculadas + Zonas desbloqueables — 9 quests con facciones, 3 zonas especiales con requisitos de rep
-- 🎯 **v3.2.3**: Comercio NPC + Entrenamiento — OpenShop para NPCs vendedores, `/entrenar` para mejorar atributos
-- 🔧 **v3.2.4**: Consolidación de callbacks (Items en combate) — Eliminar duplicados, sistema único combat_use_item
+- ⭐ **Fase 12**: Mundo Abierto Expandido — 100% COMPLETADA
+  - v3.2.0: Sistema de Facciones (10 facciones, 7 tiers reputación)
+  - v3.2.1: NPCs + Diálogos (12 NPCs interactivos)
+  - v3.2.2: Quests vinculadas + Zonas desbloqueables
+  - v3.2.3: Comercio NPC + Entrenamiento de atributos
+  - v3.2.4: Consolidación de callbacks (Items en combate)
+  - v3.2.5: Sistema de mascotas (liberar/vender)
+  - v3.2.6: **Acciones expandidas** (12 nuevas acciones: pesca, meditación, investigación, entrenamientos mentales/físicos, estudio, comercio, diplomacia, taberna, aventuras riesgosas/sigilosas/sociales)
+- 🔧 Patches y mejoras continuas (v3.1.5-3.2.6)
 
 🔜 **Siguiente (RPG):**
 - Fase 13: Eventos Temporales
 - Fase 14: Generación de Imágenes (opcional)
+- Fase 15: Telegram Mini App
 - Fase 16: IA Narrativa (Dungeon Master)
+- Fase 17: Más clases desbloqueables
+- Fase 18: Sistema de Profesiones
 
 ---
 
@@ -202,10 +206,12 @@
 
 ```
 Feb 2026  → RPG Fase 10-11 (Guild + PvP Arena)          ✅ COMPLETADO
-Mar 2026  → RPG Fase 12-13 (Mundo Abierto + Eventos)
+Feb 2026  → RPG Fase 12 (Mundo Abierto Expandido)       ✅ COMPLETADO
+Mar 2026  → RPG Fase 13 (Eventos Temporales)
 Abr 2026  → Base bot: SQLite + Tests + Dashboard web
 May 2026  → Features IA: transcripción audio + búsqueda web
 Jun 2026  → RPG Fase 14-16 (Imágenes + Mini App + IA Narrativa)
+Jul 2026  → RPG Fase 17-18 (Clases + Profesiones)
 ```
 
 ---
@@ -255,4 +261,4 @@ Se buscan colaboradores en:
 
 ---
 
-**Última actualización:** 19 de febrero de 2026 — Patches UX v3.1.5-v3.1.8 (menús, combate, log enriquecido)
+**Última actualización:** 20 de febrero de 2026 — v3.2.6 FASE 12 COMPLETADA (Acciones expandidas + Fix StateManager)

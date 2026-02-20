@@ -1,7 +1,7 @@
 # 🎮 HOJA DE RUTA - EXPANSIÓN DEL SISTEMA RPG
 
-**Última actualización:** 20 de febrero de 2025  
-**Versión:** 6.7 - Fase 12.6 v3.2.4 (Consolidación de callbacks - Items en combate)
+**Última actualización:** 20 de febrero de 2026  
+**Versión:** 6.8 - Fase 12.7 v3.2.6 (Acciones expandidas completadas + Fix StateManager)
 
 ## 📊 PROGRESO GENERAL
 ```
@@ -19,7 +19,7 @@
 ✅ Fase 9: Sistema de Misiones/Quests    [██████████] 100% ← COMPLETADA (commit 59a8fa4)
 ✅ Fase 10: Sistema de Gremio (Guild)    [██████████] 100% ← COMPLETADA (commit 08a8ed7)
 ✅ Fase 11: PvP Arena                    [██████████] 100% ← COMPLETADA (commit 2322a12)
-✅ Fase 12: Mundo Abierto Expandido      [██████████] 100% (commit cf65ebb) ← COMPLETADA
+✅ Fase 12: Mundo Abierto Expandido      [██████████] 100% (v3.2.6 commit 3ae4df2) ← COMPLETADA
 ⏸️ Fase 13: Eventos Temporales           [░░░░░░░░░░]   0%
 ⏸️ Fase 14: Generación de Imágenes       [░░░░░░░░░░]   0%
 ⏸️ Fase 15: Telegram Mini App            [░░░░░░░░░░]   0%
