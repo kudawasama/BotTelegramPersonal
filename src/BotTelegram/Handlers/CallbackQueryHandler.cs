@@ -4264,12 +4264,7 @@ Bienvenido a {player.CurrentLocation}
                 
                 if (success && pet != null)
                 {
-                    // Agregar mascota al inventario
-                    if (currentPlayer.PetInventory == null)
-                    {
-                        currentPlayer.PetInventory = new List<BotTelegram.RPG.Models.RpgPet>();
-                    }
-                    currentPlayer.PetInventory.Add(pet);
+                    // La mascota ya fue agregada en PetTamingService.AttemptTame()
                     
                     // Salir del combate
                     currentPlayer.IsInCombat = false;
@@ -6656,6 +6651,272 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                     text,
                     parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
                     replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // pets_release_menu - Menú para liberar mascotas
+            if (data == "pets_release_menu")
+            {
+                var text = "🔓 **LIBERAR MASCOTAS**\n\n";
+                text += "Deja libre a una mascota para que regrese a la naturaleza.\n";
+                text += "⚠️ Se perderá para siempre, sin recompensa.\n\n";
+                
+                if (player.PetInventory == null || player.PetInventory.Count == 0)
+                {
+                    text += "❌ No tienes mascotas para liberar.";
+                }
+                else
+                {
+                    text += "Selecciona una mascota para liberar:\n\n";
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var emoji = GetPetEmoji(pet.Species);
+                        text += $"{emoji} {pet.Name} (Lv.{pet.Level}, {pet.RarityEmoji} {pet.Rarity})\n";
+                    }
+                }
+                
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                if (player.PetInventory != null)
+                {
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        rows.Add(new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🔓 Liberar {pet.Name}", $"pets_release_{pet.Id}")
+                        });
+                    }
+                }
+                
+                rows.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "pets_main")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // pets_release_{id} - Liberar mascota específica
+            if (data.StartsWith("pets_release_"))
+            {
+                var petId = data.Replace("pets_release_", "");
+                var message = petTamingService.ReleasePet(player, petId);
+                
+                rpgService.SavePlayer(player);
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, message, showAlert: true, cancellationToken: ct);
+                
+                // Reconstruir menú de liberación con datos actualizados
+                var text = "🔓 **LIBERAR MASCOTAS**\n\n";
+                text += "Deja libre a una mascota para que regrese a la naturaleza.\n";
+                text += "⚠️ Se perderá para siempre, sin recompensa.\n\n";
+                
+                if (player.PetInventory == null || player.PetInventory.Count == 0)
+                {
+                    text += "❌ No tienes mascotas para liberar.";
+                }
+                else
+                {
+                    text += "Selecciona una mascota para liberar:\n\n";
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var emoji = GetPetEmoji(pet.Species);
+                        text += $"{emoji} {pet.Name} (Lv.{pet.Level}, {pet.RarityEmoji} {pet.Rarity})\n";
+                    }
+                }
+                
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                if (player.PetInventory != null)
+                {
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        rows.Add(new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"🔓 Liberar {pet.Name}", $"pets_release_{pet.Id}")
+                        });
+                    }
+                }
+                
+                rows.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "pets_main")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // pets_sell_menu - Menú para vender mascotas
+            if (data == "pets_sell_menu")
+            {
+                var text = "💰 **VENDER MASCOTAS**\n\n";
+                text += "Vende una mascota por oro basado en su nivel y raridad.\n";
+                text += "💡 **Fórmula:** Nivel × 50 × Multiplicador Rareza\n\n";
+                text += "**Multiplicadores por rareza:**\n";
+                text += "🟤 Common: ×1 | 🟢 Uncommon: ×2 | 🔵 Rare: ×4\n";
+                text += "🟣 Epic: ×8 | 🟡 Legend: ×16 | ⭐ Mythic: ×32\n\n";
+                
+                if (player.PetInventory == null || player.PetInventory.Count == 0)
+                {
+                    text += "❌ No tienes mascotas para vender.";
+                }
+                else
+                {
+                    text += "Selecciona una mascota para vender:\n\n";
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var emoji = GetPetEmoji(pet.Species);
+                        var baseValue = pet.Level * 50;
+                        var rarityMultiplier = pet.Rarity switch
+                        {
+                            BotTelegram.RPG.Models.PetRarity.Common => 1,
+                            BotTelegram.RPG.Models.PetRarity.Uncommon => 2,
+                            BotTelegram.RPG.Models.PetRarity.Rare => 4,
+                            BotTelegram.RPG.Models.PetRarity.Epic => 8,
+                            BotTelegram.RPG.Models.PetRarity.Legendary => 16,
+                            BotTelegram.RPG.Models.PetRarity.Mythical => 32,
+                            _ => 1
+                        };
+                        var goldValue = baseValue * rarityMultiplier;
+                        text += $"{emoji} {pet.Name} (Lv.{pet.Level}, {pet.RarityEmoji}) → 🪙 {goldValue} Gold\n";
+                    }
+                }
+                
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                if (player.PetInventory != null)
+                {
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var baseValue = pet.Level * 50;
+                        var rarityMultiplier = pet.Rarity switch
+                        {
+                            BotTelegram.RPG.Models.PetRarity.Common => 1,
+                            BotTelegram.RPG.Models.PetRarity.Uncommon => 2,
+                            BotTelegram.RPG.Models.PetRarity.Rare => 4,
+                            BotTelegram.RPG.Models.PetRarity.Epic => 8,
+                            BotTelegram.RPG.Models.PetRarity.Legendary => 16,
+                            BotTelegram.RPG.Models.PetRarity.Mythical => 32,
+                            _ => 1
+                        };
+                        var goldValue = baseValue * rarityMultiplier;
+                        rows.Add(new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"💰 Vender {pet.Name} ({goldValue}G)", $"pets_sell_{pet.Id}")
+                        });
+                    }
+                }
+                
+                rows.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "pets_main")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // pets_sell_{id} - Vender mascota específica
+            if (data.StartsWith("pets_sell_"))
+            {
+                var petId = data.Replace("pets_sell_", "");
+                var message = petTamingService.SellPet(player, petId);
+                
+                rpgService.SavePlayer(player);
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, message, showAlert: true, cancellationToken: ct);
+                
+                // Reconstruir menú de venta con datos actualizados
+                var text = "💰 **VENDER MASCOTAS**\n\n";
+                text += "Vende una mascota por oro basado en su nivel y raridad.\n";
+                text += "💡 **Fórmula:** Nivel × 50 × Multiplicador Rareza\n\n";
+                text += "**Multiplicadores por rareza:**\n";
+                text += "🟤 Common: ×1 | 🟢 Uncommon: ×2 | 🔵 Rare: ×4\n";
+                text += "🟣 Epic: ×8 | 🟡 Legend: ×16 | ⭐ Mythic: ×32\n\n";
+                
+                if (player.PetInventory == null || player.PetInventory.Count == 0)
+                {
+                    text += "❌ No tienes mascotas para vender.";
+                }
+                else
+                {
+                    text += "Selecciona una mascota para vender:\n\n";
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var emoji = GetPetEmoji(pet.Species);
+                        var baseValue = pet.Level * 50;
+                        var rarityMultiplier = pet.Rarity switch
+                        {
+                            BotTelegram.RPG.Models.PetRarity.Common => 1,
+                            BotTelegram.RPG.Models.PetRarity.Uncommon => 2,
+                            BotTelegram.RPG.Models.PetRarity.Rare => 4,
+                            BotTelegram.RPG.Models.PetRarity.Epic => 8,
+                            BotTelegram.RPG.Models.PetRarity.Legendary => 16,
+                            BotTelegram.RPG.Models.PetRarity.Mythical => 32,
+                            _ => 1
+                        };
+                        var goldValue = baseValue * rarityMultiplier;
+                        text += $"{emoji} {pet.Name} (Lv.{pet.Level}, {pet.RarityEmoji}) → 🪙 {goldValue} Gold\n";
+                    }
+                }
+                
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                
+                if (player.PetInventory != null)
+                {
+                    foreach (var pet in player.PetInventory.Take(8))
+                    {
+                        var baseValue = pet.Level * 50;
+                        var rarityMultiplier = pet.Rarity switch
+                        {
+                            BotTelegram.RPG.Models.PetRarity.Common => 1,
+                            BotTelegram.RPG.Models.PetRarity.Uncommon => 2,
+                            BotTelegram.RPG.Models.PetRarity.Rare => 4,
+                            BotTelegram.RPG.Models.PetRarity.Epic => 8,
+                            BotTelegram.RPG.Models.PetRarity.Legendary => 16,
+                            BotTelegram.RPG.Models.PetRarity.Mythical => 32,
+                            _ => 1
+                        };
+                        var goldValue = baseValue * rarityMultiplier;
+                        rows.Add(new[]
+                        {
+                            Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData($"💰 Vender {pet.Name} ({goldValue}G)", $"pets_sell_{pet.Id}")
+                        });
+                    }
+                }
+                
+                rows.Add(new[]
+                {
+                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "pets_main")
+                });
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows),
                     cancellationToken: ct);
                 return;
             }

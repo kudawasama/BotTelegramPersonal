@@ -221,5 +221,82 @@ namespace BotTelegram.RPG.Services
             return $"✅ {pet.Name} está ahora activo en combate!\n" +
                    $"⚔️ ATK: {pet.EffectiveAttack} | 🛡️ DEF: {pet.EffectiveDefense} | ⚡ SPD: {pet.Speed}";
         }
+        
+        /// <summary>
+        /// Libera una mascota a la naturaleza (desaparece, sin recompensa)
+        /// </summary>
+        public string ReleasePet(RpgPlayer player, string petId)
+        {
+            var pet = player.PetInventory.FirstOrDefault(p => p.Id == petId);
+            if (pet == null)
+            {
+                return "❌ Mascota no encontrada.";
+            }
+            
+            string petName = pet.Name;
+            
+            // Remover del inventario
+            player.PetInventory.RemoveAll(p => p.Id == petId);
+            
+            // Si estaba activa, removerla del equipo
+            if (player.ActivePets.Any(p => p.Id == petId))
+            {
+                player.ActivePets.RemoveAll(p => p.Id == petId);
+            }
+            
+            _rpgService.SavePlayer(player);
+            
+            return $"🌳 Has liberado a {petName} a la naturaleza.\n" +
+                   $"✨ Se siente libre y salvaje nuevamente.\n" +
+                   $"💔 Adiós, amigo...";
+        }
+        
+        /// <summary>
+        /// Vende una mascota por oro (basado en rarity y nivel)
+        /// </summary>
+        public string SellPet(RpgPlayer player, string petId)
+        {
+            var pet = player.PetInventory.FirstOrDefault(p => p.Id == petId);
+            if (pet == null)
+            {
+                return "❌ Mascota no encontrada.";
+            }
+            
+            string petName = pet.Name;
+            
+            // Calcular valor basado en rarity y nivel
+            int baseValue = pet.Level * 50;
+            int rarityMultiplier = pet.Rarity switch
+            {
+                BotTelegram.RPG.Models.PetRarity.Common => 1,
+                BotTelegram.RPG.Models.PetRarity.Uncommon => 2,
+                BotTelegram.RPG.Models.PetRarity.Rare => 4,
+                BotTelegram.RPG.Models.PetRarity.Epic => 8,
+                BotTelegram.RPG.Models.PetRarity.Legendary => 16,
+                BotTelegram.RPG.Models.PetRarity.Mythical => 32,
+                _ => 1
+            };
+            
+            int goldEarned = baseValue * rarityMultiplier;
+            
+            // Remover del inventario
+            player.PetInventory.RemoveAll(p => p.Id == petId);
+            
+            // Si estaba activa, removerla del equipo
+            if (player.ActivePets.Any(p => p.Id == petId))
+            {
+                player.ActivePets.RemoveAll(p => p.Id == petId);
+            }
+            
+            // Agregar oro
+            player.Gold += goldEarned;
+            
+            _rpgService.SavePlayer(player);
+            
+            return $"💰 Has vendido a {petName} {pet.RarityEmoji}.\n" +
+                   $"🪙 Ganaste: {goldEarned} Gold\n" +
+                   $"💵 Total: {player.Gold} Gold\n\n" +
+                   $"⚠️ El viajero se lleva a tu mascota...";
+        }
     }
 }

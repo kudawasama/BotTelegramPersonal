@@ -124,6 +124,12 @@ namespace BotTelegram.RPG.Commands
                     InlineKeyboardButton.WithCallbackData("🍖 Alimentar", "pets_feed_menu"),
                     InlineKeyboardButton.WithCallbackData("⭐ Evolucionar", "pets_evolve_menu")
                 });
+                
+                rows.Add(new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🔓 Liberar", "pets_release_menu"),
+                    InlineKeyboardButton.WithCallbackData("💰 Vender", "pets_sell_menu")
+                });
             }
             
             // Guía y volver
