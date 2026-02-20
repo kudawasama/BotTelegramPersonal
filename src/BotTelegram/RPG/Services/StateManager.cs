@@ -82,10 +82,18 @@ namespace BotTelegram.RPG.Services
                 "rpg_explore", "rpg_map", "rpg_travel_", "rpg_dungeon", 
                 // MUNDO: Acciones cotidianas
                 "rpg_rest", "rpg_work", 
+                // MUNDO: Acciones expandidas (FASE 12)
+                "rpg_fish", "rpg_meditate", "rpg_investigate", 
+                "rpg_adventure_risky", "rpg_adventure_stealth", "rpg_adventure_social",
+                "rpg_train_mind", "rpg_train_body", "rpg_study",
+                // MUNDO: Acciones sociales y ciudad
+                "rpg_trade", "rpg_diplomacy", "rpg_tavern",
                 // MUNDO: Personaje y sistemas
                 "rpg_pets", "rpg_counters", "rpg_passives", "rpg_combo",
                 // MUNDO: Lore y tutoriales
                 "rpg_adventure", "rpg_lore", "rpg_tutorial", "rpg_hidden",
+                "rpg_guide", "rpg_ai_chat", "rpg_commands", "rpg_bug_report", "rpg_options",
+                "rpg_actions", "rpg_action_", "rpg_progress",
                 // SISTEMAS PRINCIPALES
                 "classes_menu", "class_", "dungeon_main", "dungeon_keys",
                 "leaderboard_", "pets_", 
