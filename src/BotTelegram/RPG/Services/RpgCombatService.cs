@@ -1688,6 +1688,89 @@ namespace BotTelegram.RPG.Services
             
             return color + new string('█', filled) + new string('░', empty);
         }
+        
+        /// <summary>
+        /// Usa un item (poción) durante el combate
+        /// FASE 12.5: Sistema de items en combate
+        /// </summary>
+        public CombatResult UseItemInCombat(RpgPlayer player, RpgEnemy enemy, string itemId)
+        {
+            var result = new CombatResult();
+            StartPlayerTurn(player);
+            
+            // Buscar el item en el inventario
+            var item = player.Inventory.FirstOrDefault(i => i.Id == itemId);
+            if (item == null || item.Type != ItemType.Consumable)
+            {
+                result.PlayerHit = false;
+                AddCombatLog(player, "Usar Item", "❌ Item no encontrado o no es consumible");
+                return result;
+            }
+            
+            // Log del item usado
+            var itemName = $"{item.Emoji} {item.Name}";
+            AddCombatLog(player, "💊 Usar Item", itemName);
+            
+            // Aplicar efectos del item
+            int hpRestored = 0;
+            int manaRestored = 0;
+            int staminaRestored = 0;
+            
+            if (item.HPRestore > 0)
+            {
+                hpRestored = item.HPRestore;
+                player.HP = Math.Min(player.MaxHP, player.HP + hpRestored);
+                AddCombatLog(player, "✨ Efecto", $"Restauradas {hpRestored} HP");
+            }
+            
+            if (item.ManaRestore > 0)
+            {
+                manaRestored = item.ManaRestore;
+                player.Mana = Math.Min(player.MaxMana, player.Mana + manaRestored);
+                AddCombatLog(player, "✨ Efecto", $"Restaurado {manaRestored} Maná");
+            }
+            
+            if (item.StaminaRestore > 0)
+            {
+                staminaRestored = item.StaminaRestore;
+                player.Stamina = Math.Min(player.MaxStamina, player.Stamina + staminaRestored);
+                AddCombatLog(player, "✨ Efecto", $"Restaurada {staminaRestored} Stamina");
+            }
+            
+            // Efectos especiales de ataques
+            if (item.AttackBonus > 0)
+            {
+                AddCombatLog(player, "✨ Efecto", $"+{item.AttackBonus} Daño (1 turno)");
+                // El bonus se aplica en el siguiente ataque manualmente
+            }
+            
+            // Track del uso de item
+            TrackAction(player, $"use_item_{item.Id}");
+            
+            // Remover item del inventario
+            var itemCount = player.Inventory.Count(i => i.Id == itemId);
+            if (itemCount <= 1)
+            {
+                player.Inventory.Remove(item);
+            }
+            else
+            {
+                // Si hubiera stacks, aquí restamos 1
+                player.Inventory.RemoveAt(player.Inventory.IndexOf(item));
+            }
+            
+            result.PlayerHit = true;
+            result.ItemUsed = itemName;
+            result.ItemHPRestored = hpRestored;
+            result.ItemManaRestored = manaRestored;
+            result.ItemStaminaRestored = staminaRestored;
+            
+            // El enemigo ahora ataca al jugador (turno se gasta)
+            ProcessEnemyTurn(player, enemy, result);
+            CheckCombatEnd(player, enemy, result);
+            
+            return result;
+        }
     }
     
     public class CombatResult
@@ -1759,6 +1842,12 @@ namespace BotTelegram.RPG.Services
 
         // Notificaciones de misiones (Fase 9)
         public List<string> QuestNotifications { get; set; } = new();
+        
+        // Sistema de items en combate (Fase 12.5)
+        public string? ItemUsed { get; set; } // Nombre del item usado
+        public int ItemHPRestored { get; set; } // HP restaurados por item
+        public int ItemManaRestored { get; set; } // Mana restaurados por item
+        public int ItemStaminaRestored { get; set; } // Stamina restaurados por item
         
         // Legacy (compatibilidad)
         [Obsolete("Use HitChancePercent y HitRoll instead")]

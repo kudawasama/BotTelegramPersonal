@@ -4010,6 +4010,157 @@ Bienvenido a {player.CurrentLocation}
                 return;
             }
             
+            // ═══════════════════════════════════════════════════════════════
+            // Combat - Use Item (Fase 12.5)
+            // ═══════════════════════════════════════════════════════════════
+            if (data == "combat_use_item")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                // Obtener pociones/consumibles disponibles
+                var consumables = currentPlayer.Inventory
+                    .Where(i => i.Type == ItemType.Consumable)
+                    .GroupBy(i => i.Id)
+                    .ToList();
+                
+                if (consumables.Count == 0)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No tienes pociones", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+                
+                // Crear menú de pociones
+                var rows = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
+                foreach (var group in consumables.Take(6)) // Máximo 6 pociones por espacio
+                {
+                    var item = group.First();
+                    var count = group.Count();
+                    var displayText = count > 1 ? $"{item.Emoji} {item.Name} (x{count})" : $"{item.Emoji} {item.Name}";
+                    rows.Add(new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData(displayText, $"combat_use_item:{item.Id}")
+                    });
+                }
+                rows.Add(new[] { Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver a Combate", "combat_back") });
+                
+                var text = "🧪 **Pociones Disponibles**\n━━━━━━━━━━━━━━━━\nElige una poción para usar:";
+                
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    text,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(rows.ToArray()),
+                    cancellationToken: ct);
+                return;
+            }
+            
+            // Combat - Use Item (execute) (Fase 12.5)
+            if (data.StartsWith("combat_use_item:"))
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                var itemId = data["combat_use_item:".Length..];
+                var item = currentPlayer.Inventory.FirstOrDefault(i => i.Id == itemId);
+                
+                if (item == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Item no encontrado", cancellationToken: ct);
+                    return;
+                }
+                
+                await bot.AnswerCallbackQuery(callbackQuery.Id, $"💊 Usando {item.Name}...", showAlert: false, cancellationToken: ct);
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var result = combatService.UseItemInCombat(currentPlayer, enemy, itemId);
+                rpgService.SavePlayer(currentPlayer);
+                
+                var combatMessageId = currentPlayer.ActiveCombatMessageId ?? messageId;
+                var narrative = combatService.GetCombatNarrative(result, currentPlayer, enemy);
+                
+                if (result.EnemyDefeated)
+                {
+                    currentPlayer.ActiveCombatMessageId = null;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    await bot.EditMessageText(
+                        chatId,
+                        combatMessageId,
+                        narrative,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[]
+                            {
+                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Continuar", "rpg_main")
+                            }
+                        }),
+                        cancellationToken: ct);
+                }
+                else if (result.PlayerDefeated)
+                {
+                    currentPlayer.ActiveCombatMessageId = null;
+                    currentPlayer.HP = currentPlayer.MaxHP / 2;
+                    rpgService.SavePlayer(currentPlayer);
+                    
+                    await bot.EditMessageText(
+                        chatId,
+                        combatMessageId,
+                        narrative + "\n\n💀 **Game Over**\n\nRegresaste a la taberna...",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                        {
+                            new[]
+                            {
+                                Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎮 Volver", "rpg_main")
+                            }
+                        }),
+                        cancellationToken: ct);
+                }
+                else
+                {
+                    // El combate continúa
+                    await bot.EditMessageText(
+                        chatId,
+                        combatMessageId,
+                        combatService.GenerateCombatMessage(result, currentPlayer, enemy),
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                        replyMarkup: GetCombatKeyboard(),
+                        cancellationToken: ct);
+                }
+                return;
+            }
+            
+            // Combat - Back from items menu
+            if (data == "combat_back")
+            {
+                if (!currentPlayer.IsInCombat || currentPlayer.CurrentEnemy == null)
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No estás en combate", cancellationToken: ct);
+                    return;
+                }
+                
+                var enemy = currentPlayer.CurrentEnemy;
+                var combatMessageId = currentPlayer.ActiveCombatMessageId ?? messageId;
+                
+                await bot.EditMessageText(
+                    chatId,
+                    combatMessageId,
+                    combatService.GenerateCombatMessage(null, currentPlayer, enemy),
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: GetCombatKeyboard(),
+                    cancellationToken: ct);
+                return;
+            }
+            
             // Combat - Flee
             if (data == "rpg_combat_flee")
             {
@@ -4084,7 +4235,8 @@ Bienvenido a {player.CurrentLocation}
                                 new[]
                                 {
                                     Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("⚔️ Atacar", "rpg_combat_attack"),
-                                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🛡️ Defender", "rpg_combat_defend")
+                                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🛡️ Defender", "rpg_combat_defend"),
+                                    Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧪 Item", "combat_use_item")
                                 }
                             }),
                             cancellationToken: ct);
