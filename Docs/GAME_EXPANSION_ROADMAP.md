@@ -1,7 +1,7 @@
 # 🎮 HOJA DE RUTA - EXPANSIÓN DEL SISTEMA RPG
 
-**Última actualización:** 19 de febrero de 2025  
-**Versión:** 6.6 - Fase 12.4 v3.2.3 (Comercio NPC + Entrenamiento completo)
+**Última actualización:** 20 de febrero de 2025  
+**Versión:** 6.7 - Fase 12.6 v3.2.4 (Consolidación de callbacks - Items en combate)
 
 ## 📊 PROGRESO GENERAL
 ```
@@ -1582,3 +1582,6 @@ El bot tiene una **base sólida production-ready** con 11 fases completadas (+ F
 | `09ad076` | Chore: actualizar BuildInfo a commit cf65ebb | feb 2025 |
 | `36caec6` | Docs: actualizar roadmap - Fase 12 completada al 100% (v3.2.2) | feb 2025 |
 | `65bcf3b` | Fase 12.4 v3.2.3: Comercio NPC + Sistema de Entrenamiento | feb 2025 |
+| `ff22f7f` | Fase 12.5 v3.2.3: Sistema de usar pociones/items en combate | feb 2025 |
+| `96e13e2` | Fase 12.6 v3.2.4: Consolidación de callbacks de items - eliminar duplicados | feb 2025 |
+| `e85778b` | Build v3.2.4: Actualizar versión (consolidación de callbacks) | feb 2025 |

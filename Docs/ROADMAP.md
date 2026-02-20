@@ -4,7 +4,7 @@
 
 ---
 
-## 📊 Estado actual (v3.2.3 — Feb 2025)
+## 📊 Estado actual (v3.2.4 — Feb 2025)
 
 ✅ **Completado (Bot base):**
 - Bot de Telegram con comandos básicos
@@ -30,6 +30,7 @@
 - 👥 **v3.2.1**: NPCs + Diálogos — 12 NPCs, conversaciones interactivas, integración con `/explore`
 - ⭐ **v3.2.2**: Quests vinculadas + Zonas desbloqueables — 9 quests con facciones, 3 zonas especiales con requisitos de rep
 - 🎯 **v3.2.3**: Comercio NPC + Entrenamiento — OpenShop para NPCs vendedores, `/entrenar` para mejorar atributos
+- 🔧 **v3.2.4**: Consolidación de callbacks (Items en combate) — Eliminar duplicados, sistema único combat_use_item
 
 🔜 **Siguiente (RPG):**
 - Fase 13: Eventos Temporales
