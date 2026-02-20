@@ -112,7 +112,8 @@ namespace BotTelegram.Handlers
                          data == "shop_buy_equip_menu" ||
                          data.StartsWith("craft_") ||
                          data.StartsWith("quest_") ||
-                         data.StartsWith("inv_"))
+                         data.StartsWith("inv_") ||
+                         data.StartsWith("train_"))
                 {
                     await HandleRpgCallback(bot, callbackQuery, data, ct);
                 }
