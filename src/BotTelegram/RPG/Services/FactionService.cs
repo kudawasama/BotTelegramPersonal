@@ -4,7 +4,7 @@ namespace BotTelegram.RPG.Services
 {
     public class FactionService
     {
-        public void GainReputation(RpgPlayer player, string factionId, int amount)
+        public void GainReputation(RpgPlayer player, string factionId, int amount, bool applyEnemyPenalty = true)
         {
             var rep = player.FactionReputations.FirstOrDefault(r => r.FactionId == factionId);
             if (rep == null)
@@ -21,9 +21,13 @@ namespace BotTelegram.RPG.Services
             if (newTier > previousTier)
                 ApplyTierReward(player, factionId, newTier);
             
-            var faction = FactionDatabase.GetFaction(factionId);
-            if (faction?.EnemyFactionId != null)
-                GainReputation(player, faction.EnemyFactionId, -amount / 2);
+            // Prevenir recursión infinita: solo aplicar penalización enemiga en la llamada inicial
+            if (applyEnemyPenalty)
+            {
+                var faction = FactionDatabase.GetFaction(factionId);
+                if (faction?.EnemyFactionId != null)
+                    GainReputation(player, faction.EnemyFactionId, -amount / 2, applyEnemyPenalty: false);
+            }
         }
         
         private void ApplyTierReward(RpgPlayer player, string factionId, FactionTier tier)
