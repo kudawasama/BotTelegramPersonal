@@ -177,6 +177,18 @@ Solo los más valientes pueden enfrentar este destino...
                 },
                 new[]
                 {
+                    InlineKeyboardButton.WithCallbackData("🎯 Aventura Riesgosa", "rpg_adventure_risky"),
+                    InlineKeyboardButton.WithCallbackData("🥷 Furtivo", "rpg_adventure_stealth"),
+                    InlineKeyboardButton.WithCallbackData("🤝 Social", "rpg_adventure_social")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🧘 Meditación", "rpg_meditate"),
+                    InlineKeyboardButton.WithCallbackData("🎣 Pesca", "rpg_fish"),
+                    InlineKeyboardButton.WithCallbackData("🔍 Investigar", "rpg_investigate")
+                },
+                new[]
+                {
                     InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
                 }
             });
@@ -205,6 +217,12 @@ Solo los más valientes pueden enfrentar este destino...
                 {
                     InlineKeyboardButton.WithCallbackData("📈 Counters", "rpg_counters"),
                     InlineKeyboardButton.WithCallbackData("🎯 Combos", "rpg_combo_skills")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("🧠 Entrenar Mente", "rpg_train_mind"),
+                    InlineKeyboardButton.WithCallbackData("💪 Entrenar Cuerpo", "rpg_train_body"),
+                    InlineKeyboardButton.WithCallbackData("✍️ Estudiar", "rpg_study")
                 },
                 new[]
                 {
@@ -239,7 +257,13 @@ Solo los más valientes pueden enfrentar este destino...
                 },
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_main")
+                    InlineKeyboardButton.WithCallbackData("� Comercio", "rpg_trade"),
+                    InlineKeyboardButton.WithCallbackData("🤝 Diplomacia", "rpg_diplomacy"),
+                    InlineKeyboardButton.WithCallbackData("🎪 Taberna", "rpg_tavern")
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("�🔙 Volver", "rpg_main")
                 }
             });
         }

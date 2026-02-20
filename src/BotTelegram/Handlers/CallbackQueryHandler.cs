@@ -5856,6 +5856,466 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 return;
             }
 
+            // ═══════════════════════════════════════════════════════════════
+            // FASE 12: EXPANDED ACTIONS - AVENTURA, PERSONAJE, CIUDAD
+            // ═══════════════════════════════════════════════════════════════
+
+            // rpg_adventure_risky - Aventura Riesgosa
+            if (data == "rpg_adventure_risky")
+            {
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes hacer esto en combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🎯 Aventura riesgosa...", cancellationToken: ct);
+
+                var expandedService = new BotTelegram.RPG.Services.ExpandedActionsService(rpgService);
+                var result = expandedService.ExecuteAdventureRisky(currentPlayer);
+                rpgService.SavePlayer(currentPlayer);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎯 Intentar de nuevo", "rpg_adventure_risky"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // rpg_adventure_stealth - Aventura Furtiva
+            if (data == "rpg_adventure_stealth")
+            {
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes hacer esto en combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🥷 Movimiento sigiloso...", cancellationToken: ct);
+
+                var expandedService = new BotTelegram.RPG.Services.ExpandedActionsService(rpgService);
+                var result = expandedService.ExecuteAdventureStealth(currentPlayer);
+                rpgService.SavePlayer(currentPlayer);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🥷 Intentar de nuevo", "rpg_adventure_stealth"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // rpg_adventure_social - Aventura Social
+            if (data == "rpg_adventure_social")
+            {
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes hacer esto en combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🤝 Interactuando...", cancellationToken: ct);
+
+                var expandedService = new BotTelegram.RPG.Services.ExpandedActionsService(rpgService);
+                var result = expandedService.ExecuteAdventureSocial(currentPlayer);
+                rpgService.SavePlayer(currentPlayer);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🤝 Intentar de nuevo", "rpg_adventure_social"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // rpg_train_mind - Entrenar Mente
+            if (data == "rpg_train_mind")
+            {
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes hacer esto en combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🧠 Entrenamiento mental...", cancellationToken: ct);
+
+                var expandedService = new BotTelegram.RPG.Services.ExpandedActionsService(rpgService);
+                var result = expandedService.ExecuteTrainMind(currentPlayer);
+                rpgService.SavePlayer(currentPlayer);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧠 Entrenar de nuevo", "rpg_train_mind"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // rpg_train_body - Entrenar Cuerpo
+            if (data == "rpg_train_body")
+            {
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes hacer esto en combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "💪 Entrenamiento físico...", cancellationToken: ct);
+
+                var expandedService = new BotTelegram.RPG.Services.ExpandedActionsService(rpgService);
+                var result = expandedService.ExecuteTrainBody(currentPlayer);
+                rpgService.SavePlayer(currentPlayer);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💪 Entrenar de nuevo", "rpg_train_body"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // rpg_study - Estudiar
+            if (data == "rpg_study")
+            {
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes hacer esto en combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "✍️ Estudiando...", cancellationToken: ct);
+
+                var expandedService = new BotTelegram.RPG.Services.ExpandedActionsService(rpgService);
+                var result = expandedService.ExecuteStudy(currentPlayer);
+                rpgService.SavePlayer(currentPlayer);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("✍️ Estudiar de nuevo", "rpg_study"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // rpg_meditate - Meditación
+            if (data == "rpg_meditate")
+            {
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes hacer esto en combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🧘 Meditando...", cancellationToken: ct);
+
+                var expandedService = new BotTelegram.RPG.Services.ExpandedActionsService(rpgService);
+                var result = expandedService.ExecuteMeditate(currentPlayer);
+                rpgService.SavePlayer(currentPlayer);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🧘 Meditar de nuevo", "rpg_meditate"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // rpg_fish - Pesca
+            if (data == "rpg_fish")
+            {
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes hacer esto en combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🎣 Pescando...", cancellationToken: ct);
+
+                var expandedService = new BotTelegram.RPG.Services.ExpandedActionsService(rpgService);
+                var result = expandedService.ExecuteFish(currentPlayer);
+                rpgService.SavePlayer(currentPlayer);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎣 Pescar de nuevo", "rpg_fish"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // rpg_investigate - Investigar
+            if (data == "rpg_investigate")
+            {
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes hacer esto en combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🔍 Investigando...", cancellationToken: ct);
+
+                var expandedService = new BotTelegram.RPG.Services.ExpandedActionsService(rpgService);
+                var result = expandedService.ExecuteInvestigate(currentPlayer);
+                rpgService.SavePlayer(currentPlayer);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔍 Investigar de nuevo", "rpg_investigate"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // rpg_trade - Comercio
+            if (data == "rpg_trade")
+            {
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes hacer esto en combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "💰 Comerciando...", cancellationToken: ct);
+
+                var expandedService = new BotTelegram.RPG.Services.ExpandedActionsService(rpgService);
+                var result = expandedService.ExecuteTrade(currentPlayer);
+                rpgService.SavePlayer(currentPlayer);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("💰 Comerciar de nuevo", "rpg_trade"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // rpg_diplomacy - Diplomacia
+            if (data == "rpg_diplomacy")
+            {
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes hacer esto en combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🤝 Diplomacia...", cancellationToken: ct);
+
+                var expandedService = new BotTelegram.RPG.Services.ExpandedActionsService(rpgService);
+                var result = expandedService.ExecuteDiplomacy(currentPlayer);
+                rpgService.SavePlayer(currentPlayer);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🤝 Intentar de nuevo", "rpg_diplomacy"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
+            // rpg_tavern - Taberna
+            if (data == "rpg_tavern")
+            {
+                if (!StateManager.IsActionAllowed(currentPlayer, data))
+                {
+                    await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ No puedes hacer esto en combate o viaje", showAlert: true, cancellationToken: ct);
+                    return;
+                }
+
+                await bot.AnswerCallbackQuery(callbackQuery.Id, "🎪 Entrando a la taberna...", cancellationToken: ct);
+
+                var expandedService = new BotTelegram.RPG.Services.ExpandedActionsService(rpgService);
+                var result = expandedService.ExecuteTavern(currentPlayer);
+                rpgService.SavePlayer(currentPlayer);
+
+                var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🎪 Volver a la taberna", "rpg_tavern"),
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("📊 Ver Stats", "rpg_stats")
+                    },
+                    new[]
+                    {
+                        Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton.WithCallbackData("🔙 Volver", "rpg_actions")
+                    }
+                });
+
+                await bot.EditMessageText(
+                    chatId,
+                    messageId,
+                    result.Message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                    replyMarkup: keyboard,
+                    cancellationToken: ct);
+                return;
+            }
+
             // ─── ENTRENAMIENTO (train_*) ─────────────────────
             if (data.StartsWith("train_"))
             {
@@ -5996,7 +6456,6 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 "forge_weapon" => "Armas forjadas",
                 "gather_herbs" => "Hierbas recolectadas",
                 "mine_ore" => "Minerales minados",
-                "fish" => "Peces pescados",
                 "cook_food" => "Comidas cocinadas",
                 
                 // ═══════════════════════════════════════
@@ -6055,6 +6514,29 @@ En Puerto Esperanza, la última ciudad libre. Desde aquí, tu leyenda comenzará
                 "revive_ally" => "Resurrecciones",
                 "skill_used" => "Habilidades usadas",
                 "gold_earned" => "Oro acumulado",
+                
+                // ═══════════════════════════════════════════════════════════════
+                // FASE 12: NUEVAS ACCIONES EXPANDIDAS
+                // ═══════════════════════════════════════════════════════════════
+                "adventure_risky" => "Aventuras riesgosas",
+                "adventure_risky_failed" => "Aventuras riesgosas fallidas",
+                "adventure_stealth" => "Movimientos furtivos",
+                "adventure_stealth_failed" => "Movimientos furtivos fallidos",
+                "adventure_social" => "Interacciones sociales",
+                "adventure_social_failed" => "Interacciones sociales fallidas",
+                "train_mind" => "Entrenamientos mentales",
+                "train_body" => "Entrenamientos físicos",
+                "study" => "Sesiones de estudio",
+                "deep_meditation" => "Meditaciones profundas",
+                "fish_action" => "Sesiones de pesca",
+                "fish_catch" => "Pesca exitosa",
+                "investigate" => "Investigaciones",
+                "investigate_failed" => "Investigaciones fallidas",
+                "trade" => "Transacciones comerciales",
+                "trade_failed" => "Transacciones fallidas",
+                "diplomacy" => "Acciones diplomáticas",
+                "diplomacy_failed" => "Diplomacia fallida",
+                "tavern" => "Noches en la taberna",
                 
                 _ => actionId.Replace("_", " ").Replace("skill ", "")
             };
