@@ -9,12 +9,10 @@ namespace BotTelegram.Services
     /// </summary>
     public class TelegramLogger
     {
-        // Usar volumen persistente de Fly.io
-        private static readonly string _logsPath = Path.Combine(
-            Directory.GetCurrentDirectory(),
-            "data",
-            "logs"
-        );
+        // Permite sobreescribir la ruta por variable de entorno para cualquier hosting.
+        private static readonly string _logsPath =
+            Environment.GetEnvironmentVariable("BOT_LOGS_PATH")
+            ?? Path.Combine(Directory.GetCurrentDirectory(), "data", "logs");
 
         private static readonly object _fileLock = new();
 
@@ -54,7 +52,7 @@ namespace BotTelegram.Services
                     // Escribir en archivo
                     File.AppendAllText(filePath, logLine + Environment.NewLine);
                     
-                    // También escribir en console para que se vea en Fly logs
+                    // También escribir en consola para observabilidad en el hosting.
                     Console.WriteLine($"📝 {logLine}");
                 }
             }

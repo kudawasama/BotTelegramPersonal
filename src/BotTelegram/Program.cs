@@ -7,14 +7,14 @@ var config = new ConfigurationBuilder()
     .AddEnvironmentVariables()
     .Build();
 
-// Intentar cargar desde variable de entorno primero (Replit Secrets)
+// Prioridad: variable de entorno para producción, fallback local en appsettings.
 var token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN") 
     ?? config["Telegram:Token"];
 
 if (string.IsNullOrEmpty(token))
 {
     Console.WriteLine("❌ Token NO encontrado");
-    Console.WriteLine("💡 Configura TELEGRAM_BOT_TOKEN en Secrets (Replit) o en appsettings.json");
+    Console.WriteLine("💡 Configura TELEGRAM_BOT_TOKEN en variables de entorno o en appsettings.json");
     return;
 }
 
@@ -24,11 +24,17 @@ var bot = new TelegramBotClient(token);
 
 // Identificador de versión/deploy
 var buildDate = System.IO.File.GetLastWriteTimeUtc(typeof(Program).Assembly.Location);
+var hostingEnvironment =
+    Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")
+    ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+    ?? "Local";
+
 Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 Console.WriteLine("🚀 BOT TELEGRAM RPG - INICIANDO");
 Console.WriteLine($"📦 Versión Build: {buildDate:yyyy-MM-dd HH:mm:ss} UTC");
-Console.WriteLine($"🔖 Commit: b908803 - Fix ArgumentException en pasivas");
-Console.WriteLine($"🌐 Entorno: {(Environment.GetEnvironmentVariable("FLY_APP_NAME") ?? "Local")}");
+Console.WriteLine($"🔧 Versión Bot: v{BuildInfo.Version}");
+Console.WriteLine($"🔖 Commit: {BuildInfo.GetCommitHash()}");
+Console.WriteLine($"🌐 Entorno: {hostingEnvironment}");
 Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 Console.WriteLine("🤖 Bot iniciado correctamente");
 
@@ -52,8 +58,15 @@ app.MapControllers();
 // Ejecutar API web en background
 _ = Task.Run(async () =>
 {
-    var port = Environment.GetEnvironmentVariable("PORT") ?? "5001";
-    var url = $"http://0.0.0.0:{port}";
+    var aspNetCoreUrls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
+    var port = Environment.GetEnvironmentVariable("PORT")
+        ?? Environment.GetEnvironmentVariable("WEBSITES_PORT")
+        ?? "5001";
+
+    var url = string.IsNullOrWhiteSpace(aspNetCoreUrls)
+        ? $"http://0.0.0.0:{port}"
+        : aspNetCoreUrls;
+
     Console.WriteLine($"\n🌐 Iniciando API web en {url}");
     await app.RunAsync(url);
 });
@@ -84,8 +97,9 @@ Console.WriteLine("✅ StartReceiving() iniciado");
 Console.WriteLine("✅ API web iniciada");
 Console.WriteLine("\n📱 Telegram Bot: Presiona ENTER para salir");
 var isHosted = Console.IsInputRedirected
-    || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER"))
-    || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PORT"));
+    || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PORT"))
+    || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME"))
+    || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITES_INSTANCE_ID"));
 
 if (isHosted)
 {

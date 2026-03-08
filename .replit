@@ -1,4 +1,0 @@
-run = "cd src/BotTelegram && dotnet run"
-
-[nix]
-channel = "stable-24_05"

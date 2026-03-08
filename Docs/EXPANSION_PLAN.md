@@ -28,12 +28,12 @@
 
 ## 💾 **DEPLOYMENT STATUS**
 
-### ✅ **Fly.io - DESPLEGADO Y FUNCIONANDO**
-- **URL:** https://bottelegram-rpg.fly.dev
-- **Región:** São Paulo (gru)
-- **Memoria:** 256MB (Free tier)
+### ✅ **Azure App Service - DESPLEGADO Y FUNCIONANDO**
+- **URL:** https://bottelegram-rpg.azurewebsites.net
+- **Región:** Configurable por recurso
+- **Plan:** Basic B1
 - **Estado:** 🟢 ONLINE
-- **Última Deploy:** 13 de Febrero de 2026
+- **Último Deploy:** 13 de Febrero de 2026
 - **Commits desde último deploy:** 0
 
 **Variables de entorno configuradas:**
@@ -42,10 +42,10 @@
 
 **Comandos útiles:**
 ```bash
-fly logs                    # Ver logs en tiempo real
-fly status                  # Estado de la app
-fly deploy                  # Redesplegar después de cambios
-fly ssh console             # SSH a la máquina (debugging)
+az webapp log tail --resource-group <rg> --name <app>
+az webapp show --resource-group <rg> --name <app>
+git push origin master      # Dispara deploy automático por GitHub Actions
+az webapp restart --resource-group <rg> --name <app>
 ```
 
 ---
@@ -1625,7 +1625,7 @@ CLASES OCULTAS:
 - Sistema de mascotas completo (18 especies, evoluciones, combate integrado)
 - Tracking de ~40 acciones diferentes
 - UI completa e interactiva con botones inline
-- Bot desplegado en Fly.io funcionando 24/7
+- Bot desplegado en Azure App Service funcionando 24/7
 - Balance de dificultad ajustado (XP exponencial, enemies +120-150% stats)
 
 ### ⏳ **LO QUE ESTÁ A MEDIAS**
@@ -1654,7 +1654,7 @@ CLASES OCULTAS:
 - Día 1-2: Agregar 30 nuevas acciones trackeables
 - Día 3-4: Implementar LocationDatabase con 6 zonas
 - Día 5-6: Crear 10 boss battles especiales
-- Día 7: Testing general y deploy a Fly.io
+- Día 7: Testing general y deploy a Azure
 
 ---
 
@@ -1665,7 +1665,7 @@ CLASES OCULTAS:
 4525537 - FASE 1: Rebalanceo completo de dificultad ✅
 c49740b - FASE 2: Sistema de Mascotas 100% ✅
 cd12f39 - FASE 3: Expansión de 17 Clases Ocultas ✅
-1ac6b74 - Fix: Deploy en Fly.io con región gru ✅
+1ac6b74 - Fix: Deploy en infraestructura de producción ✅
 ```
 
 ### **Archivos Clave del Proyecto:**
@@ -1703,7 +1703,7 @@ src/BotTelegram/RPG/
 
 ### **Progreso Total del Proyecto:** 60% completado ✅
 
-El sistema RPG está **funcional, balanceado y desplegado en producción (Fly.io)**. 
+El sistema RPG está **funcional, balanceado y desplegado en producción (Azure App Service)**. 
 
 **Fases Completadas (3/5):**
 - ✅ **Fase 1:** Dificultad ajustada (XP exponencial, enemies buffados)
@@ -1719,4 +1719,4 @@ El sistema RPG está **funcional, balanceado y desplegado en producción (Fly.io
 ---
 
 **Fin del documento** | Última actualización: 13 de Febrero de 2026  
-**Bot Status:** 🟢 ONLINE en https://bottelegram-rpg.fly.dev
+**Bot Status:** 🟢 ONLINE en https://bottelegram-rpg.azurewebsites.net

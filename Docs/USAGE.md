@@ -388,7 +388,7 @@ Bot: ✅ Recurrencia desactivada
 **R:** Muy poco, solo cuando sincroniza con Telegram (algunos KB por día).
 
 ### P: ¿Funciona 24/7?
-**R:** Sí, en Replit el bot está siempre online.
+**R:** Sí, en Azure App Service (plan B1 con Always On) el bot puede mantenerse siempre online.
 
 ---
 

@@ -26,10 +26,10 @@
 http://localhost:5000
 ```
 
-**Replit (ejemplo):**
+**Azure App Service (ejemplo):**
 
 ```link
-https://bottelegram-proyecto.replit.dev
+https://bottelegram-rpg.azurewebsites.net
 ```
 
 ---

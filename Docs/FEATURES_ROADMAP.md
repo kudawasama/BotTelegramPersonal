@@ -155,7 +155,7 @@ public class WhisperResponse
 }
 ```
 
-**En Replit (Secrets):**
+**Variables de entorno (Azure/App Service o shell local):**
 ```bash
 OPENAI_API_KEY=sk-proj-...
 ```
@@ -448,7 +448,7 @@ private static async Task<string> OpenAIChat(string prompt)
 }
 ```
 
-**Replit Secrets:**
+**Variables de entorno (Azure/App Service o shell local):**
 ```bash
 BING_SEARCH_API_KEY=tu_bing_api_key
 OPENAI_API_KEY=sk-proj-...

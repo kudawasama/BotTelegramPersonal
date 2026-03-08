@@ -30,7 +30,7 @@
 - **Manejo de errores** robusto
 
 ### ☁️ Deploy
-- **Listo para producción** en Replit, Railway, Fly.io
+- **Listo para producción** en Azure App Service (Basic B1)
 - **24/7 en línea** sin intervención manual
 - **Escalable** y fácil de mantener
 
@@ -38,15 +38,11 @@
 
 ## 🚀 Quick Start
 
-### Opción 1: Replit (Recomendado - Gratis)
+Antes de retomar trabajo técnico, revisa el checkpoint:
 
-1. Abre [Replit.com](https://replit.com)
-2. "Import from GitHub" → `https://github.com/kudawasama/BotTelegramPersonal`
-3. Añade Secret: `TELEGRAM_BOT_TOKEN=tu_token_aqui`
-4. Ejecuta: `cd src/BotTelegram && dotnet run`
-5. ✅ Bot en línea 24/7
+- `Docs/ESTADO_ACTUAL.md`
 
-### Opción 2: Local
+### Opción 1: Local
 
 ```bash
 # Clonar repositorio
@@ -56,6 +52,14 @@ cd BotTelegram/src/BotTelegram
 # Ejecutar
 dotnet run
 ```
+
+### Opción 2: Azure App Service (Plan Básico B1)
+
+1. Crea una Web App Linux en un plan `B1`.
+2. Configura `TELEGRAM_BOT_TOKEN` en variables de entorno.
+3. Crea los secrets de GitHub: `AZURE_CREDENTIALS` y `AZURE_WEBAPP_NAME`.
+4. Usa el workflow `.github/workflows/azure-deploy.yml`.
+5. Revisa la guía completa en `deploy/AZURE_SETUP.md`.
 
 Requiere:
 - .NET 9.0 o superior
@@ -190,7 +194,7 @@ BotTelegram/
 
 ## 🔧 Configuración
 
-### Variables de entorno (Replit/Railway)
+### Variables de entorno (Local/Azure)
 
 ```
 TELEGRAM_BOT_TOKEN=tu_token_aqui
@@ -251,18 +255,11 @@ Los recordatorios se guardan en `bin/Debug/net9.0/data/reminders.json`:
 
 ## 🌍 Deployment
 
-### Replit ☁️
+### Azure App Service (Básico B1) ☁️
 ```bash
-# 1. Importar repo
-# 2. Añadir Secret: TELEGRAM_BOT_TOKEN
-# 3. Run: cd src/BotTelegram && dotnet run
-```
-
-### Railway ☁️
-```bash
-# 1. Conectar GitHub repo
-# 2. Detecta .NET automáticamente
-# 3. Añadir Config Var: TELEGRAM_BOT_TOKEN
+# 1. Configurar secrets en GitHub: AZURE_CREDENTIALS y AZURE_WEBAPP_NAME
+# 2. Configurar variable TELEGRAM_BOT_TOKEN en Azure Web App
+# 3. Hacer push a master para disparar el workflow de deploy
 ```
 
 ### Docker 🐳

@@ -100,7 +100,7 @@ Nos comprometemos a crear un ambiente acogedor, diverso e inclusivo para todos l
    **Información del sistema:**
    - Sistema: Windows 10
    - .NET: 9.0
-   - Replit: Sí
+   - Hosting: Azure App Service (B1)
    
    **Logs/Screenshots:**
    [Adjunta logs si es posible]

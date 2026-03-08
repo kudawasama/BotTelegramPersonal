@@ -22,7 +22,7 @@
 - ✅ Menú de tácticas en combate
 - ✅ Menú de opciones implementado
 - ✅ Compilación exitosa
-- ✅ Deploy a Fly.io exitoso
+- ✅ Deploy a Azure App Service exitoso
 - ✅ Bot funcionando en producción
 
 ### 🔄 **EN PROGRESO**
@@ -303,7 +303,7 @@ Fila 4: 🔙 Volver
 ### **FASE 5: Testing y Deploy** (Est: 1-2 horas)
 - [ ] Testing completo de todos los menús
 - [ ] Verificar que no hay callbacks rotos
-- [ ] Deploy a Fly.io
+- [ ] Deploy a Azure App Service
 - [ ] Testing en producción
 
 ---
@@ -330,17 +330,17 @@ Fila 4: 🔙 Volver
 |-------|--------|--------|
 | 2026-02-13 | Documento creado | - |
 | 2026-02-13 | Reestructuración completa implementada | 332e4e6 |
-| 2026-02-13 | Deploy exitoso a Fly.io | - |
+| 2026-02-13 | Deploy exitoso a Azure App Service | - |
 
 ---
 
 **Estado actual:** ✅ **100% COMPLETADO** - Bot funcionando en producción
 
-**URL Producción:** https://bottelegram-rpg.fly.dev
+**URL Producción:** https://bottelegram-rpg.azurewebsites.net
 
 **Próximos pasos:**  
 1. ✅ Testing local completo
-2. ✅ Deploy a Fly.io
+2. ✅ Deploy a Azure App Service
 3. ✅ Verificación en producción
 4. ⏳ Implementar Fases 5A, 5B, 5C
 

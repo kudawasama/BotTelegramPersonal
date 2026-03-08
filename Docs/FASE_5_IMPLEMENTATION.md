@@ -422,10 +422,10 @@ Archivos generados:
 
 ## 🚀 DEPLOYMENT
 
-### **Fly.io Deploy:**
+### **Azure Deploy:**
 ```bash
 cd c:\Users\ASUS\OneDrive\Documentos\GitHub\BotTelegramPersonal-1\src\BotTelegram
-& "C:\Users\ASUS\.fly\bin\flyctl.exe" deploy
+git push origin master
 ```
 
 ### **Git Commit:**

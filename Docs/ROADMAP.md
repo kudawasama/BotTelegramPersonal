@@ -11,7 +11,7 @@
 - Sistema de recordatorios con parsing natural
 - Persistencia en JSON
 - API REST completa
-- Deploy en Fly.io 24/7
+- Deploy en Azure App Service (Basic B1)
 - Recordatorios recurrentes
 - ⭐ **Botones inline interactivos** (InlineKeyboardMarkup)
 - ⭐ **FAQ/Manual completo** integrado en el bot
@@ -261,4 +261,4 @@ Se buscan colaboradores en:
 
 ---
 
-**Última actualización:** 20 de febrero de 2026 — v3.2.6 FASE 12 COMPLETADA (Acciones expandidas + Fix StateManager)
+**Última actualización:** 8 de marzo de 2026 — migración documental a Azure y checkpoint operativo actualizado

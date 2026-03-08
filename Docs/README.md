@@ -6,6 +6,9 @@ Bienvenido al centro de documentación oficial de **BotTelegram**. Aquí encontr
 
 ## 🚀 Empezar rápidamente
 
+### Para retomar el proyecto
+1. **¿Dónde quedamos?** → [ESTADO_ACTUAL.md](./ESTADO_ACTUAL.md) - Checkpoint técnico y siguientes pasos
+
 ### Para usuarios finales
 1. **Nuevo en el bot?** → [USAGE.md](./USAGE.md) - Aprende todos los comandos
 2. **Instalación** → [INSTALLATION.md](./INSTALLATION.md) - Cómo configurar local o en la nube
@@ -45,16 +48,14 @@ Bienvenido al centro de documentación oficial de **BotTelegram**. Aquí encontr
 **Audiencia:** Usuarios técnicos, devops, administradores
 
 **Contenido:**
-- ✅ Instalación en Replit (0 configuración recomendada)
-- ✅ Instalación local en Windows/macOS/Linux
+- ✅ Instalación local (Windows/macOS/Linux)
 - ✅ Instalación con Docker
-- ✅ Deploy en Railway.app
-- ✅ Deploy en Fly.io
+- ✅ Deploy en Azure App Service (Basic B1)
 - ✅ Verificación de instalación
 - ✅ Troubleshooting común
 
 **Cuándo leer:**
-- Quieres correr el bot tú mismo (no en Replit)
+- Quieres correr el bot tú mismo (local, Docker o Azure)
 - Necesitas hacer deploy en tu infraestructura
 - Tienes problemas durante la instalación
 
@@ -84,7 +85,7 @@ Bienvenido al centro de documentación oficial de **BotTelegram**. Aquí encontr
 **Audiencia:** Desarrolladores que quieren integrar el bot
 
 **Contenido:**
-- ✅ Base URL (local, Replit, cloud)
+- ✅ Base URL (local y Azure)
 - ✅ 5 endpoints completos (GET all, GET one, POST, PUT, DELETE)
 - ✅ Formatos de request/response
 - ✅ Parámetros y validaciones
@@ -139,6 +140,20 @@ Bienvenido al centro de documentación oficial de **BotTelegram**. Aquí encontr
 
 ---
 
+### 📍 ESTADO_ACTUAL.md - Checkpoint operativo
+**Audiencia:** Mantenedores, devops y desarrollo de continuidad
+
+**Contenido:**
+- ✅ Estado actual real de infraestructura y documentación
+- ✅ Lista de tareas pendientes inmediatas
+- ✅ Cómo retomar el trabajo en minutos
+
+**Cuándo leer:**
+- Retomas el proyecto después de una pausa
+- Necesitas saber el próximo paso sin releer todo
+
+---
+
 ## 🎯 Matriz de navegación por rol
 
 | Rol | Inicio | Después | Profundizar |
@@ -157,7 +172,7 @@ Bienvenido al centro de documentación oficial de **BotTelegram**. Aquí encontr
 ### ¿Cómo hago...?
 - **...crear un recordatorio?** → [USAGE.md - /remember](./USAGE.md#remember---crear-recordatorio)
 - **...hacer que se repita?** → [USAGE.md - /recur](./USAGE.md#recur---configurar-recurrencia)
-- **...instalar en Replit?** → [INSTALLATION.md - Replit](./INSTALLATION.md#instalación-replit-más-fácil)
+- **...instalar en Azure?** → [INSTALLATION.md - Deploy Azure](./INSTALLATION.md#deploy-en-azure-app-service-plan-basico-b1)
 - **...obtener recordatorios vía API?** → [API.md - GET /api/reminders](./API.md#1️⃣-obtener-todos-los-recordatorios)
 - **...arreglarlo si no funciona?** → [INSTALLATION.md - Troubleshooting](./INSTALLATION.md#🛠️-troubleshooting)
 - **...contribuir código?** → [CONTRIBUTING.md - Guía de desarrollo](./CONTRIBUTING.md#-guía-de-desarrollo)
