@@ -1,6 +1,6 @@
-# 🤖 BotTelegram - Telegram Reminder Bot
+# 🎮 BotTelegram - Telegram RPG Bot
 
-> Un bot de Telegram avanzado para gestionar recordatorios con inteligencia artificial, soporte para recurrencia y API REST integrada.
+> Un bot de Telegram con un sistema de rol completo: combate táctico, mazmorras, mascotas, clases, gremios, PvP, facciones, NPCs, crafteo y misiones en un mundo abierto expansivo.
 
 [![GitHub](https://img.shields.io/badge/GitHub-kudawasama%2FBotTelegramPersonal-blue?logo=github)](https://github.com/kudawasama/BotTelegramPersonal)
 [![.NET](https://img.shields.io/badge/.NET-9.0-purple?logo=.net)](https://dotnet.microsoft.com/)
@@ -10,24 +10,39 @@
 
 ## ✨ Características principales
 
-### 📱 Bot de Telegram
-- **Recordatorios inteligentes** con parsing de lenguaje natural
-- **Comandos completos**: `/start`, `/help`, `/remember`, `/list`, `/delete`, `/edit`, `/recur`
-- **Gestión avanzada**: Editar, eliminar, hacer recurrentes tus recordatorios
-- **Recurrencia automática**: Diario, semanal, mensual, anual
-- **Notificaciones push** automáticas a la hora exacta
+### 🎮 Sistema RPG Completo
+
+#### ⚔️ **Combate y Exploración**
+- **Combate táctico por turnos** con acciones estratégicas
+- **Mapas y zonas explorables** con regiones desbloqueables
+- **Mazmorras multi-piso** con enemigos y bosses
+- **Sistema de mascotas** - domesticar, liberar o vender
+- **12 NPCs interactivos** con diálogos y quests
+
+#### 🎯 **Progresión de Personaje**
+- **10+ clases disponibles** (Guerreo, Mago, Arquero, etc.)
+- **Atributos personalizables** (STR, INT, DEX, VIT)
+- **Inventario y equipamiento** - armas, armaduras, consumibles
+- **Habilidades y pasivas** desbloqueables por nivel
+- **Crafteo de items** - 9 recetas Tier 1-3
+
+#### 🏛️ **Sistema Social**
+- **Gremios** - crear, unir, banco gremial, oficiales
+- **Arena PvP** - combate ELO, ranking, apuestas
+- **Facciones** - 10 facciones con 7 tiers de reputación
+- **Misiones/Quests** - 8 tipos (Kill, Collect, Craft, Explore)
+
+#### 🌍 **Mundo Abierto (Fase 12 - 100%)**
+- **Acciones expandidas**: pesca, meditación, investigación, entrenamiento
+- **Comercio NPC** - comprar/vender items
+- **Entrenamiento de atributos** en tabernas
+- **Aventuras riesgosas/sigilosas/sociales**
+- **Zonas desbloqueables** por progreso
 
 ### 🌐 API REST
-- **Interfaz web** en puerto 5000
-- **CRUD completo** de recordatorios
+- **Health check** en `/health`
+- **Dashboard web** (próximamente)
 - **Integración fácil** con otras aplicaciones
-- **Documentación automática** con Swagger (próximo)
-
-### 🔒 Seguridad
-- **Token protegido** en variables de entorno
-- **Base de datos persistente** en JSON
-- **Validación de entrada** en todos los comandos
-- **Manejo de errores** robusto
 
 ### ☁️ Deploy
 - **Listo para producción** en Azure App Service (Basic B1)
@@ -69,36 +84,49 @@ Requiere:
 
 ## 📚 Comandos disponibles
 
+### 🎮 Comandos Principales
+
 | Comando | Descripción | Ejemplo |
 |---------|------------|---------|
 | `/start` | Iniciar el bot | `/start` |
 | `/help` | Ver todos los comandos | `/help` |
-| `/remember` | Crear recordatorio | `/remember Tomar agua en 10 min` |
-| `/list` | Listar todos los recordatorios | `/list` |
-| `/delete` | Eliminar un recordatorio | `/delete abc123` |
-| `/edit` | Modificar un recordatorio | `/edit abc123 Nuevo texto en 5 min` |
-| `/recur` | Establecer recurrencia | `/recur abc123 daily` |
+| `/rpg` | Abrir menú RPG principal | `/rpg` |
+| `/faq` | Ver manual/FAQ del bot | `/faq` |
 
-### Formatos soportados para `/remember`
+### ⚔️ Combate y Exploración
 
-```
-en 10 segundos          → En 10 segundos
-en 5 minutos            → En 5 minutos
-en 2 horas              → En 2 horas
-en 3 días               → En 3 días
-hoy a las 18:00         → Hoy a las 6 PM
-mañana a las 09:00      → Mañana a las 9 AM
-```
+| Comando | Descripción |
+|---------|------------|
+| `/mapa` | Ver mapa de regiones |
+| `/mazmorra` | Explorar mazmorras |
+| `/viajar` | Viajar entre zonas |
+| `/entrenar` | Entrenar atributos |
 
-### Tipos de recurrencia para `/recur`
+### 🎯 Personaje
 
-```
-/recur <id> daily       → Cada día
-/recur <id> weekly      → Cada semana
-/recur <id> monthly     → Cada mes
-/recur <id> yearly      → Cada año
-/recur <id> none        → Una sola vez
-```
+| Comando | Descripción |
+|---------|------------|
+| `/clases` | Ver clases disponibles |
+| `/stats` | Ver estadísticas del personaje |
+| `/inventario` | Ver items y equipamiento |
+| `/misiones` | Ver quests activas |
+
+### 🏛️ Social
+
+| Comando | Descripción |
+|---------|------------|
+| `/gremio` | Gestionar gremio |
+| `/arena` | Combatir en PvP |
+| `/faccion` | Ver reputación de facciones |
+| `/ranking` | Ver leaderboard global |
+
+### 🛒 Economía
+
+| Comando | Descripción |
+|---------|------------|
+| `/tienda` | Comprar/vender items |
+| `/herreria` | Craftear equipamiento |
+| `/mascotas` | Gestionar mascotas |
 
 ---
 
@@ -107,45 +135,21 @@ mañana a las 09:00      → Mañana a las 9 AM
 ### Endpoints disponibles
 
 ```bash
-# Listar todos los recordatorios
-GET http://localhost:5000/api/reminders
+# Health check del bot
+GET http://localhost:5000/health
 
-# Obtener un recordatorio específico
-GET http://localhost:5000/api/reminders/{id}
+# (Próximamente) Dashboard del personaje
+GET http://localhost:5000/api/character/{chatId}
 
-# Crear nuevo recordatorio
-POST http://localhost:5000/api/reminders
-Content-Type: application/json
-{
-  "chatId": 1234567890,
-  "text": "Tomar agua",
-  "dueAt": "2026-02-10T20:00:00-03:00",
-  "recurrence": 0
-}
-
-# Actualizar un recordatorio
-PUT http://localhost:5000/api/reminders/{id}
-
-# Eliminar un recordatorio
-DELETE http://localhost:5000/api/reminders/{id}
+# (Próximamente) Inventario
+GET http://localhost:5000/api/inventory/{chatId}
 ```
 
 ### Ejemplos con cURL
 
 ```bash
-# Listar todos
-curl http://localhost:5000/api/reminders
-
-# Obtener uno
-curl http://localhost:5000/api/reminders/abc123
-
-# Crear
-curl -X POST http://localhost:5000/api/reminders \
-  -H "Content-Type: application/json" \
-  -d '{"chatId":1392641621,"text":"Test","dueAt":"2026-02-10T20:00:00-03:00"}'
-
-# Eliminar
-curl -X DELETE http://localhost:5000/api/reminders/abc123
+# Verificar salud del bot
+curl http://localhost:5000/health
 ```
 
 ---
@@ -155,38 +159,58 @@ curl -X DELETE http://localhost:5000/api/reminders/abc123
 ```
 BotTelegram/
 ├── src/BotTelegram/
-│   ├── Commands/              # Comando handlers
+│   ├── Commands/              # Handlers de comandos
 │   │   ├── StartCommand.cs
 │   │   ├── HelpCommand.cs
-│   │   ├── RememberCommand.cs
-│   │   ├── ListCommand.cs
-│   │   ├── DeleteCommand.cs
-│   │   ├── EditCommand.cs
-│   │   ├── RecurCommand.cs
-│   │   └── UnknownCommand.cs
+│   │   ├── FaqCommand.cs
+│   │   └── ChatCommand.cs
 │   ├── Core/                  # Lógica central
 │   │   ├── Bot.cs
 │   │   ├── CommandRouter.cs
 │   │   └── BotService.cs
-│   ├── Models/                # Modelos de datos
-│   │   └── Reminder.cs
-│   ├── Services/              # Servicios
-│   │   ├── ReminderService.cs
-│   │   ├── ReminderScheduler.cs
-│   │   └── MessageHandler.cs
-│   ├── API/                   # Controladores REST
-│   │   └── RemindersController.cs
+│   ├── RPG/                   # Sistema RPG completo
+│   │   ├── Commands/          # Comandos RPG
+│   │   │   ├── RpgCommand.cs
+│   │   │   ├── ClassesCommand.cs
+│   │   │   ├── DungeonCommand.cs
+│   │   │   ├── FactionCommand.cs
+│   │   │   ├── GuildCommand.cs
+│   │   │   ├── ShopCommand.cs
+│   │   │   ├── CraftingCommand.cs
+│   │   │   ├── QuestCommand.cs
+│   │   │   └── PvpCommand.cs
+│   │   ├── Models/            # Modelos de datos RPG
+│   │   │   ├── RpgPlayer.cs
+│   │   │   ├── RpgItem.cs
+│   │   │   ├── RpgEnemy.cs
+│   │   │   ├── ClassInfo.cs
+│   │   │   ├── Faction.cs
+│   │   │   ├── Guild.cs
+│   │   │   └── GameState.cs
+│   │   └── Services/          # Servicios RPG
+│   │       ├── InventoryService.cs
+│   │       ├── CombatService.cs
+│   │       ├── QuestService.cs
+│   │       ├── FactionService.cs
+│   │       └── GuildService.cs
 │   ├── Handlers/              # Event handlers
+│   │   ├── MessageHandler.cs
+│   │   └── CallbackQueryHandler.cs
+│   ├── Services/              # Servicios generales
+│   │   ├── BotService.cs
+│   │   └── TelegramLogger.cs
+│   ├── API/                   # Controladores REST
+│   │   └── HealthController.cs
 │   ├── Program.cs             # Entry point
 │   ├── appsettings.json       # Configuración
-│   └── BotTelegram.csproj    # Proyecto
+│   └── BotTelegram.csproj     # Proyecto
 ├── Docs/                      # Documentación
 │   ├── README.md
 │   ├── INSTALLATION.md
 │   ├── USAGE.md
 │   ├── API.md
-│   ├── ARCHITECTURE.md
-│   └── ROADMAP.md
+│   ├── ROADMAP.md
+│   └── FEATURES_ROADMAP.md
 └── README.md                  # Este archivo
 ```
 
@@ -216,20 +240,22 @@ TELEGRAM_BOT_TOKEN=tu_token_aqui
 
 ## 📊 Datos persistidos
 
-Los recordatorios se guardan en `bin/Debug/net9.0/data/reminders.json`:
+Los datos del personaje se guardan en `data/`:
 
 ```json
-[
-  {
-    "Id": "abc123",
-    "ChatId": 1392641621,
-    "Text": "Tomar agua",
-    "DueAt": "2026-02-10T20:00:00-03:00",
-    "Notified": false,
-    "Recurrence": "Daily",
-    "CreatedAt": "2026-02-10T15:30:00-03:00"
-  }
-]
+{
+  "playerId": "abc123",
+  "ChatId": 1392641621,
+  "Nombre": "Guerreo",
+  "Clase": "Guerreo",
+  "Nivel": 5,
+  "Stats": { "STR": 10, "INT": 5, "DEX": 8, "VIT": 12 },
+  "Inventario": [...],
+  "Facciones": {...},
+  "Misiones": [...],
+  "Gremio": "...",
+  "PvpRating": 1200
+}
 ```
 
 ---
